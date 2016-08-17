@@ -5,5 +5,9 @@
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-[build-img]: https://travis-ci.org/ahwillia/DynamicTimeWarp.jl.svg?branch=master
-[build-url]: https://travis-ci.org/ahwillia/DynamicTimeWarp.jl
+#### Acknowledgements
+
+Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of this code. 
+
+[build-img]: https://travis-ci.org/ahwillia/TimeWarp.jl.svg?branch=master
+[build-url]: https://travis-ci.org/ahwillia/TimeWarp.jl
