@@ -1,7 +1,9 @@
-# TimeWarp
+# TimeWarp.jl
 
-[![Build Status](https://travis-ci.org/ahwillia/TimeWarp.jl.svg?branch=master)](https://travis-ci.org/ahwillia/TimeWarp.jl)
+[![Build Status][build-img]][build-url]
+[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 
-[![Coverage Status](https://coveralls.io/repos/ahwillia/TimeWarp.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/ahwillia/TimeWarp.jl?branch=master)
+Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-[![codecov.io](http://codecov.io/github/ahwillia/TimeWarp.jl/coverage.svg?branch=master)](http://codecov.io/github/ahwillia/TimeWarp.jl?branch=master)
+[build-img]: https://travis-ci.org/ahwillia/DynamicTimeWarp.jl.svg?branch=master
+[build-url]: https://travis-ci.org/ahwillia/DynamicTimeWarp.jl
