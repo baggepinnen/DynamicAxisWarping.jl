@@ -1,5 +1,4 @@
-
-module DynamicTimeWarp
+module TimeWarp
 
 using Distances
 import Compat:view

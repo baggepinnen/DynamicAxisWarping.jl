@@ -1,4 +1,4 @@
-using DynamicTimeWarp
+using TimeWarp
 if VERSION >= v"0.5.0-"
     using Base.Test
 else
@@ -149,7 +149,7 @@ end
 #############################################
 
 @testset "FastDTW compression" begin
-    compress2 = DynamicTimeWarp.compress2
+    compress2 = TimeWarp.compress2
     s=collect(0:2:98)
     s1 = compress2(s)
     s2 = compress2(s1)
@@ -166,7 +166,7 @@ end
 #############################################
 
 @testset "Window Computations" begin
-    computewindow = DynamicTimeWarp.computewindow
+    computewindow = TimeWarp.computewindow
 
     # Simplest path (along the diagonal)
     p=collect(1:8)
@@ -272,6 +272,6 @@ end
 # x+= 4*exp(-0.5*((t-pktimes[4])/250).^2);
 # y = x[1:2:end];
 # cost,px,py = dtw(x,y)
-# cost1,qx,qy = DynamicTimeWarp.fastdtw(x, y, 15)
+# cost1,qx,qy = TimeWarp.fastdtw(x, y, 15)
 
 # ## Need to actually TEST something here!
