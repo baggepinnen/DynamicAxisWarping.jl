@@ -1,14 +1,5 @@
+using Base.Test
 using TimeWarp
-if VERSION >= v"0.5.0-"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
-
-#############################################
-# Test dtw itself
-#############################################
 
 @testset "Basic Dynamic Time Warping" begin
     a=[1,1,1,2,4,6,5,5,5,4,4,3,1,1,1]
@@ -50,9 +41,6 @@ end
     @test pb==[1,2,3,3,4]
 end
 
-#############################################
-# Test DTW with windows
-#############################################
 
 @testset "DTW with windows" begin
     # Verify that a tie prefers diagonal moves
@@ -144,10 +132,6 @@ end
 end
 
 
-#############################################
-# Test sequence compressions
-#############################################
-
 @testset "FastDTW compression" begin
     compress2 = TimeWarp.compress2
     s=collect(0:2:98)
@@ -161,9 +145,6 @@ end
     @test s1==[1.0]
 end
 
-#############################################
-# Test window computation
-#############################################
 
 @testset "Window Computations" begin
     computewindow = TimeWarp.computewindow
@@ -261,17 +242,18 @@ end
     @test rmax==fill(8,4)
 end
 
-# #############################################
-# # Test DTW and FastDTW on simple, large cases
-# #############################################
-# t=collect(1:1600)
-# pktimes=[100,300,1000,1300]
-# x = 1*exp(-0.5*((t-pktimes[1])/100).^2);
-# x+= 2*exp(-0.5*((t-pktimes[2])/150).^2);
-# x+= 3*exp(-0.5*((t-pktimes[3])/250).^2);
-# x+= 4*exp(-0.5*((t-pktimes[4])/250).^2);
-# y = x[1:2:end];
-# cost,px,py = dtw(x,y)
-# cost1,qx,qy = TimeWarp.fastdtw(x, y, 15)
 
-# ## Need to actually TEST something here!
+@testset "DTW and FastDTW agreement for simple synthetic data" begin
+    t=collect(1:1600)
+    pktimes=[100,300,1000,1300]
+    x = 1*exp(-0.5*((t-pktimes[1])/100).^2);
+    x+= 2*exp(-0.5*((t-pktimes[2])/150).^2);
+    x+= 3*exp(-0.5*((t-pktimes[3])/250).^2);
+    x+= 4*exp(-0.5*((t-pktimes[4])/250).^2);
+    y = x[1:2:end];
+    cost,px,py = dtw(x,y)
+    cost1,qx,qy = fastdtw(x, y, 15)
+    @test isapprox(cost,cost1)
+    @test px == qx
+    @test py == qy
+end
