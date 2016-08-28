@@ -1,3 +1,9 @@
+typealias Sequence{T<:Number} Union{AbstractVector{T},AbstractVector{Array{T}}}
+
+#####################################
+#     Basic interface functions     #
+#####################################
+
 """
     cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean])
 
@@ -8,36 +14,13 @@ Distances.jl). If `seq1` and `seq2` are matrices, each column is considered
 an observation.
 """
 function dtw(
-        seq1::Vector,
-        seq2::Vector,
+        seq1::Sequence,
+        seq2::Sequence,
         dist::SemiMetric=SqEuclidean()
     )
 
-    # Build the cost matrix
-    m = length(seq2)
-    n = length(seq1)
-    cost11 = evaluate(dist, seq1[1], seq2[1])
-    cost = zeros(typeof(cost11), m, n)
-
-    # Initialize first column and first row
-    cost[1,1] = cost11
-    for r=2:m
-        cost[r,1] = cost[r-1,1] + evaluate(dist, seq1[1], seq2[r])
-    end
-    for c=2:n
-        cost[1,c] = cost[1,c-1] + evaluate(dist, seq1[c], seq2[1])
-    end
-
-    # Complete the cost matrix
-    for c=2:n
-        for r=2:m
-            best_neighbor_cost = min(cost[r-1,c], cost[r-1,c-1], cost[r,c-1])
-            cost[r,c] = best_neighbor_cost + evaluate(dist, seq1[c], seq2[r])
-        end
-    end
-
-    trackcols, trackrows = trackback(cost)
-    cost[end,end], trackcols, trackrows
+    D = dtw_cost_matrix(seq1, seq2, dist)
+    return trackback(D)
 end
 
 # Wrapper for multi-dimensional time series.
@@ -61,11 +44,59 @@ Do DTW to align `seq1` and `seq2` confined to a window. Vectors `i2min` and
 `i2max` specify (inclusive) lower and upper bounds for `seq2` for each index in
 `seq1`. Thus, `i2min` and `i2max` are required to be the same length as `seq1`.
 """
-function dtw(seq1::Vector, seq2::Vector,
-             i2min::Vector, i2max::Vector,
-             dist::SemiMetric = SqEuclidean())
+function dtw(
+        seq1::Sequence,
+        seq2::Sequence,
+        i2min::AbstractVector,
+        i2max::AbstractVector,
+        dist::SemiMetric = SqEuclidean()
+    )
 
-    m = length(seq2) # of rows  in cost matrix
+    D = dtw_cost_matrix(seq1, seq2, i2min, i2max, dist)
+    return trackback(D)
+end
+
+##############################
+#  Cost matrix computations  #
+##############################
+function dtw_cost_matrix{T<:Number}(
+        seq1::Sequence{T},
+        seq2::Sequence{T},
+        dist::SemiMetric=SqEuclidean()
+    )
+    # Build the cost matrix
+    m = length(seq2)
+    n = length(seq1)
+    D = zeros(T, m, n)
+
+    # Initialize first column and first row
+    D[1,1] = evaluate(dist, seq1[1], seq2[1])
+    for r=2:m
+        D[r,1] = D[r-1,1] + evaluate(dist, seq1[1], seq2[r])
+    end
+    for c=2:n
+        D[1,c] = D[1,c-1] + evaluate(dist, seq1[c], seq2[1])
+    end
+
+    # Complete the cost matrix
+    for c=2:n
+        for r=2:m
+            best_neighbor_cost = min(D[r-1,c], D[r-1,c-1], D[r,c-1])
+            D[r,c] = best_neighbor_cost + evaluate(dist, seq1[c], seq2[r])
+        end
+    end
+
+    return D
+end
+
+function dtw_cost_matrix{T<:Number,U<:Integer}(
+        seq1::Sequence{T},
+        seq2::Sequence{T},
+        i2min::AbstractVector{U},
+        i2max::AbstractVector{U},
+        dist::SemiMetric = SqEuclidean()
+    )
+    m = length(seq2) # of rows in cost matrix
     n = length(seq1) # of columns in cost matrix
     n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))
     n == length(i2max) || throw(ArgumentError("i2max does not match length of seq1."))
@@ -75,28 +106,31 @@ function dtw(seq1::Vector, seq2::Vector,
     # Build the (n x m) cost matrix into a WindowedMatrix, because it's ragged.
     # That type gives efficient storage with convenient [r,c] indexing and returns
     # Inf when accessed outside the window.
-    cost = WindowedMatrix(i2min, i2max, Inf)
+    D = WindowedMatrix(i2min, i2max, Inf)
 
     # First column first
-    cost[1,1] = evaluate(dist, seq1[1], seq2[1])
+    D[1,1] = evaluate(dist, seq1[1], seq2[1])
     for r=2:i2max[1]
-        cost[r,1] = cost[r-1,1]  + evaluate(dist, seq1[1], seq2[r])
+        D[r,1] = D[r-1,1]  + evaluate(dist, seq1[1], seq2[r])
     end
 
     # Complete the cost matrix from columns 2 to m.
     for c=2:n
         for r=i2min[c]:i2max[c]
-            best_neighbor_cost = min(cost[r-1,c], cost[r-1,c-1], cost[r,c-1])
-            cost[r,c] = best_neighbor_cost + evaluate(dist, seq1[c], seq2[r])
+            best_neighbor_cost = min(D[r-1,c], D[r-1,c-1], D[r,c-1])
+            D[r,c] = best_neighbor_cost + evaluate(dist, seq1[c], seq2[r])
         end
     end
-    trackcols, trackrows = trackback(cost)
-    cost[end,end], trackcols, trackrows
+
+    return D
 end
 
+########################################
+#  Find Best Path through Cost Matrix  #
+########################################
 
 """
-    cols,rows = trackback(D::Matrix)
+    cost,cols,rows = trackback(D::Matrix)
 
 Given the cost matrix `D`, computes the optimal track from end to beginning.
 Returns `cols` and `rows` which are vectors respectively holding the track.
@@ -121,5 +155,5 @@ function trackback{T<:Number}(D::AbstractMatrix{T})
         push!(rows,1)
         push!(cols,c)
     end
-    reverse(cols), reverse(rows)
+    return D[end,end], reverse(cols), reverse(rows)
 end
