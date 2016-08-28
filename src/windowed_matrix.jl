@@ -41,20 +41,23 @@ end
 
 
 # If the default matrix value is given, then the matrix takes on its type
-WindowedMatrix(rmin::Vector{Int}, rmax::Vector{Int}, default) =
+function WindowedMatrix{T<:Real}(
+        rmin::Vector{Int},
+        rmax::Vector{Int},
+        default::T
+    )
     WindowedMatrix{typeof(default)}(rmin, rmax, default)
+end
 
 # If no default matrix value is given, it will be Inf, and matrix will hold
 # Float64 values.
 WindowedMatrix(rmin::Vector{Int}, rmax::Vector{Int}) =
     WindowedMatrix{Float64}(rmin, rmax, Inf)
 
+Base.size(W::WindowedMatrix) = W.nrow, W.ncol
+Base.size(W::WindowedMatrix, i) = size(W)[i]
 
-import Base: size, getindex, setindex!
-size(W::WindowedMatrix) = W.nrow, W.ncol
-size(W::WindowedMatrix, i) = size(W)[i]
-
-function getindex(W::WindowedMatrix, r::Integer, c::Integer)
+function Base.getindex(W::WindowedMatrix, r::Integer, c::Integer)
     if c<1 || c>W.ncol || r<W.rowmin[c] || r>W.rowmax[c]
         return W.defaultval
     end
@@ -64,7 +67,7 @@ function getindex(W::WindowedMatrix, r::Integer, c::Integer)
 end
 
 
-function setindex!(W::WindowedMatrix, val, r::Integer, c::Integer)
+function Base.setindex!(W::WindowedMatrix, val, r::Integer, c::Integer)
     if c<1 || c>W.ncol || r<W.rowmin[c] || r>W.rowmax[c]
         throw(BoundsError())
     end
