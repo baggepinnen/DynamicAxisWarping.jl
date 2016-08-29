@@ -5,6 +5,12 @@
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
+I plan to register this package in the next month or so (after v0.5 release). Until then, install using:
+
+```julia
+Pkg.clone("https://github.com/ahwillia/TimeWarp.jl.git")
+```
+
 #### Related Packages in Other Languages
 
 * [dtw (R)](http://dtw.r-forge.r-project.org/)
