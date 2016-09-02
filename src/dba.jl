@@ -1,7 +1,7 @@
 """
-    DBAResult(cost,converged,iterations)
+    DBAResult(cost,converged,iterations,cost_trace)
 
-Holds basic results of a DTW Barycenter Averaging (DBA) fit.
+Holds results of a DTW Barycenter Averaging (DBA) fit.
 """
 type DBAResult
     cost::Float64
@@ -23,7 +23,7 @@ Example usage:
     z = [1,2,2,4]
     avg,result = dba([x,y,z])
 """
-function dba{T<:AbstractVecOrMat}(
+function dba{T<:Sequence}(
         sequences::AbstractVector{T},
         dist::SemiMetric = SqEuclidean();
         n::Int = 0,
@@ -34,7 +34,7 @@ function dba{T<:AbstractVecOrMat}(
 
     # initialize dbavg as signal with length n
     if n <= 0
-        n = mean([ length(s) in sequences ])
+        n = round(Int,mean([ length(s) for s in sequences ]))
         dbavg = zeros(n)
     end
 
@@ -64,7 +64,7 @@ function dba{T<:AbstractVecOrMat}(
         dbavg = newavg
     end
 
-    return dbavg, DBAResult(cost,converged,iter,trace)
+    return dbavg, DBAResult(cost,converged,iter,cost_trace)
 end
 
 
@@ -75,7 +75,7 @@ Performs one iteration of DTW Barycenter Averaging (DBA) given a collection of
 `sequences` and the current estimate of the average sequence, `dbavg`. Returns
 an updated estimate, and the cost/loss of the previous estimate
 """
-function dba_iteration{T<:AbstractVecOrMat}(
+function dba_iteration{T<:Sequence}(
         dbavg::T,
         sequences::AbstractVector{T},
         dist::SemiMetric
@@ -87,11 +87,11 @@ function dba_iteration{T<:AbstractVecOrMat}(
     
     for seq in sequences
         # time warp signal versus average
-        cst, match1, match2 = dtw(dbavg, seq)
+        cost, i1, i2 = dtw(dbavg, seq)
         total_cost += cost
         
         # store stats for barycentric average
-        for j=1:length(match2)
+        for j=1:length(i2)
             count[i1[j]] += 1
             newavg[i1[j]] += seq[i2[j]]
         end
@@ -101,3 +101,13 @@ function dba_iteration{T<:AbstractVecOrMat}(
     newavg = newavg ./ count
     return newavg, total_cost
 end
+
+# Wrapper for a matrix of one-dimensional time series.
+# dba( s::AbstractMatrix,
+#      args...;
+#      kwargs... ) = dba([ view(s,:,i) for i = 1:size(s,2) ], args...; kwargs...)
+
+# @inline dba{T}( s::AbstractArray{T,3},
+#              args...,
+#              kwargs... ) = dba([ view(s,:,i) for i = 1:size(s,2) ], args...; kwargs...)
+
