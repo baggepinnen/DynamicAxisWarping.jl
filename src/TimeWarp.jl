@@ -4,12 +4,14 @@ using Reexport
 @reexport using Distances
 import Compat:view
 
-export dtw,
+export Sequence,
+       dtw,
        dba,
        dtw_cost_matrix,
        DBAResult,
        fastdtw
 
+include("sequence.jl")
 include("dtw.jl")
 include("dba.jl")
 include("windowed_matrix.jl")

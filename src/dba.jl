@@ -35,7 +35,7 @@ function dba{T<:Sequence}(
     # initialize dbavg as signal with length n
     if n <= 0
         n = round(Int,mean([ length(s) for s in sequences ]))
-        dbavg = zeros(n)
+        dbavg = Sequence(zeros(n))
     end
 
     # variables storing optimization progress
@@ -82,7 +82,7 @@ function dba_iteration{T<:Sequence}(
     )
 
     count = zeros(Int, length(dbavg))
-    newavg = zeros(Float64, length(dbavg))
+    newavg = Sequence(zeros(Float64, length(dbavg)))
     total_cost = 0.0
     
     for seq in sequences

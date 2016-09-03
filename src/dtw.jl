@@ -1,5 +1,3 @@
-typealias Sequence{T<:Number} Union{AbstractVector{T},AbstractVector{Array{T}}}
-
 #####################################
 #     Basic interface functions     #
 #####################################
@@ -21,20 +19,6 @@ function dtw(
 
     D = dtw_cost_matrix(seq1, seq2, dist)
     return trackback(D)
-end
-
-# Wrapper for multi-dimensional time series.
-function dtw(
-        seq1::AbstractMatrix,
-        seq2::AbstractMatrix,
-        dist::SemiMetric = SqEuclidean()
-    )
-    if size(seq1,1) != size(seq2,1)
-        throw(ArgumentError("Provided time series don't have same number of variables, size(seq1,1) must equal size(seq2,1)"))
-    end
-    s1 = [view(seq1,:,i) for i = 1:size(seq1,2)]
-    s2 = [view(seq2,:,i) for i = 1:size(seq2,2)]
-    dtw(s1,s2,dist)
 end
 
 """
@@ -59,9 +43,9 @@ end
 ##############################
 #  Cost matrix computations  #
 ##############################
-function dtw_cost_matrix{T<:Number}(
-        seq1::Sequence{T},
-        seq2::Sequence{T},
+function dtw_cost_matrix{N,T}(
+        seq1::Sequence{N,T},
+        seq2::Sequence{N,T},
         dist::SemiMetric=SqEuclidean()
     )
     # Build the cost matrix
@@ -89,9 +73,9 @@ function dtw_cost_matrix{T<:Number}(
     return D
 end
 
-function dtw_cost_matrix{T<:Number,U<:Integer}(
-        seq1::Sequence{T},
-        seq2::Sequence{T},
+function dtw_cost_matrix{N,T,U<:Integer}(
+        seq1::Sequence{N,T},
+        seq2::Sequence{N,T},
         i2min::AbstractVector{U},
         i2max::AbstractVector{U},
         dist::SemiMetric = SqEuclidean()
@@ -156,4 +140,27 @@ function trackback{T<:Number}(D::AbstractMatrix{T})
         push!(cols,c)
     end
     return D[end,end], reverse(cols), reverse(rows)
+end
+
+
+###############################################
+# Wrapper functions for abstract array inputs #
+###############################################
+
+function dtw(
+        seq1::AbstractArray,
+        seq2::AbstractArray,
+        dist::SemiMetric=SqEuclidean()
+    )
+    dtw(Sequence(seq1),Sequence(seq2),dist)
+end
+
+function dtw(
+        seq1::AbstractArray,
+        seq2::AbstractArray,
+        i2min::AbstractVector,
+        i2max::AbstractVector,
+        dist::SemiMetric = SqEuclidean()
+    )
+    dtw(Sequence(seq1),Sequence(seq2),i2min,i2max,dist)
 end

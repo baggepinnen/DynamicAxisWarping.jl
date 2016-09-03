@@ -11,8 +11,7 @@ y = data[:,2:end]'
 # c = [ cl==1 ? :blue : :red for cl in class ]'
 # plot(y, linecolor=c, legend=false)
 
-seqs = [ y[:,i] for i = 1:size(y,2) ]
-avg, result = dba(seqs)
+avg, result = dba([Sequence(y[:,i]) for i in 1:size(y,2)])
 
 plot(y, linecolor=:grey, legend=false)
 plot!(avg, linecolor=:red, legend=false, line=(2))
