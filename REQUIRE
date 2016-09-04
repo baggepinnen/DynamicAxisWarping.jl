@@ -3,3 +3,4 @@ Distances
 Compat
 BinDeps
 ProgressMeter
+Reexport
