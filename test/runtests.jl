@@ -2,26 +2,58 @@ using Base.Test
 using TimeWarp
 
 @testset "Sequences" begin
-    # 10-dimensional time series
-    X = randn(10,3)
-    Sx = Sequence(X)
 
-    @test size(Sx) == (3,)
-    @test length(Sx) == 3
+    @testset "Sequence" begin
+        # 10-dimensional time series
+        X = randn(10,3)
+        Sx = Sequence(X)
 
-    for i = 1:length(Sx)
-        @test Sx[i] == X[:,i]
+        @test size(Sx) == (3,)
+        @test length(Sx) == 3
+
+        for i = 1:length(Sx)
+            @test Sx[i] == X[:,i]
+        end
+
+        # (10x9)-dimensional time series
+        Y = randn(10,9,3)
+        Sy = Sequence(Y)
+
+        @test size(Sy) == (3,)
+        @test length(Sy) == 3
+
+        for i = 1:length(Sy)
+            @test Sy[i] == Y[:,:,i]
+        end
     end
 
-    # (10x9)-dimensional time series
-    Y = randn(10,9,3)
-    Sy = Sequence(Y)
+    @testset "SequenceArray" begin
+        # for a vector, sequence array should error
+        @test_throws ArgumentError SequenceArray(rand(3))
 
-    @test size(Sy) == (3,)
-    @test length(Sy) == 3
+        # for a matrix, it should behave like a matrix
+        X = randn(3,4)
+        Sx = SequenceArray(X)
+        @test size(Sx) == size(X)
+        for i in eachindex(X)
+            @test Sx[i] == X[i]
+        end
 
-    for i = 1:length(Sy)
-        @test Sy[i] == Y[:,:,i]
+        # for a 3rd-order tensor
+        Y = randn(3,4,5)
+        Sy = SequenceArray(Y)
+        @test size(Sy) == (4,5) 
+        for (t,s) in zip(1:4,1:5)
+            @test Sy[t,s] == Y[:,t,s]
+        end
+
+        # for a 4th-order tensor
+        Z = randn(3,4,5,6)
+        Sz = SequenceArray(Z)
+        @test size(Sz) == (5,6)
+        for (t,s) in zip(1:5,1:6)
+            @test Sz[t,s] == Z[:,:,t,s]
+        end
     end
 end
 

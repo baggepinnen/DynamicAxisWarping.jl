@@ -5,6 +5,7 @@ using Reexport
 import Compat:view
 
 export Sequence,
+       SequenceArray,
        dtw,
        dba,
        dtw_cost_matrix,
