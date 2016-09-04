@@ -45,7 +45,7 @@ function dba{T<:Sequence}(
     cost_trace = Float64[]
 
     # main loop ##
-    p = ProgressMeter.Progress(iterations)
+    p = ProgressMeter.ProgressThresh(rtol)
     while !converged && iter < iterations
         # do an iteration of dba
         newavg, newcost = dba_iteration(dbavg,sequences,dist)
@@ -66,9 +66,9 @@ function dba{T<:Sequence}(
         dbavg = newavg
 
         # update progress bar
-        ProgressMeter.next!(p; showvalues = [(:iteration,iter),
-                                             (:cost,cost),
-                                             (Symbol("% improvement"),Δ)])
+        ProgressMeter.update!(p, Δ; showvalues =[(:iteration,iter),
+                                                 (Symbol("max iteration"),iterations),
+                                                 (:cost,cost)])
     end
 
     return dbavg, DBAResult(cost,converged,iter,cost_trace)
@@ -100,7 +100,7 @@ function dba_iteration{T<:Sequence}(
         # store stats for barycentric average
         for j=1:length(i2)
             count[i1[j]] += 1
-            newavg[i1[j]] = newavg[i1[j]]+seq[i2[j]]
+            newavg[i1[j]] += seq[i2[j]]
         end
     end
 
@@ -114,9 +114,9 @@ end
 
 # Wrapper for AbstractArray of one-dimensional time series.
 function dba( s::AbstractArray, args...; kwargs... )
-    dba(sequify(s), args...; kwargs...)
+    dba(_sequentize(s), args...; kwargs...)
 end
 
-@generated function sequify{T,N}(s::AbstractArray{T,N})
+@generated function _sequentize{T,N}(s::AbstractArray{T,N})
     :( [ Sequence(@ncall($N, view, s, n-> n==$N ? i : Colon())) for i = 1:size(s,2) ] )
 end
