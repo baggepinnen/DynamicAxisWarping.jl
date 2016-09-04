@@ -35,6 +35,3 @@ end
 @generated function Base.setindex!{N}(x::Sequence{N}, val, i)
     :( x.val[@ntuple($N, (n-> n==N ? i : Colon()))...] = val )
 end
-
-Base.scale!(x::Sequence, s) = scale!(x.val,s)
-
