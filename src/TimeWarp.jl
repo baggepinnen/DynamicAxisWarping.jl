@@ -2,7 +2,7 @@ module TimeWarp
 
 using Reexport
 @reexport using Distances
-import Compat:view
+import ProgressMeter
 
 export Sequence,
        SequenceArray,

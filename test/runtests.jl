@@ -27,34 +27,6 @@ using TimeWarp
         end
     end
 
-    @testset "SequenceArray" begin
-        # for a vector, sequence array should error
-        @test_throws ArgumentError SequenceArray(rand(3))
-
-        # for a matrix, it should behave like a matrix
-        X = randn(3,4)
-        Sx = SequenceArray(X)
-        @test size(Sx) == size(X)
-        for i in eachindex(X)
-            @test Sx[i] == X[i]
-        end
-
-        # for a 3rd-order tensor
-        Y = randn(3,4,5)
-        Sy = SequenceArray(Y)
-        @test size(Sy) == (4,5) 
-        for (t,s) in zip(1:4,1:5)
-            @test Sy[t,s] == Y[:,t,s]
-        end
-
-        # for a 4th-order tensor
-        Z = randn(3,4,5,6)
-        Sz = SequenceArray(Z)
-        @test size(Sz) == (5,6)
-        for (t,s) in zip(1:5,1:6)
-            @test Sz[t,s] == Z[:,:,t,s]
-        end
-    end
 end
 
 @testset "Basic Dynamic Time Warping" begin

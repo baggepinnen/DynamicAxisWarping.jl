@@ -14,7 +14,7 @@ end
     avgseq, results = dba(sequences, [dist=SqEuclidean()]; kwargs...)
 
 Perfoms DTW Barycenter Averaging (DBA) given a collection of `sequences`
-and the current estimate of the average sequence
+and the current estimate of the average sequence. 
 
 Example usage:
 
@@ -28,7 +28,7 @@ function dba{T<:Sequence}(
         dist::SemiMetric = SqEuclidean();
         n::Int = 0,
         iterations::Int = 1000,
-        rtol::Float64 = 1e-3,
+        rtol::Float64 = 1e-5,
         store_trace::Bool = false
     )
 
@@ -44,7 +44,8 @@ function dba{T<:Sequence}(
     cost = Inf
     cost_trace = Float64[]
 
-    ## main loop ##
+    # main loop ##
+    p = ProgressMeter.Progress(iterations)
     while !converged && iter < iterations
         # do an iteration of dba
         newavg, newcost = dba_iteration(dbavg,sequences,dist)
@@ -54,7 +55,8 @@ function dba{T<:Sequence}(
         store_trace && push!(cost_trace, newcost)
 
         # check convergence
-        if (cost-newcost)/newcost > rtol
+        Δ = (cost-newcost)/newcost
+        if Δ < rtol
             converged = true
         else
             cost = newcost
@@ -62,6 +64,11 @@ function dba{T<:Sequence}(
 
         # update estimate
         dbavg = newavg
+
+        # update progress bar
+        ProgressMeter.next!(p; showvalues = [(:iteration,iter),
+                                             (:cost,cost),
+                                             (Symbol("% improvement"),Δ)])
     end
 
     return dbavg, DBAResult(cost,converged,iter,cost_trace)
@@ -93,21 +100,23 @@ function dba_iteration{T<:Sequence}(
         # store stats for barycentric average
         for j=1:length(i2)
             count[i1[j]] += 1
-            newavg[i1[j]] += seq[i2[j]]
+            newavg[i1[j]] = newavg[i1[j]]+seq[i2[j]]
         end
     end
 
     # compute average and return total cost
-    newavg = newavg ./ count
+    for i in eachindex(newavg)
+        newavg[i] = newavg[i]/count[i]
+    end
+
     return newavg, total_cost
 end
 
-# Wrapper for a matrix of one-dimensional time series.
-# dba( s::AbstractMatrix,
-#      args...;
-#      kwargs... ) = dba([ view(s,:,i) for i = 1:size(s,2) ], args...; kwargs...)
+# Wrapper for AbstractArray of one-dimensional time series.
+function dba( s::AbstractArray, args...; kwargs... )
+    dba(sequify(s), args...; kwargs...)
+end
 
-# @inline dba{T}( s::AbstractArray{T,3},
-#              args...,
-#              kwargs... ) = dba([ view(s,:,i) for i = 1:size(s,2) ], args...; kwargs...)
-
+@generated function sequify{T,N}(s::AbstractArray{T,N})
+    :( [ Sequence(@ncall($N, view, s, n-> n==$N ? i : Colon())) for i = 1:size(s,2) ] )
+end
