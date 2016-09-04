@@ -4,91 +4,91 @@ import BinDeps: unpack_cmd
 const DATAPATH = Pkg.Dir.path()*"/TimeWarp/data"
 
 const DATASETS = """
-* 50words
-* Adiac
-* ArrowHead
-* Beef
-* BeetleFly
-* BirdChicken
-* CBF
-* Car
-* ChlorineConcentration
-* CinC_ECG_torso
-* Coffee
-* Computers
-* Cricket_X
-* Cricket_Y
-* Cricket_Z
-* DiatomSizeReduction
-* DistalPhalanxOutlineAgeGroup
-* DistalPhalanxOutlineCorrect
-* DistalPhalanxTW
-* ECG200
-* ECG5000
-* ECGFiveDays
-* Earthquakes
-* ElectricDevices
-* FISH
-* FaceAll
-* FaceFour
-* FacesUCR
-* FordA
-* FordB
-* Gun_Point
-* Ham
-* HandOutlines
-* Haptics
-* Herring
-* InlineSkate
-* InsectWingbeatSound
-* ItalyPowerDemand
-* LargeKitchenAppliances
-* Lighting2
-* Lighting7
-* MALLAT
-* Meat
-* MedicalImages
-* MiddlePhalanxOutlineAgeGroup
-* MiddlePhalanxOutlineCorrect
-* MiddlePhalanxTW
-* MoteStrain
-* NonInvasiveFatalECG_Thorax1
-* NonInvasiveFatalECG_Thorax2
-* OSULeaf
-* OliveOil
-* PhalangesOutlinesCorrect
-* Phoneme
-* Plane
-* ProximalPhalanxOutlineAgeGroup
-* ProximalPhalanxOutlineCorrect
-* ProximalPhalanxTW
-* RefrigerationDevices
-* ScreenType
-* ShapeletSim
-* ShapesAll
-* SmallKitchenAppliances
-* SonyAIBORobotSurface
-* SonyAIBORobotSurfaceII
-* StarLightCurves
-* Strawberry
-* SwedishLeaf
-* Symbols
-* ToeSegmentation1
-* ToeSegmentation2
-* Trace
-* TwoLeadECG
-* Two_Patterns
-* UWaveGestureLibraryAll
-* Wine
-* WordsSynonyms
-* Worms
-* WormsTwoClass
-* synthetic_control
-* uWaveGestureLibrary_X
-* uWaveGestureLibrary_Y
-* uWaveGestureLibrary_Z
-* wafer
-* yoga
+50words,
+Adiac,
+ArrowHead,
+Beef,
+BeetleFly,
+BirdChicken,
+CBF,
+Car,
+ChlorineConcentration,
+CinC_ECG_torso,
+Coffee,
+Computers,
+Cricket_X,
+Cricket_Y,
+Cricket_Z,
+DiatomSizeReduction,
+DistalPhalanxOutlineAgeGroup,
+DistalPhalanxOutlineCorrect,
+DistalPhalanxTW,
+ECG200,
+ECG5000,
+ECGFiveDays,
+Earthquakes,
+ElectricDevices,
+FISH,
+FaceAll,
+FaceFour,
+FacesUCR,
+FordA,
+FordB,
+Gun_Point,
+Ham,
+HandOutlines,
+Haptics,
+Herring,
+InlineSkate,
+InsectWingbeatSound,
+ItalyPowerDemand,
+LargeKitchenAppliances,
+Lighting2,
+Lighting7,
+MALLAT,
+Meat,
+MedicalImages,
+MiddlePhalanxOutlineAgeGroup,
+MiddlePhalanxOutlineCorrect,
+MiddlePhalanxTW,
+MoteStrain,
+NonInvasiveFatalECG_Thorax1,
+NonInvasiveFatalECG_Thorax2,
+OSULeaf,
+OliveOil,
+PhalangesOutlinesCorrect,
+Phoneme,
+Plane,
+ProximalPhalanxOutlineAgeGroup,
+ProximalPhalanxOutlineCorrect,
+ProximalPhalanxTW,
+RefrigerationDevices,
+ScreenType,
+ShapeletSim,
+ShapesAll,
+SmallKitchenAppliances,
+SonyAIBORobotSurface,
+SonyAIBORobotSurfaceII,
+StarLightCurves,
+Strawberry,
+SwedishLeaf,
+Symbols,
+ToeSegmentation1,
+ToeSegmentation2,
+Trace,
+TwoLeadECG,
+Two_Patterns,
+UWaveGestureLibraryAll,
+Wine,
+WordsSynonyms,
+Worms,
+WormsTwoClass,
+synthetic_control,
+uWaveGestureLibrary_X,
+uWaveGestureLibrary_Y,
+uWaveGestureLibrary_Z,
+wafer,
+yoga
 """
 
 """
@@ -136,9 +136,11 @@ function download_data()
 end
 
 """
-    data = TimeWarp.traindata(name)
+    data,labels = TimeWarp.traindata(name)
 
-Loads the training set of the specified dataset.
+Loads the training set of the specified dataset. Returns a matrix `data` where each column
+holds a 1-dimensional time series. The class label for each column is held `labels`
+which is a vector of length `size(data,2)`.
 
 Available datasets:
 
@@ -146,7 +148,10 @@ $DATASETS
 """
 function traindata(name::AbstractString)
     try
-        return readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN")
+        Y = readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN")
+        labels = vec(Y[:,1])
+        data = transpose(Y[:,2:end])
+        return data,labels
     catch err
         showerror(STDOUT, err, backtrace());println()
         info("You may have recieved this error because you haven't downloaded the database yet.")
@@ -155,9 +160,11 @@ function traindata(name::AbstractString)
 end
 
 """
-    data = TimeWarp.traindata(name)
+    data,labels = TimeWarp.traindata(name)
 
-Loads the test set of the specified dataset.
+Loads the test set of the specified dataset. Returns a matrix `data` where each column
+holds a 1-dimensional time series. The class label for each column is held `labels`
+which is a vector of length `size(data,2)`.
 
 Available datasets:
 
@@ -165,7 +172,10 @@ $DATASETS
 """
 function testdata(name::AbstractString)
     try
-        return readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TEST")
+        Y = return readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TEST")
+        labels = vec(Y[:,1])
+        data = transpose(Y[:,2:end])
+        return data,labels
     catch err
         showerror(STDOUT, err, backtrace());println()
         info("You may have recieved this error because you haven't downloaded the database yet.")
