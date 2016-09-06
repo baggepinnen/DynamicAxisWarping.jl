@@ -22,7 +22,7 @@ seq = Sequence(data)
 seq[1] == data[:,:,1] # true
 ```
 """
-type Sequence{N,T} <: AbstractArray{T,1}
+immutable Sequence{N,T} <: AbstractArray{T,1}
     val::AbstractArray{T,N}
 end
 
