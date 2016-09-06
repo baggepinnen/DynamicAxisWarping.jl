@@ -34,20 +34,24 @@ end
     @test cost==0
     @test match1==[1,2,3,4,5,6,6,6,7,8,9,10,10,11,12,12,12,13,14,15]
     @test match2==[1,1,2,3,4,5,6,7,8,8,8, 9,10,11,12,13,14,15,15,15]
+    @test evaluate(DTWDist(),a,b) == cost
 
     a[end] += 2
     cost, match1, match2 = dtw(a,b)
     @test cost==4
-    
+    @test evaluate(DTWDist(),a,b) == cost
+
     a=collect(1:10)
     b=a+1
     cost, match1, match2 = dtw(a,b)
     @test cost==2
+    @test evaluate(DTWDist(),a,b) == cost
 
     a=zeros(Int,6)
     b=1+a
     cost, match1, match2 = dtw(a,b)
     @test cost==length(a)
+    @test evaluate(DTWDist(),a,b) == cost
 
     # Verify that a tie prefers diagonal moves
     a=[1,1,1]
@@ -56,6 +60,7 @@ end
     @test cost==0
     @test pa==[1,2,3]
     @test pb==[1,2,3]
+    @test evaluate(DTWDist(),a,b) == cost
 
     # Verify that trackback ends properly if it reaches an edge before reaching [1,1]
     # Also check that trackback prefers diagonal moves
@@ -65,6 +70,16 @@ end
     @test cost==0
     @test pa==[1,1,2,3,4]
     @test pb==[1,2,3,3,4]
+    @test evaluate(DTWDist(),a,b) == cost
+
+    # test the distance api with different distances
+    a,b = randn(10),randn(10)
+    cost, = dtw(a,b,Euclidean())
+    @test evaluate(DTWDist{Euclidean}(),a,b) == cost
+    cost, = dtw(a,b,Cityblock())
+    @test evaluate(DTWDist{Cityblock}(),a,b) == cost
+    cost, = dtw(a,b,Chebyshev())
+    @test evaluate(DTWDist{Chebyshev}(),a,b) == cost
 end
 
 

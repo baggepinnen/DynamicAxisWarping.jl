@@ -7,7 +7,9 @@ import ProgressMeter
 export Sequence,
        SequenceArray,
        dtw,
+       DTWDist,
        dba,
+       dbaclust,
        dtw_cost_matrix,
        DBAResult,
        fastdtw
@@ -15,7 +17,7 @@ export Sequence,
 include("sequence.jl")
 include("dtw.jl")
 include("dba.jl")
-# include("dbaclust.jl")
+include("dbaclust.jl")
 include("windowed_matrix.jl")
 include("fastdtw.jl")
 include("datasets.jl")
