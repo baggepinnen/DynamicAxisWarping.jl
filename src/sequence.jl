@@ -26,12 +26,13 @@ type Sequence{N,T} <: AbstractArray{T,1}
     val::AbstractArray{T,N}
 end
 
-@generated Base.size{N}(x::Sequence{N}) = :((size(x.val,N),))
+Base.size{N}(x::Sequence{N}) = (size(x.val,N),)
+Base.eltype{N,T}(x::Sequence{N,T}) = T
 
 @generated function Base.getindex{N}(x::Sequence{N}, i)
-    :( x.val[@ntuple($N, (n-> n==N ? i : Colon()))...] )
+    :( x.val[@ntuple($N, (n-> n==$N ? i : Colon()))...] )
 end
 
 @generated function Base.setindex!{N}(x::Sequence{N}, val, i)
-    :( x.val[@ntuple($N, (n-> n==N ? i : Colon()))...] = val )
+    :( x.val[@ntuple($N, (n-> n==$N ? i : Colon()))...] = val )
 end

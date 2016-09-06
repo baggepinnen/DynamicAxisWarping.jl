@@ -15,6 +15,7 @@ export Sequence,
 include("sequence.jl")
 include("dtw.jl")
 include("dba.jl")
+# include("dbaclust.jl")
 include("windowed_matrix.jl")
 include("fastdtw.jl")
 include("datasets.jl")

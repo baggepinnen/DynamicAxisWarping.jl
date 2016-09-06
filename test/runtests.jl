@@ -3,28 +3,26 @@ using TimeWarp
 
 @testset "Sequences" begin
 
-    @testset "Sequence" begin
-        # 10-dimensional time series
-        X = randn(10,3)
-        Sx = Sequence(X)
+    # 10-dimensional time series
+    X = randn(10,3)
+    Sx = Sequence(X)
 
-        @test size(Sx) == (3,)
-        @test length(Sx) == 3
+    @test size(Sx) == (3,)
+    @test length(Sx) == 3
 
-        for i = 1:length(Sx)
-            @test Sx[i] == X[:,i]
-        end
+    for i = 1:length(Sx)
+        @test Sx[i] == X[:,i]
+    end
 
-        # (10x9)-dimensional time series
-        Y = randn(10,9,3)
-        Sy = Sequence(Y)
+    # (10x9)-dimensional time series
+    Y = randn(10,9,3)
+    Sy = Sequence(Y)
 
-        @test size(Sy) == (3,)
-        @test length(Sy) == 3
+    @test size(Sy) == (3,)
+    @test length(Sy) == 3
 
-        for i = 1:length(Sy)
-            @test Sy[i] == Y[:,:,i]
-        end
+    for i = 1:length(Sy)
+        @test Sy[i] == Y[:,:,i]
     end
 
 end

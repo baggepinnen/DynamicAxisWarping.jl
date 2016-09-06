@@ -121,6 +121,7 @@ Returns `cols` and `rows` which are vectors respectively holding the track.
 """
 function trackback{T<:Number}(D::AbstractMatrix{T})
     r,c = size(D)
+    # TODO: add @sizehint
     rows,cols = Int[r],Int[c]
     while r > 1 && c > 1
         tb = indmin([D[r-1,c-1], D[r-1,c], D[r,c-1]])
