@@ -140,9 +140,7 @@ function trackback{T<:Number}(D::AbstractMatrix{T})
 
     # do trackback
     while r > 1 && c > 1
-        tb = indmin3(D[r-1,c-1], D[r-1,c], D[r,c-1])
-        tb in [1,2] && (r-=1)
-        tb in [1,3] && (c-=1)
+        tb,r,c = indmin3(D[r-1,c-1], D[r-1,c], D[r,c-1], r, c)
         push!(rows,r)
         push!(cols,c)
     end

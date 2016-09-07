@@ -17,6 +17,7 @@ export Sequence,
        DBAResult,
        fastdtw
 
+include("utils.jl")
 include("sequence.jl")
 include("dtw.jl")
 include("dba.jl")
