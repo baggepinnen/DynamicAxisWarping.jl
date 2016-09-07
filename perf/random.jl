@@ -15,6 +15,32 @@ fastdtw_r10_bench = @benchmark fastdtw($x,$y,10)
 ### HISTORY ###
 
 ##
+# 7b84095
+# - add indmin3 function
+##
+
+# julia> dtw_small_bench
+# BenchmarkTools.Trial: 
+#   samples:          73
+#   minimum time:     65.15 ms (4.06% GC)
+
+# julia> dtw_big_bench
+# BenchmarkTools.Trial: 
+#   samples:          1
+#   minimum time:     12.39 s (7.60% GC)
+
+# julia> fastdtw_r1_bench
+# BenchmarkTools.Trial: 
+#   samples:          159
+#   minimum time:     28.02 ms (0.00% GC)
+
+# julia> fastdtw_r10_bench
+# BenchmarkTools.Trial: 
+#   samples:          25
+#   minimum time:     201.95 ms (6.25% GC)
+
+
+##
 # 1c46fca
 # - added sizehint! to N⋅logN
 # - very small speedup on large dtw
