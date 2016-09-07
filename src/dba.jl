@@ -26,17 +26,14 @@ Example usage:
 function dba{T<:Sequence}(
         sequences::AbstractVector{T},
         dist::SemiMetric = SqEuclidean();
-        n::Int = 0,
         iterations::Int = 1000,
         rtol::Float64 = 1e-5,
         store_trace::Bool = false
     )
 
-    # initialize dbavg as signal with length n
-    if n <= 0
-        n = round(Int,mean([ length(s) for s in sequences ]))
-        dbavg = Sequence(zeros(n))
-    end
+    # initialize dbavg as a random sample from the dataset
+    nseq = length(sequences)
+    dbavg = deepcopy(sequences[rand(1:nseq)])
 
     # variables storing optimization progress
     converged = false

@@ -1,8 +1,11 @@
 module TimeWarp
 
+import ProgressMeter
+using StatsBase
+
+# reexport to let user specify dtw(⋅,⋅,distance)
 using Reexport
 @reexport using Distances
-import ProgressMeter
 
 export Sequence,
        SequenceArray,

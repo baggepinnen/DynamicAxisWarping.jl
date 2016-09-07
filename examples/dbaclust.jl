@@ -7,11 +7,11 @@ data, labels = TimeWarp.traindata("gun_point");
 
 # c = [ cl==1 ? :blue : :red for cl in class ]'
 # plot(y, linecolor=c, legend=false)
+nclust = 3
+init_centers = TimeWarp.dbaclust_initial_centers(data, nclust)
+centers, clustids, result = dbaclust(data, nclust; centers=deepcopy(init_centers), iterations=1)
 
-centers, clustids, result = dbaclust(data, 3)
-
-plot(data, linecolor=:grey, legend=false)
-for avg in centers
-    plot!(avg, linecolor=:red, legend=false, line=(2))
-end
+plot(data, line=(:grey), legend=false)
+plot!(centers, line=(:red), legend=false)
+plot!(init_centers, line=(:green), legend=false)
 
