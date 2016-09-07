@@ -149,7 +149,7 @@ $DATASETS
 function traindata(name::AbstractString)
     try
         Y = readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN")
-        labels = vec(Y[:,1])
+        labels = round(Int,vec(Y[:,1]))
         data = transpose(Y[:,2:end])
         return data,labels
     catch err
@@ -173,7 +173,7 @@ $DATASETS
 function testdata(name::AbstractString)
     try
         Y = return readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TEST")
-        labels = vec(Y[:,1])
+        labels = round(Int,vec(Y[:,1]))
         data = transpose(Y[:,2:end])
         return data,labels
     catch err

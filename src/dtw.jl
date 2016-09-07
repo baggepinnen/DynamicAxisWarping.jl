@@ -134,7 +134,7 @@ function trackback{T<:Number}(D::AbstractMatrix{T})
 
     # estimate that we'll need N⋅logN elements
     N = max(r,c)
-    sz = ceil(Int,N*log(N))
+    sz = 2*N
     sizehint!(rows,sz)
     sizehint!(cols,sz)
 
