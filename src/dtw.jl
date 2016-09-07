@@ -48,7 +48,6 @@ DTWDist() = DTWDist{SqEuclidean}()
 Distances.evaluate{D}(::DTWDist{D}, x, y) = dtw(x,y,D())[1]
 
 ##############################
-##############################
 #  Cost matrix computations  #
 ##############################
 function dtw_cost_matrix{N,T}(
@@ -128,11 +127,20 @@ Given the cost matrix `D`, computes the optimal track from end to beginning.
 Returns `cols` and `rows` which are vectors respectively holding the track.
 """
 function trackback{T<:Number}(D::AbstractMatrix{T})
+
+    # initialize trackback throught rows/columns
     r,c = size(D)
-    # TODO: add @sizehint
     rows,cols = Int[r],Int[c]
+
+    # estimate that we'll need N⋅logN elements
+    N = max(r,c)
+    sz = ceil(Int,N*log(N))
+    sizehint!(rows,sz)
+    sizehint!(cols,sz)
+
+    # do trackback
     while r > 1 && c > 1
-        tb = indmin([D[r-1,c-1], D[r-1,c], D[r,c-1]])
+        tb = indmin3(D[r-1,c-1], D[r-1,c], D[r,c-1])
         tb in [1,2] && (r-=1)
         tb in [1,3] && (c-=1)
         push!(rows,r)
