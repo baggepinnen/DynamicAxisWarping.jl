@@ -30,7 +30,8 @@ function dba{T<:Sequence}(
         init_center::T = rand(sequences),
         iterations::Int = 1000,
         rtol::Float64 = 1e-5,
-        store_trace::Bool = false
+        store_trace::Bool = false,
+        show_progress::Bool = true
     )
 
     # method for computing dtw
@@ -50,8 +51,12 @@ function dba{T<:Sequence}(
     cost,newcost = Inf,Inf
     cost_trace = Float64[]
 
-    # main loop ##
-    p = ProgressMeter.ProgressThresh(rtol)
+    # display optimization progress
+    if show_progress
+        p = ProgressMeter.ProgressThresh(rtol)
+    end
+
+    ## main loop ##
     while !converged && iter < iterations
 
         # do an iteration of dba
@@ -72,9 +77,11 @@ function dba{T<:Sequence}(
         end
 
         # update progress bar
-        ProgressMeter.update!(p, Δ; showvalues =[(:iteration,iter),
+        if show_progress
+            ProgressMeter.update!(p, Δ; showvalues =[(:iteration,iter),
                                                  (Symbol("max iteration"),iterations),
                                                  (:cost,cost)])
+        end
     end
 
     return newavg, DBAResult(newcost,converged,iter,cost_trace)

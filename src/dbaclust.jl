@@ -14,28 +14,32 @@ Example usage:
 function dbaclust{N,T}(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
-        dist::SemiMetric = SqEuclidean();
-        centers::AbstractVector{Sequence{N,T}} = dbaclust_initial_centers(sequences, nclust, dist),
+        _method::DTWMethod,
+        _dist::SemiMetric = SqEuclidean();
+        init_centers::AbstractVector{Sequence{N,T}} = dbaclust_initial_centers(sequences, nclust, _method, _dist),
         dbalen::Int = 0,
         iterations::Int = 100,
-        inner_iterations::Int = 0,
+        inner_iterations::Int = 10,
         rtol::Float64 = 1e-4,
         store_trace::Bool = true
     )
-    
-    # rename for convienences
-    avgs = centers
+
+    # rename for convienence
+    avgs = init_centers
+    dbalen = length(avgs[1])
+
+    # check initial centers have the same length
+    if !all([ length(a) for a in avgs ] .== dbalen)
+        throw(ArgumentError("all initial centers should be the same length"))
+    end
 
     # dimensions
     nseq = length(sequences)
-
-    # initialize dbavg as signal with length dbalen
-    if dbalen <= 0
-        dbalen = round(Int,mean([ length(s) for s in sequences ]))
-    end
-
     maxseqlen = maximum([ length(s) for s in sequences ])
     
+    # initialize procedure for computing DTW
+    dtwdist = DTWDistance(_method, _dist)
+
     # TODO switch to ntuples?
     counts = [ zeros(Int,dbalen) for _ in 1:nclust ]
     sums = [ Sequence(Array(T,dbalen)) for _ in 1:nclust ]
@@ -57,19 +61,26 @@ function dbaclust{N,T}(
 
     # main loop ##
     prog = ProgressMeter.ProgressThresh(rtol)
+    ProgressMeter.update!(prog, Inf; showvalues =[(:iteration,iter),
+                                                 (Symbol("max iteration"),iterations),
+                                                 (:cost,total_cost)])
+
     while !converged && iter < iterations
+        println("1")
+
         # first, update cluster assignments based on nearest
         # centroid (measured by dtw distance). Keep track of
         # total cost (sum of all distances to centers).
         total_cost = 0.0
         for s = 1:nseq
+            print("*")
             # process sequence s
             seq = sequences[s]
 
             # find cluster assignment for s
             costs[s] = Inf
             for c_ = 1:nclust
-                cost, i1_, i2_ = dtw(avgs[c_], seq, dist)
+                cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
                 if cost < costs[s]
                     # store cluster, and match indices
                     c = c_
@@ -93,15 +104,18 @@ function dbaclust{N,T}(
             end
         end
 
+        println("2")
+
         # if any centers are unused, and reassign them to the sequences
         # with the highest cost
         unused = setdiff(1:nclust, unique(clus_asgn))
         if ~isempty(unused)
+            println("unused")
             # reinitialize centers
             for c in unused
                 avgs[c] = deepcopy(sequences[indmax(costs)])
                 for s = 1:nseq
-                    cost, = dtw(avgs[c], seq, dist)
+                    cost, = distpath(dtwdist, avgs[c], seq)
                     if costs[s] > cost
                         costs[s] = cost
                     end
@@ -135,10 +149,14 @@ function dbaclust{N,T}(
         end
 
         # add additional inner dba iterations
-        for (i,a) in enumerate(avgs)
+        for i = 1:nclust
+            seqs = view(sequences, clus_asgn .== i)
             for inner_iter = 1:inner_iterations
-                a = dba_iteration(a,view(sequences, clus_asgn .== i),dist)
+                print("!")
+                dba_iteration!(sums[i], avgs[i], counts[i], seqs, dtwdist)
+                copy!(avgs[i], sums[i])
             end
+            println(" ")
         end
 
         # update progress bar
@@ -165,8 +183,12 @@ for dba clustering.
 function dbaclust_initial_centers{N,T}(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
-        dist::SemiMetric = SqEuclidean()
+        _method::DTWMethod,
+        _dist::SemiMetric = SqEuclidean();
     )
+
+    # procedure for calculating dtw
+    dtwdist = DTWDistance(_method,_dist)
 
     # number of sequences in dataset
     nseq = length(sequences)
@@ -190,7 +212,7 @@ function dbaclust_initial_centers{N,T}(
             # this distance will be zero
             i == center_ids[c] && continue
             # else, compute dtw distance
-            dists[c,i], = dtw(seq, cent, dist)
+            dists[c,i], = distpath(dtwdist, seq, cent)
         end
 
         # for each sequence, find distance to closest center
@@ -211,7 +233,8 @@ end
 function dbaclust_initial_centers(
         s::AbstractArray,
         nclust::Int,
-        dist::SemiMetric = SqEuclidean()
+        _method::DTWMethod,
+        _dist::SemiMetric = SqEuclidean();
     )
-    dbaclust_initial_centers(_sequentize(s), nclust, dist)
+    dbaclust_initial_centers(_sequentize(s), nclust, _method, _dist)
 end

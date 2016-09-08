@@ -32,7 +32,7 @@ include("dba.jl")
 include("dbaclust.jl")
 include("windowed_matrix.jl")
 include("fastdtw.jl")
-include("datasets.jl")
+include("datasets/datasets.jl")
 include("plots.jl")
 
 end # module

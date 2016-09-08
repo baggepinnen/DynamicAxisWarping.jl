@@ -1,9 +1,4 @@
-import BinDeps: unpack_cmd
-
-# place to store the data
-const DATAPATH = Pkg.Dir.path()*"/TimeWarp/data"
-
-const DATASETS = """
+const UCR_DATASETS = """
 50words,
 Adiac,
 ArrowHead,
@@ -97,7 +92,7 @@ yoga
 Downloads the UC Riverside Time Series Classification Archive to
 the specified path.
 """
-function download_data()
+function download_ucr()
 
     UCR_URL = "http://www.cs.ucr.edu/~eamonn/time_series_data/UCR_TS_Archive_2015.zip"
 
@@ -144,9 +139,9 @@ which is a vector of length `size(data,2)`.
 
 Available datasets:
 
-$DATASETS
+$UCR_DATASETS
 """
-function traindata(name::AbstractString)
+function ucr_traindata(name::AbstractString)
     try
         Y = readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN")
         labels = round(Int,vec(Y[:,1]))
@@ -155,7 +150,8 @@ function traindata(name::AbstractString)
     catch err
         showerror(STDOUT, err, backtrace());println()
         info("You may have recieved this error because you haven't downloaded the database yet.")
-        info("Try running TimeWarp.download_data() first.")
+        info("Try running download_ucr() first.")
+        info("You may also have mispelled the name of the dataset.")
     end
 end
 
@@ -168,9 +164,9 @@ which is a vector of length `size(data,2)`.
 
 Available datasets:
 
-$DATASETS
+$UCR_DATASETS
 """
-function testdata(name::AbstractString)
+function ucr_testdata(name::AbstractString)
     try
         Y = return readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TEST")
         labels = round(Int,vec(Y[:,1]))
@@ -179,6 +175,7 @@ function testdata(name::AbstractString)
     catch err
         showerror(STDOUT, err, backtrace());println()
         info("You may have recieved this error because you haven't downloaded the database yet.")
-        info("Try running TimeWarp.download_data() first.")
+        info("Try running download_ucr() first.")
+        info("You may also have mispelled the name of the dataset.")
     end
 end
