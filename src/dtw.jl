@@ -40,13 +40,6 @@ function dtw(
     return trackback(D)
 end
 
-#################
-#  DTW Distance #
-#################
-type DTWDist{D<:SemiMetric} <: PreMetric end
-DTWDist() = DTWDist{SqEuclidean}()
-Distances.evaluate{D}(::DTWDist{D}, x, y) = dtw(x,y,D())[1]
-
 ##############################
 #  Cost matrix computations  #
 ##############################

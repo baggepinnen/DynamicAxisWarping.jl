@@ -25,27 +25,37 @@ Example usage:
 """
 function dba{T<:Sequence}(
         sequences::AbstractVector{T},
+        method::DTWMethod,
         dist::SemiMetric = SqEuclidean();
+        init_center::T = rand(sequences),
         iterations::Int = 1000,
         rtol::Float64 = 1e-5,
         store_trace::Bool = false
     )
 
+    # method for computing dtw
+    dtwdist = DTWDistance(method,dist)
+    
     # initialize dbavg as a random sample from the dataset
     nseq = length(sequences)
-    dbavg = deepcopy(sequences[rand(1:nseq)])
+    dbavg = deepcopy(init_center)
+
+    # storage for each iteration
+    newavg = Sequence(zeros(length(dbavg)))
+    counts = zeros(Int, length(dbavg))
 
     # variables storing optimization progress
     converged = false
     iter = 0
-    cost = Inf
+    cost,newcost = Inf,Inf
     cost_trace = Float64[]
 
     # main loop ##
     p = ProgressMeter.ProgressThresh(rtol)
     while !converged && iter < iterations
+
         # do an iteration of dba
-        newavg, newcost = dba_iteration(dbavg,sequences,dist)
+        newcost = dba_iteration!(newavg, dbavg, counts, sequences, dtwdist)
         iter += 1
 
         # store history of cost while optimizing (optional)
@@ -56,11 +66,10 @@ function dba{T<:Sequence}(
         if Δ < rtol
             converged = true
         else
+            # update estimate
             cost = newcost
+            dbavg = deepcopy(newavg)
         end
-
-        # update estimate
-        dbavg = newavg
 
         # update progress bar
         ProgressMeter.update!(p, Δ; showvalues =[(:iteration,iter),
@@ -68,7 +77,7 @@ function dba{T<:Sequence}(
                                                  (:cost,cost)])
     end
 
-    return dbavg, DBAResult(cost,converged,iter,cost_trace)
+    return newavg, DBAResult(newcost,converged,iter,cost_trace)
 end
 
 
@@ -79,34 +88,40 @@ Performs one iteration of DTW Barycenter Averaging (DBA) given a collection of
 `sequences` and the current estimate of the average sequence, `dbavg`. Returns
 an updated estimate, and the cost/loss of the previous estimate
 """
-function dba_iteration{T<:Sequence}(
-        dbavg::T,
+function dba_iteration!{T<:Sequence}(
+        newavg::T,
+        oldavg::T,
+        counts::Array{Int,1},
         sequences::AbstractVector{T},
-        dist::SemiMetric
+        d::DTWDistance
     )
 
-    count = zeros(Int, length(dbavg))
-    newavg = Sequence(zeros(Float64, length(dbavg)))
+    # sum of dtw dist of all sequences to center
     total_cost = 0.0
     
+    # store stats for barycenter averages
+    scale!(counts,0)
+    scale!(newavg,0)
+
+    # main ploop
     for seq in sequences
         # time warp signal versus average
-        cost, i1, i2 = dtw(dbavg, seq)
+        cost, i1, i2 = distpath(d, oldavg, seq)
         total_cost += cost
         
         # store stats for barycentric average
         for j=1:length(i2)
-            count[i1[j]] += 1
+            counts[i1[j]] += 1
             newavg[i1[j]] += seq[i2[j]]
         end
     end
 
     # compute average and return total cost
     for i in eachindex(newavg)
-        newavg[i] = newavg[i]/count[i]
+        newavg[i] = newavg[i]/counts[i]
     end
 
-    return newavg, total_cost
+    return total_cost
 end
 
 # Wrapper for AbstractArray of one-dimensional time series.

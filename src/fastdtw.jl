@@ -6,9 +6,9 @@ Computes FastDTW approximation to the DTW, described in Salvador & Chan,
 Intelligent Data Analysis (2007).
 """
 function fastdtw(
-        seq1::Vector,
-        seq2::Vector,
-        radius::Integer, 
+        seq1::AbstractVector,
+        seq2::AbstractVector,
+        radius::Int,
         dist::SemiMetric=SqEuclidean()
     )
 
@@ -30,7 +30,6 @@ function fastdtw(
     idx2min, idx2max = computewindow(hirescol, hiresrow, radius)
     cost1, newcol, newrow = dtw(seq1, seq2, idx2min, idx2max, dist)
 end
-
 
 
 # Given a path through low-res space, generate an approximate path

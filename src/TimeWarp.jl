@@ -2,6 +2,7 @@ module TimeWarp
 
 import ProgressMeter
 using StatsBase
+using Parameters
 
 # reexport to let user specify dtw(⋅,⋅,distance)
 using Reexport
@@ -10,7 +11,11 @@ using Reexport
 export Sequence,
        SequenceArray,
        dtw,
-       DTWDist,
+       DTWDistance,
+       DTWMethod,
+       ClassicDTW,
+       FastDTW,
+       distpath,
        dba,
        dbaclust,
        dtw_cost_matrix,
@@ -19,6 +24,9 @@ export Sequence,
 
 include("utils.jl")
 include("sequence.jl")
+
+include("distance_interface.jl")
+
 include("dtw.jl")
 include("dba.jl")
 include("dbaclust.jl")
