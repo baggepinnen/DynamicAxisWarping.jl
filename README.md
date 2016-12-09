@@ -2,11 +2,11 @@
 
 [![Build Status][build-img]][build-url]
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
-[![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+[![Project Status: Unsupported - The project has reached a stable, usable state but the author(s) have ceased all work on it. A new maintainer may be desired.](http://www.repostatus.org/badges/latest/unsupported.svg)](http://www.repostatus.org/#unsupported)
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-I plan to register this package in the next month or so (after v0.5 release). Until then, install using:
+This package isn't officially registered. Install using:
 
 ```julia
 Pkg.clone("https://github.com/ahwillia/TimeWarp.jl.git")
