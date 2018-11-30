@@ -1,17 +1,17 @@
 # methods for estimating dtw #
-abstract DTWMethod
+abstract type DTWMethod end
 
-type ClassicDTW <: DTWMethod end
+mutable struct ClassicDTW <: DTWMethod end
 
-immutable FastDTW <: DTWMethod
+struct FastDTW <: DTWMethod
     radius::Int
 end
 
 # distance interface #
-immutable DTWDistance{M<:DTWMethod, D<:SemiMetric} <: SemiMetric
+struct DTWDistance{M<:DTWMethod, D<:SemiMetric} <: SemiMetric
     method::M
     dist::D
-    DTWDistance(m::M,d::D) = new(m,d)
+    DTWDistance{M,D}(m::M,d::D) where  {M<:DTWMethod, D<:SemiMetric} = new(m,d)
 end
 
 function DTWDistance{M<:DTWMethod,D<:SemiMetric}(
@@ -32,4 +32,5 @@ Distances.evaluate(d::DTWDistance{ClassicDTW}, x, y) = dtw(x,y,d.dist)[1]
 Distances.evaluate(d::DTWDistance{FastDTW}, x, y) = fastdtw(x,y,d.method.radius,d.dist)[1]
 
 distpath(d::DTWDistance{ClassicDTW}, x, y) = dtw(x,y,d.dist)
+distpath(d::DTWDistance{ClassicDTW}, x, y, i2min::AbstractVector, i2max::AbstractVector) = dtw(x,y,i2min,i2max,d.dist)
 distpath(d::DTWDistance{FastDTW}, x, y) = fastdtw(x,y,d.method.radius,d.dist)

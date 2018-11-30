@@ -10,6 +10,7 @@ using Reexport
 
 export Sequence,
        SequenceArray,
+       seq_to_array,
        dtw,
        DTWDistance,
        DTWMethod,

@@ -12,7 +12,7 @@
 # December 2014
 #
 
-immutable WindowedMatrix{T<:Real} <: AbstractArray{T,2}
+struct WindowedMatrix{T<:Real} <: AbstractArray{T,2}
     nrow::Int
     ncol::Int
     ncells::Int
@@ -25,7 +25,7 @@ immutable WindowedMatrix{T<:Real} <: AbstractArray{T,2}
     defaultval::T
 
     function WindowedMatrix{T}(rmin::Vector{Int}, rmax::Vector{Int},
-                               default::T)
+                               default::T) where {T<:Real}
         rowmin = copy(rmin)
         rowmax = copy(rmax)
         rowspercol = rowmax-rowmin+1

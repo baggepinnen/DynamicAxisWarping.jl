@@ -1,8 +1,22 @@
 """
+    DBAclustResult(centers,clustids,result)
+
+Holds results of a DBAclust run.
+
+"""
+mutable struct DBAclustResult
+    centers::AbstractArray{Sequence}
+    clustids::Array{Int}
+    converged::Bool
+    iterations::Int
+    dbaresult::DBAResult
+end
+
+"""
     avgseq, results = dba(sequences, [dist=SqEuclidean()]; kwargs...)
 
 Perfoms DTW Barycenter Averaging (DBA) given a collection of `sequences`
-and the current estimate of the average sequence. 
+and the current estimate of the average sequence.
 
 Example usage:
 
@@ -14,6 +28,56 @@ Example usage:
 function dbaclust{N,T}(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
+        n_init::Int,
+        _method::DTWMethod,
+        _dist::SemiMetric = SqEuclidean();
+        dbalen::Int = 0,
+        iterations::Int = 100,
+        inner_iterations::Int = 10,
+        rtol::Float64 = 1e-4,
+        rtol_inner::Float64 = rtol,
+        n_jobs::Int =1,
+        show_progress::Bool = true,
+        store_trace::Bool = true,
+        i2min::AbstractVector=[],
+        i2max::AbstractVector=[]
+    )
+
+    if n_jobs == 1
+      best_result = []
+      best_cost = []
+      for i=1:n_init
+      dbaclust_result = dbaclust_single(sequences,nclust,_method,_dist;dbalen=dbalen,iterations=iterations,inner_iterations=inner_iterations,rtol=rtol,rtol_inner=rtol_inner,show_progress=show_progress,store_trace=store_trace,i2min=i2min,i2max=i2max)
+        if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
+          best_result = deepcopy(dbaclust_result)
+          best_cost = best_result.dbaresult.cost
+        end
+      end #1:n_init
+    else
+ #results = Array{DBAclustResult}(n)_
+     error("parallelism for dbaclust not implemented yet")
+
+    end # n_jobs
+    return best_result
+end
+
+
+"""
+    avgseq, results = dbaclust_single(sequences, [dist=SqEuclidean()]; kwargs...)
+
+Perfoms a single DTW Barycenter Averaging (DBA) given a collection of `sequences`
+and the current estimate of the average sequence.
+
+Example usage:
+
+    x = [1,2,2,3,3,4]
+    y = [1,3,4]
+    z = [1,2,2,4]
+    avg,result = dba([x,y,z])
+"""
+function dbaclust_single{N,T}(
+        sequences::AbstractVector{Sequence{N,T}},
+        nclust::Int,
         _method::DTWMethod,
         _dist::SemiMetric = SqEuclidean();
         init_centers::AbstractVector{Sequence{N,T}} = dbaclust_initial_centers(sequences, nclust, _method, _dist),
@@ -21,7 +85,11 @@ function dbaclust{N,T}(
         iterations::Int = 100,
         inner_iterations::Int = 10,
         rtol::Float64 = 1e-4,
-        store_trace::Bool = true
+        rtol_inner::Float64 = rtol,
+        show_progress::Bool = true,
+        store_trace::Bool = true,
+        i2min::AbstractVector =[],
+        i2max::AbstractVector = []
     )
 
     # rename for convienence
@@ -36,16 +104,16 @@ function dbaclust{N,T}(
     # dimensions
     nseq = length(sequences)
     maxseqlen = maximum([ length(s) for s in sequences ])
-    
+
     # initialize procedure for computing DTW
     dtwdist = DTWDistance(_method, _dist)
 
     # TODO switch to ntuples?
     counts = [ zeros(Int,dbalen) for _ in 1:nclust ]
-    sums = [ Sequence(Array(T,dbalen)) for _ in 1:nclust ]
+    sums = [ Sequence(Array{T}(dbalen)) for _ in 1:nclust ]
 
     # cluster assignments for each sequence
-    clus_asgn = Array(Int, nseq)
+    clus_asgn = Array{Int}(nseq)
     c = 0
 
     # arrays storing path through dtw cost matrix
@@ -54,33 +122,42 @@ function dbaclust{N,T}(
     # variables storing optimization progress
     converged = false
     iter = 0
+    inner_iter=0
+    converged_inner=false
     last_cost = Inf
     total_cost = 0.0
     cost_trace = Float64[]
-    costs = Array(Float64, nseq)
+    costs = Array{Float64}(nseq)
 
     # main loop ##
-    prog = ProgressMeter.ProgressThresh(rtol)
-    ProgressMeter.update!(prog, Inf; showvalues =[(:iteration,iter),
+    if show_progress
+      prog = ProgressMeter.ProgressThresh(rtol)
+      ProgressMeter.update!(prog, Inf; showvalues =[(:iteration,iter),
                                                  (Symbol("max iteration"),iterations),
                                                  (:cost,total_cost)])
+    end#showprogress
 
     while !converged && iter < iterations
-        println("1")
+        show_progress && println("1")
 
         # first, update cluster assignments based on nearest
         # centroid (measured by dtw distance). Keep track of
         # total cost (sum of all distances to centers).
         total_cost = 0.0
         for s = 1:nseq
-            print("*")
+            show_progress && print("*")
             # process sequence s
             seq = sequences[s]
 
             # find cluster assignment for s
             costs[s] = Inf
             for c_ = 1:nclust
-                cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
+                # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+                if isempty(i2min) && isempty(i2max)
+                   cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
+                else
+                   cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq,i2min,i2max)
+                end
                 if cost < costs[s]
                     # store cluster, and match indices
                     c = c_
@@ -104,7 +181,7 @@ function dbaclust{N,T}(
             end
         end
 
-        println("2")
+        show_progress && println("2")
 
         # if any centers are unused, and reassign them to the sequences
         # with the highest cost
@@ -115,7 +192,11 @@ function dbaclust{N,T}(
             for c in unused
                 avgs[c] = deepcopy(sequences[indmax(costs)])
                 for s = 1:nseq
-                    cost, = distpath(dtwdist, avgs[c], seq)
+                    if isempty(i2min) && isempty(i2max)
+                      cost, = distpath(dtwdist, avgs[c], seq)
+                    else
+                      cost, = distpath(dtwdist, avgs[c], seq,i2min,i2max)
+                    end
                     if costs[s] > cost
                         costs[s] = cost
                     end
@@ -149,24 +230,35 @@ function dbaclust{N,T}(
         end
 
         # add additional inner dba iterations
+
         for i = 1:nclust
             seqs = view(sequences, clus_asgn .== i)
-            for inner_iter = 1:inner_iterations
-                print("!")
-                dba_iteration!(sums[i], avgs[i], counts[i], seqs, dtwdist)
+            inner_iter = 0
+            converged_inner = false
+            oldcost = 1.0e100
+            while !converged_inner  && inner_iter < inner_iterations
+                show_progress && print("!")
+                newcost = dba_iteration!(sums[i], avgs[i], counts[i], seqs, dtwdist; i2min=i2min,i2max=i2max)
                 copy!(avgs[i], sums[i])
+                inner_iter += 1
+                δ = (oldcost-newcost)/oldcost
+                if δ < rtol_inner
+                  converged_inner = true
+                else
+                  oldcost=newcost
+                end
             end
-            println(" ")
+            show_progress && println(" ")
         end
 
         # update progress bar
         iter += 1
-        ProgressMeter.update!(prog, Δ; showvalues =[(:iteration,iter),
+        show_progress && ProgressMeter.update!(prog, Δ; showvalues =[(:iteration,iter),
                                                  (Symbol("max iteration"),iterations),
                                                  (:cost,total_cost)])
     end
 
-    return avgs, clus_asgn, DBAResult(total_cost,converged,iter,cost_trace)
+    return DBAclustResult(avgs, clus_asgn, converged, iter, DBAResult(total_cost,converged_inner,inner_iter,cost_trace))
 end
 
 # Wrapper for AbstractArray of one-dimensional time series.
@@ -192,7 +284,7 @@ function dbaclust_initial_centers{N,T}(
 
     # number of sequences in dataset
     nseq = length(sequences)
-    
+
     # distance of each datapoint to each center
     dists = zeros(nclust, nseq)
 
@@ -219,10 +311,10 @@ function dbaclust_initial_centers{N,T}(
         minimum!(min_dists, dists[1:c,:])
 
         # square distances
-        map!((x)->x^2, min_dists)
+        map!((x)->x^2, min_dists, min_dists)
 
         # sample the next center
-        center_ids[c+1] = sample(1:nseq, WeightVec(view(min_dists,:)))
+        center_ids[c+1] = sample(1:nseq, Weights(view(min_dists,:)))
     end
 
     # return list of cluster centers
