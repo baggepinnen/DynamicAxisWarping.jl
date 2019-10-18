@@ -9,7 +9,7 @@ export ucr_traindata, ucr_testdata, download_ucr
 export fakedata
 
 # place to store the data
-const DATAPATH = Pkg.Dir.path()*"/TimeWarp/data"
+const DATAPATH = joinpath(@__DIR__, "../../data") |> normpath
 
 include("ucr_datasets.jl")
 include("fake_datasets.jl")

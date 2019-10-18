@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 1
   - nightly
 notifications:
   email: false
@@ -12,6 +12,9 @@ notifications:
 #script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("TimeWarp"); Pkg.test("TimeWarp"; coverage=true)'
+before_install:
+  - sudo apt update
+  - sudo apt install -y python3-matplotlib
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("TimeWarp")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
