@@ -3,3 +3,4 @@
 *.jl.mem
 data/*/
 *.swp
+Manifest.toml
