@@ -23,7 +23,7 @@ Example usage:
     z = [1,2,2,4]
     avg,result = dba([x,y,z])
 """
-function dba{T<:Sequence}(
+function dba(
         sequences::AbstractVector{T},
         method::DTWMethod,
         dist::SemiMetric = SqEuclidean();
@@ -34,7 +34,7 @@ function dba{T<:Sequence}(
         show_progress::Bool = true,
         i2min::AbstractVector =[],
         i2max::AbstractVector = []
-    )
+    ) where {T<:Sequence}
 
     # method for computing dtw
     dtwdist = DTWDistance(method,dist)
@@ -97,7 +97,7 @@ Performs one iteration of DTW Barycenter Averaging (DBA) given a collection of
 `sequences` and the current estimate of the average sequence, `dbavg`. Returns
 an updated estimate, and the cost/loss of the previous estimate
 """
-function dba_iteration!{T<:Sequence}(
+function dba_iteration!(
         newavg::T,
         oldavg::T,
         counts::Array{Int,1},
@@ -105,7 +105,7 @@ function dba_iteration!{T<:Sequence}(
         d::DTWDistance;
         i2min::AbstractVector=[],
         i2max::AbstractVector=[]
-    )
+    ) where {T<:Sequence}
 
     # sum of dtw dist of all sequences to center
     total_cost = 0.0

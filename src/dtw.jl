@@ -43,11 +43,11 @@ end
 ##############################
 #  Cost matrix computations  #
 ##############################
-function dtw_cost_matrix{N,T}(
+function dtw_cost_matrix(
         seq1::Sequence{N,T},
         seq2::Sequence{N,T},
         dist::SemiMetric=SqEuclidean()
-    )
+    ) where {N,T}
     # Build the cost matrix
     m = length(seq2)
     n = length(seq1)
@@ -73,13 +73,13 @@ function dtw_cost_matrix{N,T}(
     return D
 end
 
-function dtw_cost_matrix{N,T,U<:Integer}(
+function dtw_cost_matrix(
         seq1::Sequence{N,T},
         seq2::Sequence{N,T},
         i2min::AbstractVector{U},
         i2max::AbstractVector{U},
         dist::SemiMetric = SqEuclidean()
-    )
+    ) where {N,T,U<:Integer}
     m = length(seq2) # of rows in cost matrix
     n = length(seq1) # of columns in cost matrix
     n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))
@@ -119,7 +119,7 @@ end
 Given the cost matrix `D`, computes the optimal track from end to beginning.
 Returns `cols` and `rows` which are vectors respectively holding the track.
 """
-function trackback{T<:Number}(D::AbstractMatrix{T})
+function trackback(D::AbstractMatrix{T}) where {T<:Number}
 
     # initialize trackback throught rows/columns
     r,c = size(D)

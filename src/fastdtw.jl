@@ -12,9 +12,9 @@ function fastdtw(
         dist::SemiMetric=SqEuclidean()
     )
 
-    const MinSize = max(radius + 2, 10)
-    const N1 = length(seq1)
-    const N2 = length(seq2)
+    MinSize = max(radius + 2, 10)
+    N1 = length(seq1)
+    N2 = length(seq2)
     if N1 <= MinSize || N2 <= MinSize
         return (dtw(seq1, seq2, dist))
     end
@@ -38,7 +38,7 @@ end
 function expandpath(lowrescol, lowresrow, Ncol, Nrow)
     @assert div(Ncol+1,2) == lowrescol[end]
     @assert div(Nrow+1,2) == lowresrow[end]
-    const Np = length(lowrescol)
+    Np = length(lowrescol)
     @assert Np == length(lowresrow)
 
     hirescol = zeros(eltype(lowrescol), 2*Np)
@@ -102,10 +102,10 @@ end
 # for each column, the minimum and maximum row numbers used in that column.
 
 function computewindow(pathcols, pathrows, radius)
-    const Np = length(pathcols)
+    Np = length(pathcols)
     @assert Np == length(pathrows)
-    const Ncol = pathcols[end]
-    const Nrow = pathrows[end]
+    Ncol = pathcols[end]
+    Nrow = pathrows[end]
 
     # Find the min/max row at each column in the path.
     pathmin = zeros(Int, Ncol)
@@ -122,8 +122,8 @@ function computewindow(pathcols, pathrows, radius)
     # of the rth-previous column and ends at the pathmax of the
     # rth-next column, plus (in each case) the radius.
     if radius < Ncol-1 && radius < Nrow-1
-        rowmin = vcat(fill(1,radius), pathmin[1:end-radius]-radius)
-        rowmax = vcat(pathmax[radius+1:end]+radius, fill(Nrow,radius))
+        rowmin = vcat(fill(1,radius), pathmin[1:end-radius] .- radius)
+        rowmax = vcat(pathmax[radius+1:end] .+ radius, fill(Nrow,radius))
 
         # Window values must be in the range [1:Nrow].
         for c=1:Ncol

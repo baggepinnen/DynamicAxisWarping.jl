@@ -28,12 +28,12 @@ struct WindowedMatrix{T<:Real} <: AbstractArray{T,2}
                                default::T) where {T<:Real}
         rowmin = copy(rmin)
         rowmax = copy(rmax)
-        rowspercol = rowmax-rowmin+1
+        rowspercol = rowmax .- rowmin .+ 1
         ncells = sum(rowspercol)
         nrow = maximum(rowmax)
         ncol = length(rowmax)
         cost = zeros(T, ncells)
-        idxcol = 1+vcat([0],cumsum(rowspercol[1:end-1])) # index of 1st element per column
+        idxcol = 1 .+ vcat([0],cumsum(rowspercol[1:end-1])) # index of 1st element per column
 
         new(nrow, ncol, ncells, cost, rowmin, rowmax, rowspercol, idxcol, default)
     end
@@ -41,11 +41,11 @@ end
 
 
 # If the default matrix value is given, then the matrix takes on its type
-function WindowedMatrix{T<:Real}(
+function WindowedMatrix(
         rmin::Vector{Int},
         rmax::Vector{Int},
         default::T
-    )
+    ) where {T<:Real}
     WindowedMatrix{typeof(default)}(rmin, rmax, default)
 end
 

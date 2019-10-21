@@ -25,7 +25,7 @@ Example usage:
     z = [1,2,2,4]
     avg,result = dba([x,y,z])
 """
-function dbaclust{N,T}(
+function dbaclust(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
         n_init::Int,
@@ -41,7 +41,7 @@ function dbaclust{N,T}(
         store_trace::Bool = true,
         i2min::AbstractVector=[],
         i2max::AbstractVector=[]
-    )
+    ) where {N,T}
 
     if n_jobs == 1
       best_result = []
@@ -75,7 +75,7 @@ Example usage:
     z = [1,2,2,4]
     avg,result = dba([x,y,z])
 """
-function dbaclust_single{N,T}(
+function dbaclust_single(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
         _method::DTWMethod,
@@ -90,7 +90,7 @@ function dbaclust_single{N,T}(
         store_trace::Bool = true,
         i2min::AbstractVector =[],
         i2max::AbstractVector = []
-    )
+    ) where {N,T}
 
     # rename for convienence
     avgs = init_centers
@@ -272,12 +272,12 @@ end
 Uses kmeans++ (but with dtw distance) to initialize the centers
 for dba clustering.
 """
-function dbaclust_initial_centers{N,T}(
+function dbaclust_initial_centers(
         sequences::AbstractVector{Sequence{N,T}},
         nclust::Int,
         _method::DTWMethod,
         _dist::SemiMetric = SqEuclidean();
-    )
+    ) where {N,T}
 
     # procedure for calculating dtw
     dtwdist = DTWDistance(_method,_dist)

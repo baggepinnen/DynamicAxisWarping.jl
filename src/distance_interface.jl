@@ -14,17 +14,17 @@ struct DTWDistance{M<:DTWMethod, D<:SemiMetric} <: SemiMetric
     DTWDistance{M,D}(m::M,d::D) where  {M<:DTWMethod, D<:SemiMetric} = new(m,d)
 end
 
-function DTWDistance{M<:DTWMethod,D<:SemiMetric}(
+function DTWDistance(
         d::D=SqEuclidean(),
         m::M=ClassicDTW()
-    )
+    ) where {M<:DTWMethod,D<:SemiMetric}
     DTWDistance{M,D}(m,d)
 end
 
-function DTWDistance{M<:DTWMethod,D<:SemiMetric}(
+function DTWDistance(
         m::M,
         d::D=SqEuclidean()
-    )
+    ) where {M<:DTWMethod,D<:SemiMetric}
     DTWDistance{M,D}(m,d)
 end
 
