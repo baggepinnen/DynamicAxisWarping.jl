@@ -298,3 +298,11 @@ end
     @test px == qx
     @test py == qy
 end
+
+@testset "DBA" begin
+    x = Sequence([1., 2., 2., 3., 3., 4.])
+    y = Sequence([1., 3., 4.])
+    z = Sequence([1., 2., 2., 4.])
+    avg, _ = dba([x, y, z], init_center=z)
+    @test avg == [1.0, 1.75, 2.75, 4.0]
+end

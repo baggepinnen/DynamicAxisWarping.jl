@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 """
     DBAResult(cost,converged,iterations,cost_trace)
 
@@ -18,14 +20,14 @@ and the current estimate of the average sequence.
 
 Example usage:
 
-    x = [1,2,2,3,3,4]
-    y = [1,3,4]
-    z = [1,2,2,4]
+    x = Sequence([1., 2., 2., 3., 3., 4.])
+    y = Sequence([1., 3., 4.])
+    z = Sequence([1., 2., 2., 4.])
     avg,result = dba([x,y,z])
 """
 function dba(
         sequences::AbstractVector{T},
-        method::DTWMethod,
+        method::DTWMethod = ClassicDTW(),
         dist::SemiMetric = SqEuclidean();
         init_center::T = rand(sequences),
         iterations::Int = 1000,
@@ -111,13 +113,13 @@ function dba_iteration!(
     total_cost = 0.0
 
     # store stats for barycenter averages
-    scale!(counts,0)
-    scale!(newavg,0)
+    rmul!(counts,0)
+    rmul!(newavg,0)
 
     # main ploop
     for seq in sequences
         # time warp signal versus average
-        # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+        # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same length, distpath will throw error
         if isempty(i2min) && isempty(i2max)
           cost, i1, i2 = distpath(d, oldavg, seq)
         else
