@@ -46,7 +46,8 @@ function dba(
     dbavg = deepcopy(init_center)
 
     # storage for each iteration
-    newavg = Sequence(zeros(length(dbavg)))
+#     newavg = Sequence(zeros(size(dbavg)))
+    newavg = Sequence(zeros(size(dbavg.val)))
     counts = zeros(Int, length(dbavg))
 
     # variables storing optimization progress

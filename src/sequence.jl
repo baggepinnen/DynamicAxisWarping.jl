@@ -37,14 +37,6 @@ end
     :( x.val[@ntuple($N, (n-> n==$N ? i : Colon()))...] = val )
 end
 
-# convert a sequence back into an array
-# in case sequences have different lenght, throw error
-function seq_to_array(seq::AbstractVector{T}) where T <: Sequence
-  len_seq = length(seq[1])
-  arr = zeros(typeof(seq[1][1]),len_seq,length(seq))
-  for i=1:length(seq)
-    length(seq[i]) != len_seq ? error("Sequences do not have the same length, cannot construct array") : nothing
-    arr[:,i] = seq[i][:]
-  end
-  return arr
+function seq_to_array(seq::Sequence{N}) where N
+    return cat(seq..., dims=N)
 end
