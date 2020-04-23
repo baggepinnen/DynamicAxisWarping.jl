@@ -129,7 +129,7 @@ function dbaclust_single(
 
     # TODO switch to ntuples?
     counts    = [zeros(Int, dbalen) for _ = 1:nclust]
-    sums      = [Sequence(Array{T}(dbalen)) for _ = 1:nclust]
+    sums      = [Array{T}(dbalen) for _ = 1:nclust]
 
     # cluster assignments for each sequence
     clus_asgn = Array{Int}(nseq)
@@ -250,8 +250,8 @@ function dbaclust_single(
                 a[t] = s[t] / c[t]
             end
             # zero out sums and counts for next iteration
-            scale!(s, 0)
-            scale!(c, 0)
+            s .= 0
+            c .= 0
         end
 
         # add additional inner dba iterations
@@ -351,8 +351,7 @@ function dbaclust_initial_centers(
         # for each sequence, find distance to closest center
         minimum!(min_dists, dists[1:c, :])
 
-        # square distances
-        map!((x) -> x^2, min_dists, min_dists)
+        min_dists .= abs2.(min_dists)
 
         # sample the next center
         center_ids[c+1] = sample(1:nseq, Weights(view(min_dists, :)))

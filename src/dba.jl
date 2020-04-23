@@ -46,8 +46,8 @@ function dba(
     dbavg = deepcopy(init_center)
 
     # storage for each iteration
-    newavg = Sequence(zeros(size(dbavg.val)))
-    counts = zeros(Int, length(dbavg))
+    newavg = zeros(size(dbavg))
+    counts = zeros(Int, lastlength(dbavg))
 
     # variables storing optimization progress
     converged = false
@@ -127,8 +127,8 @@ function dba_iteration!(
     total_cost = 0.0
 
     # store stats for barycenter averages
-    rmul!(counts, 0)
-    rmul!(newavg, 0)
+    counts .= 0
+    newavg .= 0
 
     # main ploop
     for seq in sequences
@@ -144,13 +144,13 @@ function dba_iteration!(
         # store stats for barycentric average
         for j = 1:length(i2)
             counts[i1[j]] += 1
-            newavg[i1[j]] += seq[i2[j]]
+            newavg[!,i1[j]] += seq[i2[j]]
         end
     end
 
     # compute average and return total cost
     for i in eachindex(newavg)
-        newavg[i] = newavg[i] / counts[i]
+        newavg[!,i] = newavg[!,i] / counts[i]
     end
 
     return total_cost

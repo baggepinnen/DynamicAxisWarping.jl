@@ -4,7 +4,7 @@ import ProgressMeter
 using StatsBase
 using Parameters
 using Distances
-using Plots
+using Plots, Plots.PlotMeasures
 
 export dtw,
        DTWDistance,

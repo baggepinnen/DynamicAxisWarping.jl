@@ -39,19 +39,19 @@ end
 #  Cost matrix computations  #
 ##############################
 
-Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s2, s1')
+Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s1, s2')
 function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; dims=2)
-    [evaluate(d, s1[!,j], s2[!,i]) for i in 1:size(s2)[end], j in 1:size(s1)[end]]
+    [evaluate(d, s1[!,i], s2[!,j]) for i in 1:lastlength(s1), j in lastlength(s2)]
 end
 
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean()) where T
     # Build the cost matrix
-    m = length(seq2)
-    n = length(seq1)
-    D = zeros(T, m, n)
+    m = lastlength(seq2)
+    n = lastlength(seq1)
 
     # Initialize first column and first row
     D = pairwise(dist, seq2, seq1, dims=2)
+    @assert size(D) == (m,n)
 
     # Complete the cost matrix
     for c = 2:n
@@ -64,19 +64,21 @@ end
     return D
 end
 
-@inbounds function dtw_cost_matrix(
+Base.@propagate_inbounds function dtw_cost_matrix(
     seq1::AbstractArray{T},
     seq2::AbstractArray{T},
     i2min::AbstractVector{U},
     i2max::AbstractVector{U},
     dist::SemiMetric = SqEuclidean(),
 ) where {T,U<:Integer}
-    m = length(seq2) # of rows in cost matrix
-    n = length(seq1) # of columns in cost matrix
-    n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))
-    n == length(i2max) || throw(ArgumentError("i2max does not match length of seq1."))
-    1 == i2min[1]      || throw(ArgumentError("i2min must start at 1."))
-    m == i2max[end]    || throw(ArgumentError("i2max must end at length(seq2)."))
+    m = lastlength(seq2) # of rows in cost matrix
+    n = lastlength(seq1) # of columns in cost matrix
+    Base.@boundscheck begin
+        n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))
+        n == length(i2max) || throw(ArgumentError("i2max does not match length of seq1."))
+        1 == i2min[1]      || throw(ArgumentError("i2min must start at 1."))
+        m == i2max[end]    || throw(ArgumentError("i2max must end at length(seq2)."))
+    end
 
     # Build the (n x m) cost matrix into a WindowedMatrix, because it's ragged.
     # That type gives efficient storage with convenient [r,c] indexing and returns

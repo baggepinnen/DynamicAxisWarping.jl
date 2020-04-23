@@ -39,13 +39,11 @@ end
     top_margin --> 0mm
     right_margin --> 0mm
     clim --> (0,3*D[end,end])
-    colorbar --> :right
 
     # heatmap
     @series begin
         seriestype := :heatmap
         formatter --> (z)->""
-        c --> :viridis
         subplot := 2
         D
     end

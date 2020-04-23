@@ -57,7 +57,7 @@ Base.size(W::WindowedMatrix) = W.nrow, W.ncol
 Base.size(W::WindowedMatrix, i) = size(W)[i]
 
 @inline function Base.getindex(W::WindowedMatrix, r::Integer, c::Integer)
-    Base.@boundscheck if c < 1 || c > W.ncol || r < W.rowmin[c] || r > W.rowmax[c]
+    if c < 1 || c > W.ncol || r < W.rowmin[c] || r > W.rowmax[c]
         return W.defaultval
     end
 
