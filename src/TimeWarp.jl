@@ -4,10 +4,6 @@ import ProgressMeter
 using StatsBase
 using Parameters
 
-# reexport to let user specify dtw(⋅,⋅,distance)
-using Reexport
-@reexport using Distances
-
 export Sequence,
        SequenceArray,
        seq_to_array,
@@ -24,7 +20,6 @@ export Sequence,
        fastdtw
 
 include("utils.jl")
-include("sequence.jl")
 
 include("distance_interface.jl")
 

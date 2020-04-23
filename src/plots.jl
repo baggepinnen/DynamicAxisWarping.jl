@@ -1,10 +1,5 @@
-module WarpPlots
-
-using TimeWarp
-using Reexport
-@reexport using Plots
 export dtwplot
-pyplot(); # preferred backend
+
 
 """
     dtwplot(seq1, seq2, [dist=SqEuclidean()])
@@ -45,7 +40,7 @@ end
     right_margin --> 0mm
     clim --> (0,3*D[end,end])
     colorbar --> :right
-    
+
     # heatmap
     @series begin
         seriestype := :heatmap
@@ -66,18 +61,16 @@ end
         formatter --> (z)->""
         i1, i2
     end
-        
+
     # left line plot
     @series begin
         subplot := 1
         seq2, 1:n2
     end
-    
+
     # bottom line plot
     @series begin
         subplot := 3
         1:n1, seq1
     end
-end
-
 end

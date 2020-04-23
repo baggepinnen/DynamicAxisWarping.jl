@@ -1,3 +1,4 @@
+using DelimitedFiles
 const UCR_DATASETS = """
 50words,
 Adiac,
@@ -97,7 +98,7 @@ function download_ucr()
     UCR_URL = "http://www.cs.ucr.edu/~eamonn/time_series_data/UCR_TS_Archive_2015.zip"
 
     # the password is "attempttoclassify"
-    info(
+    @info(
         """
         A simple password is required to extract the UCR Time Series Classification. While the
         data is downloading, please read the following paper
@@ -107,7 +108,7 @@ function download_ucr()
         http://dx.doi.org/10.1137/1.9781611972832.64
 
         Find the following sentence (it's near the end of the first page):
-        
+
         “Every item that we ******* ## @@@@@@@ belongs to exactly one of our well defined classes”
 
         Enter the three redacted words (without spaces) to extract the data. The purpose of this
@@ -126,7 +127,7 @@ function download_ucr()
     # delete the zip file when we're done
     rm("$DATAPATH/UCR.zip")
 
-    info("Download and extraction successful!")
+    @info("Download and extraction successful!")
 
 end
 
@@ -143,15 +144,15 @@ $UCR_DATASETS
 """
 function ucr_traindata(name::AbstractString)
     try
-        Y = readcsv(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN")
+        Y = readdlm(DATAPATH*"/UCR_TS_Archive_2015/"*name*"/"*name*"_TRAIN", ',')
         labels = round(Int,vec(Y[:,1]))
         data = transpose(Y[:,2:end])
         return data,labels
     catch err
-        showerror(STDOUT, err, backtrace());println()
-        info("You may have recieved this error because you haven't downloaded the database yet.")
-        info("Try running download_ucr() first.")
-        info("You may also have mispelled the name of the dataset.")
+        showerror(stdout, err, backtrace());println()
+        @info("You may have recieved this error because you haven't downloaded the database yet.")
+        @info("Try running download_ucr() first.")
+        @info("You may also have mispelled the name of the dataset.")
     end
 end
 
@@ -173,9 +174,9 @@ function ucr_testdata(name::AbstractString)
         data = transpose(Y[:,2:end])
         return data,labels
     catch err
-        showerror(STDOUT, err, backtrace());println()
-        info("You may have recieved this error because you haven't downloaded the database yet.")
-        info("Try running download_ucr() first.")
-        info("You may also have mispelled the name of the dataset.")
+        showerror(stdout, err, backtrace());println()
+        @info("You may have recieved this error because you haven't downloaded the database yet.")
+        @info("Try running download_ucr() first.")
+        @info("You may also have mispelled the name of the dataset.")
     end
 end

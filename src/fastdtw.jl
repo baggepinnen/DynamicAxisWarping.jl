@@ -35,7 +35,7 @@ end
 # Given a path through low-res space, generate an approximate path
 # through high-res space. It should have dimension Ncol x Nrow
 
-function expandpath(lowrescol, lowresrow, Ncol, Nrow)
+@inbounds function expandpath(lowrescol, lowresrow, Ncol, Nrow)
     @assert div(Ncol+1,2) == lowrescol[end]
     @assert div(Nrow+1,2) == lowresrow[end]
     Np = length(lowrescol)
@@ -53,7 +53,7 @@ function expandpath(lowrescol, lowresrow, Ncol, Nrow)
             r += 1
             hirescol[2*i+1] = c
             hiresrow[2*i+1] = r
-            
+
         elseif lowresrow[i+1] == lowresrow[i] # Next move is sideways
             c += 1
             hirescol[2*i] = c
@@ -61,7 +61,7 @@ function expandpath(lowrescol, lowresrow, Ncol, Nrow)
             c += 1
             hirescol[2*i+1] = c
             hiresrow[2*i+1] = r
-            
+
         else  # Next move is diagonal.
             c += 1; r += 1
             hirescol[2*i] = c
@@ -101,7 +101,7 @@ end
 # Returns (rowmin, rowmax), each a vector of length pathcols[end], representing
 # for each column, the minimum and maximum row numbers used in that column.
 
-function computewindow(pathcols, pathrows, radius)
+@inbounds function computewindow(pathcols, pathrows, radius)
     Np = length(pathcols)
     @assert Np == length(pathrows)
     Ncol = pathcols[end]

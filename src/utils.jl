@@ -1,3 +1,6 @@
+Base.@propagate_inbounds Base.getindex(v::AbstractVector, ::typeof(!), i::Int) = v[i]
+Base.@propagate_inbounds Base.getindex(v::AbstractVector, ::typeof(!), i::Int) = @view v[:,i]
+
 @inline function indmin3(a,b,c,i,j)
     if a <= b
         if a <= c

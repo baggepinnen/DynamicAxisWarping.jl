@@ -16,7 +16,7 @@ struct WindowedMatrix{T<:Real} <: AbstractArray{T,2}
     nrow::Int
     ncol::Int
     ncells::Int
-    
+
     cost::Vector{T}
     rowmin::Vector{Int}
     rowmax::Vector{Int}
@@ -24,8 +24,11 @@ struct WindowedMatrix{T<:Real} <: AbstractArray{T,2}
     idxcol::Vector{Int}  # Index (in cost) of 1st element in each column
     defaultval::T
 
-    function WindowedMatrix{T}(rmin::Vector{Int}, rmax::Vector{Int},
-                               default::T) where {T<:Real}
+    function WindowedMatrix{T}(
+        rmin::Vector{Int},
+        rmax::Vector{Int},
+        default::T,
+    ) where {T<:Real}
         rowmin = copy(rmin)
         rowmax = copy(rmax)
         rowspercol = rowmax .- rowmin .+ 1
@@ -33,7 +36,7 @@ struct WindowedMatrix{T<:Real} <: AbstractArray{T,2}
         nrow = maximum(rowmax)
         ncol = length(rowmax)
         cost = zeros(T, ncells)
-        idxcol = 1 .+ vcat([0],cumsum(rowspercol[1:end-1])) # index of 1st element per column
+        idxcol = 1 .+ vcat([0], cumsum(rowspercol[1:end-1])) # index of 1st element per column
 
         new(nrow, ncol, ncells, cost, rowmin, rowmax, rowspercol, idxcol, default)
     end
@@ -41,12 +44,8 @@ end
 
 
 # If the default matrix value is given, then the matrix takes on its type
-function WindowedMatrix(
-        rmin::Vector{Int},
-        rmax::Vector{Int},
-        default::T
-    ) where {T<:Real}
-    WindowedMatrix{typeof(default)}(rmin, rmax, default)
+function WindowedMatrix(rmin::Vector{Int}, rmax::Vector{Int}, default::T) where {T<:Real}
+    WindowedMatrix{T}(rmin, rmax, default)
 end
 
 # If no default matrix value is given, it will be Inf, and matrix will hold
@@ -57,22 +56,22 @@ WindowedMatrix(rmin::Vector{Int}, rmax::Vector{Int}) =
 Base.size(W::WindowedMatrix) = W.nrow, W.ncol
 Base.size(W::WindowedMatrix, i) = size(W)[i]
 
-function Base.getindex(W::WindowedMatrix, r::Integer, c::Integer)
-    if c<1 || c>W.ncol || r<W.rowmin[c] || r>W.rowmax[c]
+@inline function Base.getindex(W::WindowedMatrix, r::Integer, c::Integer)
+    Base.@boundscheck if c < 1 || c > W.ncol || r < W.rowmin[c] || r > W.rowmax[c]
         return W.defaultval
     end
 
-    offset = r-W.rowmin[c]
+    offset = r - W.rowmin[c]
     W.cost[W.idxcol[c]+offset]
 end
 
 
-function Base.setindex!(W::WindowedMatrix, val, r::Integer, c::Integer)
-    if c<1 || c>W.ncol || r<W.rowmin[c] || r>W.rowmax[c]
+@inline function Base.setindex!(W::WindowedMatrix, val, r::Integer, c::Integer)
+    Base.@boundscheck if c < 1 || c > W.ncol || r < W.rowmin[c] || r > W.rowmax[c]
         throw(BoundsError())
     end
 
-    offset = r-W.rowmin[c]
+    offset = r - W.rowmin[c]
     W.cost[W.idxcol[c]+offset] = val
     return W
 end
