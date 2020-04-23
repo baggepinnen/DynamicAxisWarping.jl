@@ -64,7 +64,7 @@ end
     for c = 2:n
         for r = 2:m
             best_neighbor_cost = min(D[r-1, c], D[r-1, c-1], D[r, c-1])
-            D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r])
+            D[r, c] += best_neighbor_cost
         end
     end
 
