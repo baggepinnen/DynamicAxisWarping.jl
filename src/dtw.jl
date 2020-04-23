@@ -38,6 +38,12 @@ end
 ##############################
 #  Cost matrix computations  #
 ##############################
+
+Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s1, s2')
+function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; dims=2)
+    [evaluate(d, s1[!,j], s2[!,i]) for i in 1:size(s2)[end], j in 1:size(s1)[end]]
+end
+
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean()) where T
     # Build the cost matrix
     m = length(seq2)
@@ -45,13 +51,7 @@ end
     D = zeros(T, m, n)
 
     # Initialize first column and first row
-    D[1, 1] = evaluate(dist, seq1[!, 1], seq2[!, 1])
-    for r = 2:m
-        D[r, 1] = D[r-1, 1] + evaluate(dist, seq1[!, 1], seq2[!, r])
-    end
-    for c = 2:n
-        D[1, c] = D[1, c-1] + evaluate(dist, seq1[!, c], seq2[!, 1])
-    end
+    D = pairwise(dist, seq2, seq1, dims=2)
 
     # Complete the cost matrix
     for c = 2:n
