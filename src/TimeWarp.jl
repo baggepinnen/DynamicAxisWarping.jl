@@ -4,10 +4,7 @@ import ProgressMeter
 using StatsBase
 using Parameters
 
-export Sequence,
-       SequenceArray,
-       seq_to_array,
-       dtw,
+export dtw,
        DTWDistance,
        DTWMethod,
        ClassicDTW,
