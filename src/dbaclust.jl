@@ -4,8 +4,8 @@
 Holds results of a DBAclust run.
 
 """
-mutable struct DBAclustResult
-    centers::AbstractArray{Sequence}
+mutable struct DBAclustResult{T}
+    centers::T
     clustids::Array{Int}
     converged::Bool
     iterations::Int
@@ -26,7 +26,7 @@ Example usage:
     avg,result = dba([x,y,z])
 """
 function dbaclust(
-    sequences::AbstractVector{Sequence{N,T}},
+    sequences
     nclust::Int,
     n_init::Int,
     _method::DTWMethod,
@@ -90,11 +90,11 @@ Example usage:
     avg,result = dba([x,y,z])
 """
 function dbaclust_single(
-    sequences::AbstractVector{Sequence{N,T}},
+    sequences::AbstractVector,
     nclust::Int,
     _method::DTWMethod,
     _dist::SemiMetric = SqEuclidean();
-    init_centers::AbstractVector{Sequence{N,T}} = dbaclust_initial_centers(
+    init_centers::AbstractVector = dbaclust_initial_centers(
         sequences,
         nclust,
         _method,
@@ -318,7 +318,7 @@ Uses kmeans++ (but with dtw distance) to initialize the centers
 for dba clustering.
 """
 function dbaclust_initial_centers(
-    sequences::AbstractVector{Sequence{N,T}},
+    sequences::AbstractVector,
     nclust::Int,
     _method::DTWMethod,
     _dist::SemiMetric = SqEuclidean();,
@@ -360,14 +360,4 @@ function dbaclust_initial_centers(
 
     # return list of cluster centers
     return [deepcopy(sequences[c]) for c in center_ids]
-end
-
-# Wrapper for AbstractArray of one-dimensional time series.
-function dbaclust_initial_centers(
-    s::AbstractArray,
-    nclust::Int,
-    _method::DTWMethod,
-    _dist::SemiMetric = SqEuclidean();,
-)
-    dbaclust_initial_centers(_sequentize(s), nclust, _method, _dist)
 end

@@ -10,8 +10,8 @@ the results. If alignment has already been computed, pass
 the indices `i1` and `i2` to make the plot.
 """
 function dtwplot(
-        seq1::TimeWarp.Sequence,
-        seq2::TimeWarp.Sequence,
+        seq1,
+        seq2,
         dist::SemiMetric=SqEuclidean()
     )
     D = dtw_cost_matrix(seq1, seq2, dist)

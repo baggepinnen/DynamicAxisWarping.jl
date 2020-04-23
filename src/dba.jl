@@ -20,26 +20,26 @@ and the current estimate of the average sequence.
 
 Example usage:
 
-    x = Sequence([1., 2., 2., 3., 3., 4.])
-    y = Sequence([1., 3., 4.])
-    z = Sequence([1., 2., 2., 4.])
+    x = [1., 2., 2., 3., 3., 4.]
+    y = [1., 3., 4.]
+    z = [1., 2., 2., 4.]
     avg,result = dba([x,y,z])
 """
 function dba(
-        sequences::AbstractVector{T},
-        method::DTWMethod = ClassicDTW(),
-        dist::SemiMetric = SqEuclidean();
-        init_center::T = rand(sequences),
-        iterations::Int = 1000,
-        rtol::Float64 = 1e-5,
-        store_trace::Bool = false,
-        show_progress::Bool = true,
-        i2min::AbstractVector =[],
-        i2max::AbstractVector = []
-    ) where {T<:Sequence}
+    sequences::AbstractVector{T},
+    method::DTWMethod = ClassicDTW(),
+    dist::SemiMetric = SqEuclidean();
+    init_center::T = rand(sequences),
+    iterations::Int = 1000,
+    rtol::Float64 = 1e-5,
+    store_trace::Bool = false,
+    show_progress::Bool = true,
+    i2min::AbstractVector = [],
+    i2max::AbstractVector = [],
+) where {T<:Sequence}
 
     # method for computing dtw
-    dtwdist = DTWDistance(method,dist)
+    dtwdist = DTWDistance(method, dist)
 
     # initialize dbavg as a random sample from the dataset
     nseq = length(sequences)
@@ -52,7 +52,7 @@ function dba(
     # variables storing optimization progress
     converged = false
     iter = 0
-    cost,newcost = Inf,Inf
+    cost, newcost = Inf, Inf
     cost_trace = Float64[]
 
     # display optimization progress
@@ -64,14 +64,22 @@ function dba(
     while !converged && iter < iterations
 
         # do an iteration of dba
-        newcost = dba_iteration!(newavg, dbavg, counts, sequences, dtwdist; i2min=i2min,i2max=i2max)
+        newcost = dba_iteration!(
+            newavg,
+            dbavg,
+            counts,
+            sequences,
+            dtwdist;
+            i2min = i2min,
+            i2max = i2max,
+        )
         iter += 1
 
         # store history of cost while optimizing (optional)
         store_trace && push!(cost_trace, newcost)
 
         # check convergence
-        Δ = (cost-newcost)/newcost
+        Δ = (cost - newcost) / newcost
         if Δ < rtol
             converged = true
         else
@@ -82,13 +90,19 @@ function dba(
 
         # update progress bar
         if show_progress
-            ProgressMeter.update!(p, Δ; showvalues =[(:iteration,iter),
-                                                 (Symbol("max iteration"),iterations),
-                                                 (:cost,cost)])
+            ProgressMeter.update!(
+                p,
+                Δ;
+                showvalues = [
+                    (:iteration, iter),
+                    (Symbol("max iteration"), iterations),
+                    (:cost, cost),
+                ],
+            )
         end
     end
 
-    return newavg, DBAResult(newcost,converged,iter,cost_trace)
+    return newavg, DBAResult(newcost, converged, iter, cost_trace)
 end
 
 
@@ -100,35 +114,35 @@ Performs one iteration of DTW Barycenter Averaging (DBA) given a collection of
 an updated estimate, and the cost/loss of the previous estimate
 """
 function dba_iteration!(
-        newavg::T,
-        oldavg::T,
-        counts::Array{Int,1},
-        sequences::AbstractVector{T},
-        d::DTWDistance;
-        i2min::AbstractVector=[],
-        i2max::AbstractVector=[]
-    ) where {T<:Sequence}
+    newavg::T,
+    oldavg::T,
+    counts::Array{Int,1},
+    sequences::AbstractVector{T},
+    d::DTWDistance;
+    i2min::AbstractVector = [],
+    i2max::AbstractVector = [],
+) where {T}
 
     # sum of dtw dist of all sequences to center
     total_cost = 0.0
 
     # store stats for barycenter averages
-    rmul!(counts,0)
-    rmul!(newavg,0)
+    rmul!(counts, 0)
+    rmul!(newavg, 0)
 
     # main ploop
     for seq in sequences
         # time warp signal versus average
         # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same length, distpath will throw error
         if isempty(i2min) && isempty(i2max)
-          cost, i1, i2 = distpath(d, oldavg, seq)
+            cost, i1, i2 = distpath(d, oldavg, seq)
         else
-          cost, i1, i2 = distpath(d, oldavg, seq, i2min, i2max)
+            cost, i1, i2 = distpath(d, oldavg, seq, i2min, i2max)
         end
         total_cost += cost
 
         # store stats for barycentric average
-        for j=1:length(i2)
+        for j = 1:length(i2)
             counts[i1[j]] += 1
             newavg[i1[j]] += seq[i2[j]]
         end
@@ -136,25 +150,14 @@ function dba_iteration!(
 
     # compute average and return total cost
     for i in eachindex(newavg)
-        newavg[i] = newavg[i]/counts[i]
+        newavg[i] = newavg[i] / counts[i]
     end
 
     return total_cost
 end
 
-# Wrapper for AbstractArray of one-dimensional time series.
-function dba( s::AbstractArray, args...; kwargs... )
-    dba(_sequentize(s), args...; kwargs...)
-end
 
 # weirdly enought, this works for the dtw_dba_miniexample,  but does not work for dtw_dbaclust
 #@generated function _sequentize{T,N}(s::AbstractArray{T,N})
 #    :( Sequence[ Sequence(@ncall($N, view, s, n-> n==$N ? i : Colon())) for i = 1:size(s,2) ] )
 #end
-
-
-# This function replaces the compile-time function which doesn't work in v0.6
-# Compile-time function fixed, generated functions to not support untyped generators
-function _sequentize(s::AbstractArray)
-    [Sequence(s[:,i]) for i=1:size(s,2)]
-end
