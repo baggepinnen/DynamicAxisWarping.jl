@@ -53,6 +53,13 @@ end
     D = pairwise(dist, seq2, seq1, dims=2)
     @assert size(D) == (m,n)
 
+    for r=2:m
+        D[r,1] += D[r-1,1]
+    end
+    for c=2:n
+        D[1,c] += D[1,c-1]
+    end
+
     # Complete the cost matrix
     for c = 2:n
         for r = 2:m
