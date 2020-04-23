@@ -1,5 +1,6 @@
 Base.@propagate_inbounds Base.getindex(v::AbstractVector, ::typeof(!), i::Int) = v[i]
-Base.@propagate_inbounds Base.getindex(v::AbstractVector, ::typeof(!), i::Int) = @view v[:,i]
+Base.@propagate_inbounds Base.getindex(v::AbstractMatrix, ::typeof(!), i::Int) = @view v[:,i]
+Base.@propagate_inbounds Base.getindex(v::AbstractArray{<:Any,3}, ::typeof(!), i::Int) = @view v[:,:,i]
 
 @inline function indmin3(a,b,c,i,j)
     if a <= b

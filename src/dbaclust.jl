@@ -26,7 +26,7 @@ Example usage:
     avg,result = dba([x,y,z])
 """
 function dbaclust(
-    sequences
+    sequences,
     nclust::Int,
     n_init::Int,
     _method::DTWMethod,
@@ -41,7 +41,7 @@ function dbaclust(
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
-) where {N,T}
+)
 
     if n_jobs == 1
         best_result = []
@@ -109,7 +109,7 @@ function dbaclust_single(
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
-) where {N,T}
+)
 
     # rename for convienence
     avgs   = init_centers
@@ -321,8 +321,8 @@ function dbaclust_initial_centers(
     sequences::AbstractVector,
     nclust::Int,
     _method::DTWMethod,
-    _dist::SemiMetric = SqEuclidean();,
-) where {N,T}
+    _dist::SemiMetric = SqEuclidean();
+)
 
     # procedure for calculating dtw
     dtwdist       = DTWDistance(_method, _dist)

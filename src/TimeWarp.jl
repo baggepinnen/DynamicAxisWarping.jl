@@ -3,6 +3,8 @@ module TimeWarp
 import ProgressMeter
 using StatsBase
 using Parameters
+using Distances
+using Plots
 
 export dtw,
        DTWDistance,

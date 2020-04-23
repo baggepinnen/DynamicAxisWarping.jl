@@ -38,7 +38,7 @@ end
 ##############################
 #  Cost matrix computations  #
 ##############################
-@inbounds function dtw_cost_matrix(seq1, seq2, dist::SemiMetric = SqEuclidean()) where {N,T}
+@inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean()) where T
     # Build the cost matrix
     m = length(seq2)
     n = length(seq1)
@@ -65,12 +65,12 @@ end
 end
 
 @inbounds function dtw_cost_matrix(
-    seq1,
-    seq2,
+    seq1::AbstractArray{T},
+    seq2::AbstractArray{T},
     i2min::AbstractVector{U},
     i2max::AbstractVector{U},
     dist::SemiMetric = SqEuclidean(),
-) where {N,T,U<:Integer}
+) where {T,U<:Integer}
     m = length(seq2) # of rows in cost matrix
     n = length(seq1) # of columns in cost matrix
     n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))

@@ -26,17 +26,17 @@ Example usage:
     avg,result = dba([x,y,z])
 """
 function dba(
-    sequences::AbstractVector{T},
+    sequences::AbstractVector,
     method::DTWMethod = ClassicDTW(),
     dist::SemiMetric = SqEuclidean();
-    init_center::T = rand(sequences),
+    init_center = rand(sequences),
     iterations::Int = 1000,
     rtol::Float64 = 1e-5,
     store_trace::Bool = false,
     show_progress::Bool = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
-) where {T<:Sequence}
+)
 
     # method for computing dtw
     dtwdist = DTWDistance(method, dist)
