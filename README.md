@@ -2,14 +2,17 @@
 
 [![Build Status][build-img]][build-url]
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
-[![Project Status: Unsupported - The project has reached a stable, usable state but the author(s) have ceased all work on it. A new maintainer may be desired.](http://www.repostatus.org/badges/latest/unsupported.svg)](http://www.repostatus.org/#unsupported)
+
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
+
+This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
 
 This package isn't officially registered. Install using:
 
 ```julia
-Pkg.clone("https://github.com/ahwillia/TimeWarp.jl.git")
+using Pkg
+pkg"add https://github.com/baggepinnen/TimeWarp.jl"
 ```
 
 #### Related Packages in Other Languages
@@ -19,7 +22,7 @@ Pkg.clone("https://github.com/ahwillia/TimeWarp.jl.git")
 
 #### Acknowledgements
 
-Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of this code. 
+Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of this code.
 
-[build-img]: https://travis-ci.org/ahwillia/TimeWarp.jl.svg?branch=master
-[build-url]: https://travis-ci.org/ahwillia/TimeWarp.jl
+[build-img]: https://travis-ci.org/baggepinnen/TimeWarp.jl.svg?branch=master
+[build-url]: https://travis-ci.org/baggepinnen/TimeWarp.jl
