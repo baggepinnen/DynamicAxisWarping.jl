@@ -39,7 +39,7 @@ end
 #  Cost matrix computations  #
 ##############################
 
-Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s1, s2')
+Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s2, s1')
 function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; dims=2)
     [evaluate(d, s1[!,j], s2[!,i]) for i in 1:size(s2)[end], j in 1:size(s1)[end]]
 end

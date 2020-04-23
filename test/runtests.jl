@@ -1,5 +1,11 @@
 using Test
 using TimeWarp
+using Distances
+
+@testset "TimeWarp" begin
+    @info "Testing TimeWarp"
+
+
 
 @testset "Basic Dynamic Time Warping" begin
     a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
@@ -319,4 +325,7 @@ end
     z = [1.0, 2.0, 2.0, 4.0]
     avg, _ = dba([x, y, z], init_center = z)
     @test avg == [1.0, 1.75, 2.75, 4.0]
+end
+
+
 end
