@@ -3,14 +3,14 @@
 To download the datasets locally, run:
 
 ```julia
-julia> TimeWarp.Datasets.download_ucr()
+julia> DynamicAxisWarp.Datasets.download_ucr()
 ```
 
-You will have to enter a password, follow the printed instructions. The datasets will be saved in `.../TimeWarp/data/UCR_TS_Archive_2015/`. Then you can load the train/test data as follows (using the `50words` dataset as an example):
+You will have to enter a password, follow the printed instructions. The datasets will be saved in `.../DynamicAxisWarp/data/UCR_TS_Archive_2015/`. Then you can load the train/test data as follows (using the `50words` dataset as an example):
 
 ```julia
-traindata = TimeWarp.traindata("50words");
-testdata = TimeWarp.testdata("50words")
+traindata = DynamicAxisWarp.traindata("50words");
+testdata = DynamicAxisWarp.testdata("50words")
 ```
 
 #### References

@@ -1,4 +1,4 @@
-module TimeWarp
+module DynamicAxisWarp
 
 import ProgressMeter
 using StatsBase

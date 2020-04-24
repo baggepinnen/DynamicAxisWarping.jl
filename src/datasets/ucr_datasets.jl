@@ -88,7 +88,7 @@ yoga
 """
 
 """
-    TimeWarp.download_data([path="/TimeWarp/data/"])
+    DynamicAxisWarp.download_data([path="/DynamicAxisWarp/data/"])
 
 Downloads the UC Riverside Time Series Classification Archive to
 the specified path.
@@ -132,7 +132,7 @@ function download_ucr()
 end
 
 """
-    data,labels = TimeWarp.traindata(name)
+    data,labels = DynamicAxisWarp.traindata(name)
 
 Loads the training set of the specified dataset. Returns a matrix `data` where each column
 holds a 1-dimensional time series. The class label for each column is held `labels`
@@ -157,7 +157,7 @@ function ucr_traindata(name::AbstractString)
 end
 
 """
-    data,labels = TimeWarp.traindata(name)
+    data,labels = DynamicAxisWarp.traindata(name)
 
 Loads the test set of the specified dataset. Returns a matrix `data` where each column
 holds a 1-dimensional time series. The class label for each column is held `labels`

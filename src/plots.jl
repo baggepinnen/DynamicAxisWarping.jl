@@ -3,7 +3,7 @@ export dtwplot
 
 """
     dtwplot(seq1, seq2, [dist=SqEuclidean()])
-    dtwplot(seq1, seq2, i1, i2)
+    dtwplot(seq1, seq2, D, i1, i2)
 
 Given two sequences, perform dynamic time warping and plot
 the results. If alignment has already been computed, pass
@@ -12,10 +12,11 @@ the indices `i1` and `i2` to make the plot.
 function dtwplot(
         seq1,
         seq2,
-        dist::SemiMetric=SqEuclidean()
+        dist::SemiMetric=SqEuclidean();
+        kwargs...
     )
-    D = dtw_cost_matrix(seq1, seq2, dist)
-    cost,i1,i2 = TimeWarp.trackback(D)
+    D = dtw_cost_matrix(seq1, seq2, dist; kwargs...)
+    cost,i1,i2 = DynamicAxisWarp.trackback(D)
     dtwplot(seq1, seq2, D, i1, i2)
 end
 

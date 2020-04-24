@@ -5,14 +5,14 @@
 """
     cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean])
 
-Find a set of indices (`i1`,`i2`) that align two time series (`seq1`,`seq2`) by
-dynamic time warping. Also returns the distance (after warping) according to
+Find a set of indices (`i1`,`i2`) that align two series (`seq1`,`seq2`) by
+dynamic axis warping. Also returns the distance (after warping) according to
 the SemiMetric `dist`, which defaults to squared Euclidean distance (see
 Distances.jl). If `seq1` and `seq2` are matrices, each column is considered
 an observation.
 """
-function dtw(seq1, seq2, dist::SemiMetric = SqEuclidean())
-    D = dtw_cost_matrix(seq1, seq2, dist)
+function dtw(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
+    D = dtw_cost_matrix(seq1, seq2, dist; kwargs...)
     return trackback(D)
 end
 
@@ -28,10 +28,11 @@ function dtw(
     seq2,
     i2min::AbstractVector,
     i2max::AbstractVector,
-    dist::SemiMetric = SqEuclidean(),
+    dist::SemiMetric = SqEuclidean();
+    kwargs...
 )
 
-    D = dtw_cost_matrix(seq1, seq2, i2min, i2max, dist)
+    D = dtw_cost_matrix(seq1, seq2, i2min, i2max, dist; kwargs...)
     return trackback(D)
 end
 
@@ -44,7 +45,8 @@ function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; 
     [evaluate(d, s1[!,i], s2[!,j]) for i in 1:lastlength(s1), j in lastlength(s2)]
 end
 
-@inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean()) where T
+@inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean();
+    transportcost=0) where T
     # Build the cost matrix
     m = lastlength(seq2)
     n = lastlength(seq1)
@@ -52,6 +54,9 @@ end
     # Initialize first column and first row
     D = pairwise(dist, seq2, seq1, dims=2)
     @assert size(D) == (m,n)
+    if transportcost > 0
+        D .+= transportcost .* evaluate.(Ref(dist), 1:m, (1:n)')
+    end
 
     for r=2:m
         D[r,1] += D[r-1,1]
@@ -76,7 +81,8 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     seq2::AbstractArray{T},
     i2min::AbstractVector{U},
     i2max::AbstractVector{U},
-    dist::SemiMetric = SqEuclidean(),
+    dist::SemiMetric = SqEuclidean();
+    transportcost = 0
 ) where {T,U<:Integer}
     m = lastlength(seq2) # of rows in cost matrix
     n = lastlength(seq1) # of columns in cost matrix
@@ -95,14 +101,14 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     # First column first
     D[1, 1] = evaluate(dist, seq1[!, 1], seq2[!, 1])
     for r = 2:i2max[1]
-        D[r, 1] = D[r-1, 1] + evaluate(dist, seq1[!, 1], seq2[!, r])
+        D[r, 1] = D[r-1, 1] + evaluate(dist, seq1[!, 1], seq2[!, r]) + transportcost*dist(r,1)
     end
 
     # Complete the cost matrix from columns 2 to m.
     for c = 2:n
         for r = i2min[c]:i2max[c]
             best_neighbor_cost = min(D[r-1, c], D[r-1, c-1], D[r, c-1])
-            D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r])
+            D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r]) + transportcost*dist(r,c)
         end
     end
 

@@ -1,5 +1,5 @@
-using TimeWarp
-using TimeWarp.Datasets
+using DynamicAxisWarp
+using DynamicAxisWarp.Datasets
 using Plots
 gr()
 
