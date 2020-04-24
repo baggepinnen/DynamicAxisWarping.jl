@@ -23,3 +23,8 @@ lastlength(x) = size(x, ndims(x))
         end
     end
 end
+
+
+function radiuslimits(r,n, m)
+    max.((1:n) .- r,1), min.((1:n) .+ r, m)
+end

@@ -23,6 +23,7 @@ cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
 cost, i1, i2 = fastdtw(a,b, [dist=SqEuclidean()])
 dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
 centers, clustids, result = dbaclust(data, nclust, FastDTW(10))
+imin,imax = radiuslimits(5,20,20), plot([imin imax])
 ```
 `transportcost` adds an additional penalty multiplier for "transporting", i.e., deviations from the Euclidean matching. The standard DTW distance does not consider this added cost and the default is 1. A value greater than 1 multiplies the cost of moving horizontally or vertically in the coupling matrix, promoting a diagnoal move, corresponding to the standard Euclidean matching. The influence of the transport cost can be visualized with
 ```julia

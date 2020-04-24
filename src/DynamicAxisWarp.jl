@@ -16,7 +16,8 @@ export dtw,
        dbaclust,
        dtw_cost_matrix,
        DBAResult,
-       fastdtw
+       fastdtw,
+       radiuslimits
 
 include("utils.jl")
 
