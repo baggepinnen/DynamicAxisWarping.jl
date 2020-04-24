@@ -1,7 +1,7 @@
-using DynamicAxisWarp
-using DynamicAxisWarp.Datasets
+using DynamicAxisWarping
+using DynamicAxisWarping.Datasets
 
-# UCI data repository must be downloaded first, run DynamicAxisWarp.download_data()
+# UCI data repository must be downloaded first, run DynamicAxisWarping.download_data()
 data = ucr_traindata("Gun_Point");
 
 y1 = data[1][:,1]

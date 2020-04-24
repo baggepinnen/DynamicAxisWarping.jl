@@ -1,4 +1,4 @@
-using DynamicAxisWarp, DSP, LPVSpectral, Distances
+using DynamicAxisWarping, DSP, LPVSpectral, Distances
 
 # Create two signals
 N = 48_000

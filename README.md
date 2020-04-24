@@ -1,24 +1,24 @@
-# DynamicAxisWarp.jl
+# DynamicAxisWarping.jl
 
-[![CI](https://github.com/baggepinnen/DynamicAxisWarp.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/DynamicAxisWarp.jl/actions)
-[![codecov](https://codecov.io/gh/baggepinnen/DynamicAxisWarp.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/DynamicAxisWarp.jl)
+[![CI](https://github.com/baggepinnen/DynamicAxisWarping.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/DynamicAxisWarping.jl/actions)
+[![codecov](https://codecov.io/gh/baggepinnen/DynamicAxisWarping.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/DynamicAxisWarping.jl)
 
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-This package is a fork of https://github.com/ahwillia/DynamicAxisWarp.jl which is no longer maintained.
+This package is a fork of https://github.com/ahwillia/DynamicAxisWarping.jl which is no longer maintained.
 
 This package isn't officially registered. Install using:
 
 ```julia
 using Pkg
-pkg"add https://github.com/baggepinnen/DynamicAxisWarp.jl"
+pkg"add https://github.com/baggepinnen/DynamicAxisWarping.jl"
 ```
 
 ## Usage
 
 ```julia
-using DynamicAxisWarp, Distances, Plots
+using DynamicAxisWarping, Distances, Plots
 cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
 cost, i1, i2 = fastdtw(a,b, [dist=SqEuclidean()])
 dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
@@ -37,11 +37,11 @@ You can try a `transportcost < 1` as well, but then it is preferable to make wei
 See also function `dba` for barycenter averaging, but note that `dba` is known to not always produce the best barycenters. See, e.g., ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
 
 #### Combine with optimal transport
-See the file [`frequency_warping.jl`](https://github.com/baggepinnen/DynamicAxisWarp.jl/blob/master/examples/frequency_warping.jl) for an example combining dynamic time warping with optimal transport along the frequency axis for spectrograms. This example makes use of [SpectralDistances.jl](https://github.com/baggepinnen/SpectralDistances.jl).
+See the file [`frequency_warping.jl`](https://github.com/baggepinnen/DynamicAxisWarping.jl/blob/master/examples/frequency_warping.jl) for an example combining dynamic time warping with optimal transport along the frequency axis for spectrograms. This example makes use of [SpectralDistances.jl](https://github.com/baggepinnen/SpectralDistances.jl).
 
 #### Acknowledgements
 
 Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of this code.
 
-[build-img]: https://travis-ci.org/baggepinnen/DynamicAxisWarp.jl.svg?branch=master
-[build-url]: https://travis-ci.org/baggepinnen/DynamicAxisWarp.jl
+[build-img]: https://travis-ci.org/baggepinnen/DynamicAxisWarping.jl.svg?branch=master
+[build-url]: https://travis-ci.org/baggepinnen/DynamicAxisWarping.jl

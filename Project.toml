@@ -1,4 +1,4 @@
-name = "DynamicAxisWarp"
+name = "DynamicAxisWarping"
 uuid = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 
 [deps]

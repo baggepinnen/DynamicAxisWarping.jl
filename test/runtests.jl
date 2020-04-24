@@ -1,9 +1,9 @@
 using Test
-using DynamicAxisWarp
+using DynamicAxisWarping
 using Distances
 
-@testset "DynamicAxisWarp" begin
-    @info "Testing DynamicAxisWarp"
+@testset "DynamicAxisWarping" begin
+    @info "Testing DynamicAxisWarping"
 
 
 
@@ -195,7 +195,7 @@ using Distances
 
 
     @testset "FastDTW compression" begin
-        compress2 = DynamicAxisWarp.compress2
+        compress2 = DynamicAxisWarping.compress2
         s = collect(0:2:98)
         s1 = compress2(s)
         s2 = compress2(s1)
@@ -209,7 +209,7 @@ using Distances
 
 
     @testset "Window Computations" begin
-        computewindow = DynamicAxisWarp.computewindow
+        computewindow = DynamicAxisWarping.computewindow
 
         # Simplest path (along the diagonal)
         p = collect(1:8)

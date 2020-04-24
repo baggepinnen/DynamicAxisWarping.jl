@@ -87,9 +87,10 @@ end
 #   The length of the compressed sequence is always even.
 function compress2(seq::AbstractArray)
     # Navg = div(length(seq), 2)
-    evenseq = 0.5*(seq[!,1:2:end-1]+seq[!,2:2:end])
+    n = lastlength(seq)
+    evenseq = 0.5*(seq[!,1:2:n-1]+seq[!,2:2:n])
     if lastlength(seq)%2 == 1
-        return cat(evenseq, seq[!, end], dims=ndims(seq))
+        return cat(evenseq, seq[!, n], dims=ndims(seq))
     end
     evenseq
 end

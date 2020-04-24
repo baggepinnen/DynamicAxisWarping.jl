@@ -11,7 +11,7 @@ the indices `i1` and `i2` to make the plot.
 """
 function handleargs(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
     D = dtw_cost_matrix(seq1, seq2, dist; kwargs...)
-    cost, i1, i2 = DynamicAxisWarp.trackback(D)
+    cost, i1, i2 = DynamicAxisWarping.trackback(D)
     seq1, seq2, D, i1, i2
 end
 

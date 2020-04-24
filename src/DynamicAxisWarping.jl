@@ -1,4 +1,4 @@
-module DynamicAxisWarp
+module DynamicAxisWarping
 
 import ProgressMeter
 using StatsBase
