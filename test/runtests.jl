@@ -1,6 +1,6 @@
 using Test
 using DynamicAxisWarping
-using Distances
+using Distances, Plots
 
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
@@ -61,6 +61,9 @@ using Distances
         @test evaluate(DTWDistance(Cityblock()), a, b) == cost
         cost, = dtw(a, b, Chebyshev())
         @test evaluate(DTWDistance(Chebyshev()), a, b) == cost
+
+
+        @test_nowarn dtwplot(a, b)
     end
 
 

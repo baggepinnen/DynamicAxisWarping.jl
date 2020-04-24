@@ -42,7 +42,7 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
     bottom_margin --> 0mm
     top_margin --> 0mm
     right_margin --> 0mm
-    clim --> (0, 3 * D[end, end])
+    clims --> (0, 3 * D[end, end])
 
     # heatmap
     @series begin
