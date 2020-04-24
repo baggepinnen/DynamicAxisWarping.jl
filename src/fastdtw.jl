@@ -6,15 +6,15 @@ Computes FastDTW approximation to the DTW, described in Salvador & Chan,
 Intelligent Data Analysis (2007).
 """
 function fastdtw(
-        seq1::AbstractVector,
-        seq2::AbstractVector,
+        seq1::AbstractArray,
+        seq2::AbstractArray,
         radius::Int,
         dist::SemiMetric=SqEuclidean()
     )
 
     MinSize = max(radius + 2, 10)
-    N1 = length(seq1)
-    N2 = length(seq2)
+    N1 = lastlength(seq1)
+    N2 = lastlength(seq2)
     if N1 <= MinSize || N2 <= MinSize
         return (dtw(seq1, seq2, dist))
     end
@@ -85,11 +85,11 @@ end
 # yshort = compress2(y)
 #   Returns a shortened time series that is half the length of the input sequence.
 #   The length of the compressed sequence is always even.
-function compress2(seq::AbstractVector)
+function compress2(seq::AbstractArray)
     # Navg = div(length(seq), 2)
-    evenseq = 0.5*(seq[1:2:end-1]+seq[2:2:end])
-    if length(seq)%2 == 1
-        return vcat(evenseq, [seq[end]])
+    evenseq = 0.5*(seq[!,1:2:end-1]+seq[!,2:2:end])
+    if lastlength(seq)%2 == 1
+        return cat(evenseq, seq[!, end], dims=ndims(seq))
     end
     evenseq
 end

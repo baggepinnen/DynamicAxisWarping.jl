@@ -105,7 +105,7 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     for c = 2:n
         for r = i2min[c]:i2max[c]
             best_neighbor_cost = min(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1])
-            D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r]) + transportcost*dist(r,c)
+            D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r])
         end
     end
 
