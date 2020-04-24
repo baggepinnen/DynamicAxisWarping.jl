@@ -31,5 +31,5 @@ Distances.evaluate(d::DTWDistance{FastDTW}, x, y) =
 
 distpath(d::DTWDistance{ClassicDTW}, x, y) = dtw(x, y, d.dist)
 distpath(d::DTWDistance{ClassicDTW}, x, y, i2min::AbstractVector, i2max::AbstractVector) =
-    dtw(x, y, i2min, i2max, d.dist)
-distpath(d::DTWDistance{FastDTW}, x, y) = fastdtw(x, y, d.method.radius, d.dist)
+    dtw(x, y, d.dist, i2min, i2max)
+distpath(d::DTWDistance{FastDTW}, x, y) = fastdtw(x, y, d.dist, d.method.radius)

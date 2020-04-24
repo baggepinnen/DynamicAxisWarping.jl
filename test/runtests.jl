@@ -66,9 +66,10 @@ using Distances
 
     @testset "DTW with windows" begin
         # Verify that a tie prefers diagonal moves
+        dist = SqEuclidean()
         a = [1, 1, 1]
         b = [1, 1, 1]
-        cost, pa, pb = dtw(a, b, [1, 1, 1], [3, 3, 3])
+        cost, pa, pb = dtw(a, b, dist, [1, 1, 1], [3, 3, 3])
         @test cost == 0
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
@@ -77,7 +78,7 @@ using Distances
         # Also check that trackback prefers diagonal moves
         a = [0, 1, 1, 1]
         b = [0, 0, 1, 1]
-        cost, pa, pb = dtw(a, b, [1, 1, 1, 1], [4, 4, 4, 4])
+        cost, pa, pb = dtw(a, b, dist, [1, 1, 1, 1], [4, 4, 4, 4])
         @test cost == 0
         @test pa == [1, 1, 2, 3, 4]
         @test pb == [1, 2, 3, 3, 4]
@@ -95,7 +96,7 @@ using Distances
         # Wide window, not touching optimal path
         rmin = [1, 1, 1, 2, 3, 4, 5, 6]
         rmax = [4, 6, 7, 8, 8, 8, 8, 8]
-        cost, pa, pb = dtw(a, b, rmin, rmax)
+        cost, pa, pb = dtw(a, b, dist, rmin, rmax)
         @test cost == 0
         @test pa == best_pa
         @test pb == best_pb
@@ -103,7 +104,7 @@ using Distances
         # Bottom of window is optimal path
         rmin = [1, 3, 4, 7, 8, 8, 8, 8]
         rmax = [4, 6, 7, 8, 8, 8, 8, 8]
-        cost, pa, pb = dtw(a, b, rmin, rmax)
+        cost, pa, pb = dtw(a, b, dist, rmin, rmax)
         @test cost == 0
         @test pa == best_pa
         @test pb == best_pb
@@ -111,7 +112,7 @@ using Distances
         # Top of window is optimal path
         rmin = [1, 1, 1, 2, 3, 4, 5, 6]
         rmax = [2, 3, 6, 7, 8, 8, 8, 8]
-        cost, pa, pb = dtw(a, b, rmin, rmax)
+        cost, pa, pb = dtw(a, b, dist, rmin, rmax)
         @test cost == 0
         @test pa == best_pa
         @test pb == best_pb
@@ -119,7 +120,7 @@ using Distances
         # Top and bottom of window are optimal path
         rmin = [1, 3, 4, 7, 8, 8, 8, 8]
         rmax = [2, 3, 6, 7, 8, 8, 8, 8]
-        cost, pa, pb = dtw(a, b, rmin, rmax)
+        cost, pa, pb = dtw(a, b, dist, rmin, rmax)
         @test cost == 0
         @test pa == best_pa
         @test pb == best_pb
@@ -127,7 +128,7 @@ using Distances
         # Now top of window cuts into optimal path
         rmin = [1, 1, 1, 2, 3, 4, 5, 6]
         rmax = [4, 4, 5, 6, 7, 8, 8, 8]
-        cost, pa, pb = dtw(a, b, rmin, rmax)
+        cost, pa, pb = dtw(a, b, dist, rmin, rmax)
         @test cost == 2
         @test pa == [1, 1, 2, 3, 3, 4, 5, 6, 7, 8]
         @test pb == [1, 2, 3, 4, 5, 6, 7, 8, 8, 8]
@@ -137,7 +138,7 @@ using Distances
         seq2 = seq1[1:2:end]
         cost, pa, pb = dtw(seq1, seq2)
         n1, n2 = length(seq1), length(seq2)
-        cost2, qa, qb = dtw(seq1, seq2, fill(1, n1), fill(n2, n1))
+        cost2, qa, qb = dtw(seq1, seq2, dist, fill(1, n1), fill(n2, n1))
         @test cost == cost2
         @test pa == qa
         @test pb == qb
@@ -187,7 +188,7 @@ using Distances
 
         cost, pa, pb = dtw(seq1, seq2)
         n1, n2 = length(seq1), length(seq2)
-        cost2, qa, qb = dtw(seq1, seq2, fill(1, n1), fill(n2, n1))
+        cost2, qa, qb = dtw(seq1, seq2, dist, fill(1, n1), fill(n2, n1))
         @test cost == cost2
         @test pa == qa
         @test pb == qb

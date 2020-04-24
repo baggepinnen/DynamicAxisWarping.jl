@@ -6,7 +6,7 @@
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-This package is a fork of https://github.com/ahwillia/DynamicAxisWarping.jl which is no longer maintained.
+This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
 
 This package isn't officially registered. Install using:
 

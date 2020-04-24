@@ -4,35 +4,20 @@
 
 """
     cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean])
+    cost,i1,i2 = dtw(seq1, seq2, dist, i2min, i2max)
 
 Find a set of indices (`i1`,`i2`) that align two series (`seq1`,`seq2`) by
 dynamic axis warping. Also returns the distance (after warping) according to
 the SemiMetric `dist`, which defaults to squared Euclidean distance (see
 Distances.jl). If `seq1` and `seq2` are matrices, each column is considered
 an observation.
-"""
-function dtw(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
-    D = dtw_cost_matrix(seq1, seq2, dist; kwargs...)
-    return trackback(D)
-end
 
-"""
-    cost,i1,i2 = dtw(seq1,seq2,i2min,i2max,[dist=SqEuclidean])
-
-Do DTW to align `seq1` and `seq2` confined to a window. Vectors `i2min` and
+If `i2min/max` are provided, do DTW to align `seq1` and `seq2` confined to a window. Vectors `i2min` and
 `i2max` specify (inclusive) lower and upper bounds for `seq2` for each index in
 `seq1`. Thus, `i2min` and `i2max` are required to be the same length as `seq1`.
 """
-function dtw(
-    seq1,
-    seq2,
-    i2min::AbstractVector,
-    i2max::AbstractVector,
-    dist::SemiMetric = SqEuclidean();
-    kwargs...
-)
-
-    D = dtw_cost_matrix(seq1, seq2, i2min, i2max, dist; kwargs...)
+function dtw(args...; kwargs...)
+    D = dtw_cost_matrix(args...; kwargs...)
     return trackback(D)
 end
 
@@ -76,9 +61,9 @@ end
 Base.@propagate_inbounds function dtw_cost_matrix(
     seq1::AbstractArray{T},
     seq2::AbstractArray{T},
+    dist::SemiMetric,
     i2min::AbstractVector{U},
-    i2max::AbstractVector{U},
-    dist::SemiMetric = SqEuclidean();
+    i2max::AbstractVector{U};
     transportcost = 1
 ) where {T,U<:Integer}
     m = lastlength(seq2) # of rows in cost matrix
