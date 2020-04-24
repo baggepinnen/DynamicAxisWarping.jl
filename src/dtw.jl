@@ -46,7 +46,7 @@ function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; 
 end
 
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean();
-    transportcost=0) where T
+    transportcost=1) where T
     # Build the cost matrix
     m = lastlength(seq2)
     n = lastlength(seq1)
@@ -54,9 +54,6 @@ end
     # Initialize first column and first row
     D = pairwise(dist, seq2, seq1, dims=2)
     @assert size(D) == (m,n)
-    if transportcost > 0
-        D .+= transportcost .* evaluate.(Ref(dist), 1:m, (1:n)')
-    end
 
     for r=2:m
         D[r,1] += D[r-1,1]
@@ -68,7 +65,7 @@ end
     # Complete the cost matrix
     for c = 2:n
         for r = 2:m
-            best_neighbor_cost = min(D[r-1, c], D[r-1, c-1], D[r, c-1])
+            best_neighbor_cost = min(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1])
             D[r, c] += best_neighbor_cost
         end
     end
@@ -82,7 +79,7 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     i2min::AbstractVector{U},
     i2max::AbstractVector{U},
     dist::SemiMetric = SqEuclidean();
-    transportcost = 0
+    transportcost = 1
 ) where {T,U<:Integer}
     m = lastlength(seq2) # of rows in cost matrix
     n = lastlength(seq1) # of columns in cost matrix
@@ -101,13 +98,13 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     # First column first
     D[1, 1] = evaluate(dist, seq1[!, 1], seq2[!, 1])
     for r = 2:i2max[1]
-        D[r, 1] = D[r-1, 1] + evaluate(dist, seq1[!, 1], seq2[!, r]) + transportcost*dist(r,1)
+        D[r, 1] = D[r-1, 1] + evaluate(dist, seq1[!, 1], seq2[!, r])
     end
 
     # Complete the cost matrix from columns 2 to m.
     for c = 2:n
         for r = i2min[c]:i2max[c]
-            best_neighbor_cost = min(D[r-1, c], D[r-1, c-1], D[r, c-1])
+            best_neighbor_cost = min(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1])
             D[r, c] = best_neighbor_cost + evaluate(dist, seq1[!, c], seq2[!, r]) + transportcost*dist(r,c)
         end
     end
