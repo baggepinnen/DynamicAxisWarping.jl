@@ -1,4 +1,4 @@
-The DynamicAxisWarp.jl package is a fork of https://github.com/ahwillia/TimeWarp.jl/issues/5 that came with the license reproduced below. All modifications to the original TimeWarp.jl are licensed under the MIT license.
+The DynamicAxisWarp.jl package is a fork of https://github.com/ahwillia/TimeWarp.jl/ that came with the license reproduced below. All modifications to the original TimeWarp.jl are licensed under the MIT license.
 
 ---
 
