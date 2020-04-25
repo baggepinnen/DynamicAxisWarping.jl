@@ -11,6 +11,7 @@ using Distances, Plots
         a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
         b = [1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
         cost, match1, match2 = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == 0
         @test match1 ==
               [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
@@ -19,18 +20,21 @@ using Distances, Plots
 
         a[end] += 2
         cost, match1, match2 = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == 4
         @test evaluate(DTWDistance(), a, b) == cost
 
         a = collect(1:10)
         b = a .+ 1
         cost, match1, match2 = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == 2
         @test evaluate(DTWDistance(), a, b) == cost
 
         a = zeros(Int, 6)
         b = 1 .+ a
         cost, match1, match2 = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == length(a)
         @test evaluate(DTWDistance(), a, b) == cost
 
@@ -38,6 +42,7 @@ using Distances, Plots
         a = [1, 1, 1]
         b = [1, 1, 1]
         cost, pa, pb = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == 0
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
@@ -48,6 +53,7 @@ using Distances, Plots
         a = [0, 1, 1, 1]
         b = [0, 0, 1, 1]
         cost, pa, pb = dtw(a, b)
+        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
         @test cost == 0
         @test pa == [1, 1, 2, 3, 4]
         @test pb == [1, 2, 3, 3, 4]
@@ -57,10 +63,13 @@ using Distances, Plots
         a, b = randn(10), randn(10)
         cost, = dtw(a, b, Euclidean())
         @test evaluate(DTWDistance(Euclidean()), a, b) == cost
+        @test dtw_cost(a,b,Euclidean(),length(a)) == cost
         cost, = dtw(a, b, Cityblock())
         @test evaluate(DTWDistance(Cityblock()), a, b) == cost
+        @test dtw_cost(a,b,Cityblock(),length(a)) == cost
         cost, = dtw(a, b, Chebyshev())
         @test evaluate(DTWDistance(Chebyshev()), a, b) == cost
+        @test dtw_cost(a,b,Chebyshev(),length(a)) == cost
 
 
         @test_nowarn dtwplot(a, b)
@@ -333,4 +342,85 @@ using Distances, Plots
     end
 
 
+    @testset "DTW NN" begin
+        @info "Testing DTW NN"
+        a = randn(Float32, 100)
+        b = randn(Float32, 10000)
+
+        function naive(a,b)
+            dists = map(1:length(b)-length(a)) do i
+                dtw_cost(a,@view(b[i:i+length(a)-1]),SqEuclidean(), 7)
+            end
+        end
+
+        w = DTWWorkspace(a,SqEuclidean(),7)
+        @inferred dtwnn(w,b)
+
+        res = dtwnn(w,b)
+        m = findmin(naive(a,b))
+        @test m[1] ≈ res.cost
+        @test m[2] == res.loc
+
+    end
+
+
 end
+
+
+# using DynamicAxisWarping, Distances
+# a = randn(1000)
+# b = randn(1000)
+# @btime dtw($a, $b)
+#
+# # 10.526 ms (9 allocations: 7.68 MiB)
+# # add @avx
+# # 2.245 ms (9 allocations: 7.68 MiB)
+#
+# imi,ima = radiuslimits(10,1000,1000)
+# @btime dtw($a, $b, SqEuclidean(), $imi, $ima)
+# # 196.412 μs (18 allocations: 193.91 KiB)
+#
+#
+#
+# s1,s2 = zeros(21),zeros(21)
+# @btime dtw_cost($a, $b, SqEuclidean(), 10, cost=$s1, cost_prev=$s2)
+#
+# dtw(a, b, SqEuclidean(), imi, ima)
+# dtw_cost(a, b, SqEuclidean(), 10)
+
+
+# using DynamicAxisWarping, Distances
+# a = randn(Float32, 1000)
+# b = randn(Float32, 100000)
+#
+# function naive(a,b)
+#     dists = map(1:length(b)-length(a)) do i
+#         dtw_cost(a,@view(b[i:i+length(a)-1]),SqEuclidean(), 7)
+#     end
+# end
+#
+# w = DTWWorkspace(a,SqEuclidean(),7)
+# @inferred dtwnn(w,b)
+#
+# res = dtwnn(w,b)
+# m = findmin(naive(a,b))
+# @test m[1] ≈ res.cost
+# @test m[2] == res.loc
+#
+#
+# @btime naive($a,$b)
+# @btime dtwnn($w,$b)
+#
+#
+# a = sin.(0.1 .* (1:100)) .+ 0.1 .* randn.()
+# b = sin.(0.1 .* (1:100000)) .+ 0.1 .* randn.()
+# w = DTWWorkspace(a,SqEuclidean(),7)
+# res = dtwnn(w,b)
+#
+# plot([a b[eachindex(a) .+ (res.loc-1)]])
+#
+#
+# res = dtwnn(w,b)
+# m = findmin(naive(a,b))
+# @test m[1] ≈ res.cost
+# @test m[2] == res.loc

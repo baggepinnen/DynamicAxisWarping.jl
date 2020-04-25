@@ -137,3 +137,78 @@ function trackback(D::AbstractMatrix{T}) where {T<:Number}
     end
     return D[end, end], reverse(cols), reverse(rows)
 end
+
+
+
+
+
+"""
+    dtw_cost(a::AbstractArray, b::AbstractArray, dist::Distances.SemiMetric, r::Int; best_so_far = Inf, cumulative_bound = Zeros(length(a)))
+
+Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You may provide values of `best_so_far` and `cumulative_bound` in order to enable early stopping.
+
+# Keyword arguments:
+- `best_so_far`: The best cost value obtained so far (optional)
+- `cumulative_bound`: A vector the same length as a and b (optional)
+- `cost`: Optional storage vector of length 2r+1, can be used to save allocations.
+- `cost_prev`: Optional storage vector of length 2r+1, can be used to save allocations.
+
+Providing the two vectors `cost, cost_prev` does not save very much time, but it makes the function completely allocation free. Can be useful in a threaded context.
+
+This code was inspired by https://www.cs.ucr.edu/~eamonn/UCRsuite.html
+"""
+function dtw_cost(
+    a::AbstractArray{QT},
+    b::AbstractArray,
+    dist::Distances.SemiMetric,
+    r::Int;
+    best_so_far = Inf,
+    cumulative_bound = Zeros(length(a)),
+    cost = fill(Inf, 2 * r + 1),
+    cost_prev = fill(Inf, 2 * r + 1),
+) where QT
+
+    T = QT <: Number ? QT : Float64
+
+    # Instead of using matrix of size O(m^2) or O(mr), we will reuse two array of size O(r).
+    m = length(a)
+    length(b) == m || throw(ArgumentError("a and b must have the same length."))
+
+    local k
+
+    @inbounds for i = 0:m-1
+        k = max(0, r - i)
+        min_cost = T(Inf)
+
+        for j = max(0, i - r):min(m - 1, i + r)
+            if j == 0 && i == 0
+                cost[k+1] = dist(a[!,1], b[!,1])
+                min_cost = cost[k+1]
+                k += 1
+                continue
+            end
+            y = (j - 1 < 0) || (k - 1 < 0) ? T(Inf) : cost[k]
+            x = (i - 1 < 0) || (k + 1 > 2 * r) ? T(Inf) : cost_prev[k+2]
+            z = (i - 1 < 0) || (j - 1 < 0) ? T(Inf) : cost_prev[k+1]
+
+            cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1])
+
+            # Find minimum cost in row for early abandoning
+            if cost[k+1] < min_cost
+                min_cost = cost[k+1]
+            end
+            k += 1
+        end
+
+        # We can abandon early if the current cummulative distace with lower bound together are larger than best_so_far
+        if i + r < m - 1 && min_cost + cumulative_bound[i+r+2] >= best_so_far
+            return min_cost + cumulative_bound[i+r+2]
+        end
+
+        cost_prev, cost = cost, cost_prev
+    end
+
+    # the DTW distance is in the last cell in the matrix of size O(m^2) or at the middle of our array.
+    final_dtw = cost_prev[k]
+    return T(final_dtw)
+end
