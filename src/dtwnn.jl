@@ -13,7 +13,7 @@ struct DTWWorkspace{T,AT<:AbstractArray,D}
 end
 
 function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int) where QT
-    T = QT <: Number ? QT : Float64
+    T           = floattype(QT)
     m           = length(q)
     n           = 2r + 1
     buffer      = zeros(QT, m)

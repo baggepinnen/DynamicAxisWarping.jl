@@ -54,6 +54,19 @@ The following optimizations are implemented.
 - [ ] Envelope lower bound pruning
 - [x] DTW early termination
 - [ ] Online normalization
+- [ ] Sorting of query series
+
+#### Roadmap
+The online normalization might work very well for 1d time series, but for multi-dimensional time series and a general loss function, it's less straightforward to optimize. Maybe a type-based approach, with types like
+```julia
+struct ZNormalizer <: AbstractNormalizer
+    sum
+    sumsquare
+    n
+end
+```
+could be implemented, which would allow for other types to be provided.
+
 
 
 #### `transportcost`

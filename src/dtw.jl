@@ -162,13 +162,13 @@ function dtw_cost(
     b::AbstractArray,
     dist::Distances.SemiMetric,
     r::Int;
-    best_so_far = Inf,
+    best_so_far = typemax(floattype(QT)),
     cumulative_bound = Zeros(length(a)),
-    cost = fill(Inf, 2 * r + 1),
-    cost_prev = fill(Inf, 2 * r + 1),
+    cost = fill(typemax(floattype(QT)), 2 * r + 1),
+    cost_prev = fill(typemax(floattype(QT)), 2 * r + 1),
 ) where QT
 
-    T = QT <: Number ? QT : Float64
+    T = floattype(QT)
 
     # Instead of using matrix of size O(m^2) or O(mr), we will reuse two array of size O(r).
     m = length(a)
@@ -178,7 +178,7 @@ function dtw_cost(
 
     @inbounds for i = 0:m-1
         k = max(0, r - i)
-        min_cost = T(Inf)
+        min_cost = typemax(T)
 
         for j = max(0, i - r):min(m - 1, i + r)
             if j == 0 && i == 0
@@ -187,9 +187,9 @@ function dtw_cost(
                 k += 1
                 continue
             end
-            y = (j - 1 < 0) || (k - 1 < 0) ? T(Inf) : cost[k]
-            x = (i - 1 < 0) || (k + 1 > 2 * r) ? T(Inf) : cost_prev[k+2]
-            z = (i - 1 < 0) || (j - 1 < 0) ? T(Inf) : cost_prev[k+1]
+            y = (j - 1 < 0) || (k - 1 < 0) ? typemax(T) : cost[k]
+            x = (i - 1 < 0) || (k + 1 > 2 * r) ? typemax(T) : cost_prev[k+2]
+            z = (i - 1 < 0) || (j - 1 < 0) ? typemax(T) : cost_prev[k+1]
 
             cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1])
 
