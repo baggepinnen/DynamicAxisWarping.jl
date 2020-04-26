@@ -150,33 +150,38 @@ Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You 
 # Keyword arguments:
 - `best_so_far`: The best cost value obtained so far (optional)
 - `cumulative_bound`: A vector the same length as a and b (optional)
-- `cost`: Optional storage vector of length 2r+1, can be used to save allocations.
-- `cost_prev`: Optional storage vector of length 2r+1, can be used to save allocations.
+- `s1`: Optional storage vector of length 2r+1, can be used to save allocations.
+- `s2`: Optional storage vector of length 2r+1, can be used to save allocations.
 
-Providing the two vectors `cost, cost_prev` does not save very much time, but it makes the function completely allocation free. Can be useful in a threaded context.
+Providing the two vectors `s1, s2` does not save very much time, but it makes the function completely allocation free. Can be useful in a threaded context.
 
 This code was inspired by https://www.cs.ucr.edu/~eamonn/UCRsuite.html
 """
 function dtw_cost(
     a::AbstractArray{QT},
     b::AbstractArray,
-    dist::Distances.SemiMetric,
+    dist::Union{Distances.SemiMetric, Function},
     r::Int;
     best_so_far = typemax(floattype(QT)),
-    cumulative_bound = Zeros(length(a)),
-    cost = fill(typemax(floattype(QT)), 2 * r + 1),
-    cost_prev = fill(typemax(floattype(QT)), 2 * r + 1),
+    cumulative_bound = Zeros(lastlength(a)),
+    s1 = fill(typemax(floattype(QT)), 2r + 1),
+    s2 = fill(typemax(floattype(QT)), 2r + 1),
 ) where QT
 
     T = floattype(QT)
+    cost = s1
+    cost_prev = s2
 
     # Instead of using matrix of size O(m^2) or O(mr), we will reuse two array of size O(r).
-    m = length(a)
-    length(b) == m || throw(ArgumentError("a and b must have the same length."))
+    m = lastlength(a)
+    lastlength(b) == m || throw(ArgumentError("a and b must have the same length."))
+    lastlength(cumulative_bound) == m || throw(ArgumentError("cumulative_bound and a must have the same length."))
+    length(s1) == 2r+1 || throw(ArgumentError("s1 must be length 2r+1."))
+    length(s2) == 2r+1 || throw(ArgumentError("s2 must be length 2r+1."))
 
     local k
 
-    @inbounds for i = 0:m-1
+    for i = 0:m-1
         k = max(0, r - i)
         min_cost = typemax(T)
 
@@ -193,15 +198,15 @@ function dtw_cost(
 
             cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1])
 
-            # Find minimum cost in row for early abandoning
+            # Find minimum cost in row for early stopping
             if cost[k+1] < min_cost
                 min_cost = cost[k+1]
             end
             k += 1
         end
 
-        # We can abandon early if the current cummulative distace with lower bound together are larger than best_so_far
-        if i + r < m - 1 && min_cost + cumulative_bound[i+r+2] >= best_so_far
+        # We can abandon early if the current cumulative distace with lower bound together are larger than best_so_far
+        if ((i + r) < (m - 2)) && (min_cost + cumulative_bound[i+r+2] >= best_so_far)
             return min_cost + cumulative_bound[i+r+2]
         end
 

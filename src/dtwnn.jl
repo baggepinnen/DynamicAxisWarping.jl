@@ -13,17 +13,17 @@ struct DTWWorkspace{T,AT<:AbstractArray,D}
 end
 
 function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int) where QT
-    T           = floattype(QT)
-    m           = length(q)
-    n           = 2r + 1
-    buffer      = zeros(QT, m)
-    l           = zeros(T, m)
-    u           = zeros(T, m)
-    l_buff      = zeros(T, m)
-    u_buff      = zeros(T, m)
-    cb          = zeros(T, m)
-    c1          = zeros(T, n)
-    c2          = zeros(T, n)
+    T      = floattype(QT)
+    m      = lastlength(q)
+    n      = 2r + 1
+    buffer = similar(q)
+    l      = zeros(T, m)
+    u      = zeros(T, m)
+    l_buff = zeros(T, m)
+    u_buff = zeros(T, m)
+    cb     = zeros(T, m)
+    c1     = zeros(T, n)
+    c2     = zeros(T, n)
     DTWWorkspace(q, dist, r, buffer, l, u, l_buff, u_buff, cb, c1, c2)
 end
 
@@ -33,8 +33,7 @@ struct DTWSearchResult
     prunestats
 end
 
-function lower_upper_envs!(w,buffer, bsf, query=false)
-
+function lower_upper_envs!#(w,buffer, bsf, query=false)
 end
 
 function lb_endpoints(w, buffer, best_so_far)
@@ -85,7 +84,9 @@ function rev_cumsum!(cb)
 end
 
 
-function dtwnn(w::DTWWorkspace{T}, data::AbstractArray) where T
+function dtwnn(w::DTWWorkspace{T}, data::AbstractArray;
+    prune_endpoints = true,
+    prune_envelope = false) where T
 
     best_so_far = typemax(T)
     best_loc    = 1
@@ -93,23 +94,25 @@ function dtwnn(w::DTWWorkspace{T}, data::AbstractArray) where T
     # TODO: normalize q
     m           = lastlength(q)
     onedim      = ndims(q) == 1 && eltype(q) <: Real
-    onedim && lower_upper_envs!(w, q, best_so_far, true)
+    onedim && prune_envelope && lower_upper_envs!(w, q, best_so_far, true)
 
     # Counters to keep track of how many times lb helps
     prune_end   = 0
     prune_env   = 0
 
 
-    for it = 1:length(data)-m+1
-        buffer = data[!, it:it+m-1]
+    for it = 1:lastlength(data)-m
+        buffer = data[!, (1:m) .+ (it-1)]
         # TODO: normalize
         # they copy d into circular array t at i%m and (i%m)+m, they then use t in place of buffer in many places to save time on renormalization
-        lb_end = lb_endpoints(w, buffer, best_so_far)
-        if lb_end > best_so_far
-            prune_end += 1
-            continue
+        if prune_endpoints
+            lb_end = lb_endpoints(w, buffer, best_so_far)
+            if lb_end > best_so_far
+                prune_end += 1
+                continue
+            end
         end
-        if onedim && false # This bound only works when there is a natural ordering
+        if onedim && prune_envelope # This bound only works when there is a natural ordering
             lower_upper_envs!(w, buffer, best_so_far)
             lb_env = lb_env!(w, buffer, best_so_far) # updates w.cb
             rev_cumsum!(w.cb)
@@ -122,8 +125,8 @@ function dtwnn(w::DTWWorkspace{T}, data::AbstractArray) where T
         newdist = dtw_cost( buffer, q, w.dist, w.r,
             cumulative_bound = w.cb,
             best_so_far      = best_so_far,
-            cost             = w.c1,
-            cost_prev        = w.c2,
+            s1               = w.c1,
+            s2               = w.c2,
         )
         if newdist < best_so_far
             best_so_far = newdist

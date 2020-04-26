@@ -19,6 +19,8 @@ pkg"add https://github.com/baggepinnen/DynamicAxisWarping.jl"
 
 Inputs of dimension larger than 1 will be treated as sequences where time is in the last dimension. When using higher-dimensional series, make sure the provided distance accepts them.
 
+Any distance from Distances.jl works, as well as functions on the form `dist(x,y) -> ℝ`.
+
 ```julia
 using DynamicAxisWarping, Distances, Plots
 cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
@@ -56,16 +58,7 @@ The following optimizations are implemented.
 - [ ] Online normalization
 - [ ] Sorting of query series
 
-#### Roadmap
-The online normalization might work very well for 1d time series, but for multi-dimensional time series and a general loss function, it's less straightforward to optimize. Maybe a type-based approach, with types like
-```julia
-struct ZNormalizer <: AbstractNormalizer
-    sum
-    sumsquare
-    n
-end
-```
-could be implemented, which would allow for other types to be provided.
+
 
 
 
