@@ -1,4 +1,4 @@
-using DynamicAxisWarping, DSP, LPVSpectral, Distances
+using DynamicAxisWarping, DSP, LPVSpectral, Distances, SpectralDistances
 
 # Create two signals
 N = 48_000
@@ -14,16 +14,16 @@ plot([y1 y2])
 M1,M2 = melspectrogram.((y1,y2), 2048)
 plot(plot(M1), plot(M2))
 # Calculate the Dynamic Time-Warping cost between them (I do this in √ domain since that appears to produce the nicest looking plots)
-dtw(.√(M1.power), .√(M2.power))[1]
+@btime dtw(.√(M1.power), .√(M2.power))[1] evals=1 samples=5
+# Calculating this distance is rather fast.
 # Visualize the coupling matrix. The green line should cross diagonally (since the two signals are the same) starting halfway along the axes (since one signal is shifted by 50% of the length copared to the other).
 dtwplot(.√(M1.power), .√(M2.power), linecolor=:green)
 #
 
 # The code above used the squared Euclidean distance between spectra for each time point. We can replace that distance with a transport-based distance instead.
 # We thus combine dynamic time warping with a transport-based cost along the frequency axis
-using SpectralDistances
 n,m = size(M1.power)
-dist = DiscreteGridTransportDistance(SqEuclidean(), n, n)
+dist = DiscreteGridTransportDistance(Cityblock(), n, n)
 dtw(.√(M1.power), .√(M2.power), dist)[1]
 #
 dtwplot(.√(M1.power), .√(M2.power), dist, linecolor=:green)
