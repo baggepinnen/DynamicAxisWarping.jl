@@ -78,3 +78,30 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
         end
     end
 end
+
+
+
+@userplot MatchPlot
+
+znorm(x) = (x .-mean(x); x ./= std(x))
+using Statistics
+@recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1)
+    x, y, D, i1, i2 = handleargs(h; transportcost=transportcost)
+    x,y = znorm.((x,y))
+    s1 = x .- separation
+    s2 = x .+ separation
+
+    @series begin
+        s1
+    end
+    @series begin
+        s2
+    end
+    @series begin
+        primary := false
+        linecolor --> :black
+        alpha --> 0.2
+        i = fill(Inf, 1, length(i1))
+        vec([i1'; i2'; i][:,1:ds:end]), vec([s1[i1]'; s2[i2]'; i][:,1:ds:end])
+    end
+end
