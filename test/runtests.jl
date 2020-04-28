@@ -366,7 +366,7 @@ using Distances, Plots
 
     @testset "DBA clust" begin
         allsame(x) = all(==(x[1]), x)
-        data = [randn(100) .+ (i ÷ 5) for i = 0:19]
+        data = [randn(100) .+ 2(i ÷ 5) for i = 0:19]
         nclust = 4
         init_centers =
             DynamicAxisWarping.dbaclust_initial_centers(data, nclust, ClassicDTW())

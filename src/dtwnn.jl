@@ -61,28 +61,28 @@ function lb_endpoints(w, buffer, best_so_far; kwargs...)
     # TODO: can add more comparisons here
 end
 
-function lb_env!(w::DTWWorkspace{T}, buffer, best_so_far; kwargs...) where T
-    lb = zero(T)
-    q, dist, u, l = w.q, w.dist, w.u, w.l
-    for i in eachindex(q)
-        x = buffer[i] # This function only supports data with natural ordering
-        if x > u[i]
-            d = dist(x, u[i]; kwargs...)
-        elseif x < l[i]
-            d = dist(x, l[i]; kwargs...)
-        end
-        lb += d
-        w.cb[i] = d
-        lb > best_so_far && return lb
-    end
-    return lb
-end
-
-function rev_cumsum!(cb)
-    for k = length(cb)-1:-1:1
-        cb[k] = cb[k+1] + cb[k]
-    end
-end
+# function lb_env!(w::DTWWorkspace{T}, buffer, best_so_far; kwargs...) where T
+#     lb = zero(T)
+#     q, dist, u, l = w.q, w.dist, w.u, w.l
+#     for i in eachindex(q)
+#         x = buffer[i] # This function only supports data with natural ordering
+#         if x > u[i]
+#             d = dist(x, u[i]; kwargs...)
+#         elseif x < l[i]
+#             d = dist(x, l[i]; kwargs...)
+#         end
+#         lb += d
+#         w.cb[i] = d
+#         lb > best_so_far && return lb
+#     end
+#     return lb
+# end
+#
+# function rev_cumsum!(cb)
+#     for k = length(cb)-1:-1:1
+#         cb[k] = cb[k+1] + cb[k]
+#     end
+# end
 
 """
     search_result = dtwnn(q, y, dist, rad; kwargs...)
