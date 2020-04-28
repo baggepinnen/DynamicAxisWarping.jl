@@ -393,6 +393,22 @@ using Distances, Plots
     end
 
 
+    @testset "datasets" begin
+        @info "Testing datasets"
+
+        @testset "gaussian" begin
+            @info "Testing gaussian"
+            data, labels = DynamicAxisWarping.Datasets.fakedata_gaussian()
+        end
+
+        @testset "ucr" begin
+            @info "Testing ucr"
+
+        end
+
+    end
+
+
 end
 
 
