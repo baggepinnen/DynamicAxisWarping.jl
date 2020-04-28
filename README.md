@@ -6,9 +6,9 @@
 
 Dynamic Time Warping (DTW) and related algorithms in Julia.
 
-This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
-
-*Warning:* This package is under active development and the API is likely to break.
+- This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
+- *Warning:* This package is under active development and the API is likely to break.
+- This package supports arbitrary metrics and arbitrary "spaces", i.e., as long as you are passing a vector or higher dimensional array of something that your distance can operate on, you're good to go. Time is always considered to be the last dimension.
 
 This package isn't officially registered. Install using:
 
@@ -30,6 +30,7 @@ cost, i1, i2 = fastdtw(a,b, [dist=SqEuclidean()])
 cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. Supports early stopping, see docstring. Can be made completely allocation free.
 
 dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
+matchplot(a,b, [dist=SqEuclidean()])
 
 centers, clustids, result = dbaclust(data, nclust, FastDTW(10))
 
@@ -46,9 +47,12 @@ using DynamicAxisWarping, Distances
 radius = 5
 a      = sin.(0.1 .* (1:100))     .+ 0.1 .* randn.()
 b      = sin.(0.1 .* (1:100_000)) .+ 0.1 .* randn.()
-res    = dtwnn(a, b, SqEuclidean(), radius) # takes about 0.1s # DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
+res    = dtwnn(a, b, SqEuclidean(), radius, saveall=false, bsf_multiplier=1) # takes about 0.1s # DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
 plot([a b[eachindex(a) .+ (res.loc-1)]])
 ```
+
+- `saveall` allows you to return the entire distance profile. This will take longer time to compute.
+- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`. This allows you to find several nearby points without having to compute the entire distance profile. 
 
 #### Optimizations
 The following optimizations are implemented.
