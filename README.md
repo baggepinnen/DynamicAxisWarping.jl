@@ -21,26 +21,27 @@ pkg"add https://github.com/baggepinnen/DynamicAxisWarping.jl"
 
 Inputs of dimension larger than 1 will be treated as sequences where time is in the last dimension. When using higher-dimensional series, make sure the provided distance accepts them.
 
-Any distance from Distances.jl works, as well as functions on the form `dist(x,y) -> ℝ`.
+Any distance implementing the [Distances.jl](https://github.com/JuliaStats/Distances.jl) interface works, as well as functions on the form `dist(x,y) -> ℝ`.
 
 ```julia
 using DynamicAxisWarping, Distances, Plots
 cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
-cost, i1, i2 = fastdtw(a,b, [dist=SqEuclidean()])
+cost, i1, i2 = fastdtw(a,b, dist, radius)
 cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. Supports early stopping, see docstring. Can be made completely allocation free.
-
-dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
-matchplot(a,b, [dist=SqEuclidean()])
-
-centers, clustids, result = dbaclust(data, nclust, FastDTW(10))
 
 # dtw supports arbitrary upper and lower bound vectors constraining the warping path.
 imin,imax = radiuslimits(5,20,20), plot([imin imax])
 dtw(a, b, dist, imin, imax) # Cost eqivalent to dtw_cost(a, b, dist, 5)
 ```
 
+## Plotting
+```julia
+dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
+matchplot(a,b, [dist=SqEuclidean()])
+```
+
 ## Find a short pattern in a long time series
-The function `dtwnn` searches for a pattern in a long time series. It's currently not super well optimized, and *does not normalize* the data over each window.
+The function `dtwnn` searches for a pattern in a long time series. It's currently not super well optimized, and *does not normalize* the data over each window (see roadmap issue).
 
 ```julia
 using DynamicAxisWarping, Distances
@@ -52,7 +53,13 @@ plot([a b[eachindex(a) .+ (res.loc-1)]])
 ```
 
 - `saveall` allows you to return the entire distance profile. This will take longer time to compute.
-- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`. This allows you to find several nearby points without having to compute the entire distance profile. 
+- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`. This allows you to find several nearby points without having to compute the entire distance profile.
+
+## Clustering and barycenter averaging
+```julia
+barycenter = dba(vector_of_arrays)
+result     = dbaclust(data, nclust, ClassicDTW())
+```
 
 #### Optimizations
 The following optimizations are implemented.

@@ -11,7 +11,7 @@ using Distances, Plots
         a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
         b = [1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
         cost, match1, match2 = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test match1 ==
               [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
@@ -20,21 +20,21 @@ using Distances, Plots
 
         a[end] += 2
         cost, match1, match2 = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 4
         @test evaluate(DTWDistance(), a, b) == cost
 
         a = collect(1:10)
         b = a .+ 1
         cost, match1, match2 = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 2
         @test evaluate(DTWDistance(), a, b) == cost
 
         a = zeros(Int, 6)
         b = 1 .+ a
         cost, match1, match2 = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == length(a)
         @test evaluate(DTWDistance(), a, b) == cost
 
@@ -42,7 +42,7 @@ using Distances, Plots
         a = [1, 1, 1]
         b = [1, 1, 1]
         cost, pa, pb = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
@@ -53,7 +53,7 @@ using Distances, Plots
         a = [0, 1, 1, 1]
         b = [0, 0, 1, 1]
         cost, pa, pb = dtw(a, b)
-        @test dtw_cost(a,b,SqEuclidean(),length(a)) == cost
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test pa == [1, 1, 2, 3, 4]
         @test pb == [1, 2, 3, 3, 4]
@@ -63,16 +63,17 @@ using Distances, Plots
         a, b = randn(10), randn(10)
         cost, = dtw(a, b, Euclidean())
         @test evaluate(DTWDistance(Euclidean()), a, b) == cost
-        @test dtw_cost(a,b,Euclidean(),length(a)) == cost
+        @test dtw_cost(a, b, Euclidean(), length(a)) == cost
         cost, = dtw(a, b, Cityblock())
         @test evaluate(DTWDistance(Cityblock()), a, b) == cost
-        @test dtw_cost(a,b,Cityblock(),length(a)) == cost
+        @test dtw_cost(a, b, Cityblock(), length(a)) == cost
         cost, = dtw(a, b, Chebyshev())
         @test evaluate(DTWDistance(Chebyshev()), a, b) == cost
-        @test dtw_cost(a,b,Chebyshev(),length(a)) == cost
+        @test dtw_cost(a, b, Chebyshev(), length(a)) == cost
 
 
         @test_nowarn dtwplot(a, b)
+        @test_nowarn matchplot(a, b)
     end
 
 
@@ -327,7 +328,7 @@ using Distances, Plots
         x += 4 * exp.(-0.5 * ((t .- pktimes[4]) / 250) .^ 2)
         y = x[1:2:end]
         cost, px, py = dtw(x, y)
-        cost1, qx, qy = fastdtw(x, y, 15)
+        cost1, qx, qy = fastdtw(x, y, SqEuclidean(), 15)
         @test isapprox(cost, cost1)
         @test px == qx
         @test py == qy
@@ -347,20 +348,48 @@ using Distances, Plots
         a = randn(Float32, 100)
         b = randn(Float32, 10000)
 
-        function naive(a,b)
+        function naive(a, b)
             dists = map(1:length(b)-length(a)) do i
-                dtw_cost(a,@view(b[i:i+length(a)-1]),SqEuclidean(), 7)
+                dtw_cost(a, @view(b[i:i+length(a)-1]), SqEuclidean(), 7)
             end
         end
 
-        w = DTWWorkspace(a,SqEuclidean(),7)
-        @inferred dtwnn(w,b)
+        @inferred dtwnn(a, b, SqEuclidean(), 7)
 
-        res = dtwnn(w,b)
-        m = findmin(naive(a,b))
+        res = dtwnn(a, b, SqEuclidean(), 7)
+        m = findmin(naive(a, b))
         @test m[1] ≈ res.cost
         @test m[2] == res.loc
 
+    end
+
+
+    @testset "DBA clust" begin
+        allsame(x) = all(==(x[1]), x)
+        data = [randn(100) .+ (i ÷ 5) for i = 0:19]
+        nclust = 4
+        init_centers =
+            DynamicAxisWarping.dbaclust_initial_centers(data, nclust, ClassicDTW())
+        result = dbaclust(
+            data,
+            nclust,
+            ClassicDTW();
+            n_init = 20,
+            iterations = 10,
+        )
+        inds = 1:5
+        @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
+
+
+        result = dbaclust(
+            data,
+            nclust,
+            FastDTW(10);
+            n_init = 20,
+            iterations = 10,
+        )
+        inds = 1:5
+        @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
     end
 
 

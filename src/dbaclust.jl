@@ -28,10 +28,9 @@ Example usage:
 function dbaclust(
     sequences,
     nclust::Int,
-    n_init::Int,
     _method::DTWMethod,
     _dist::SemiMetric     = SqEuclidean();
-    dbalen::Int           = 0,
+    n_init::Int           = 1,
     iterations::Int       = 100,
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
@@ -52,7 +51,6 @@ function dbaclust(
                 nclust,
                 _method,
                 _dist;
-                dbalen           = dbalen,
                 iterations       = iterations,
                 inner_iterations = inner_iterations,
                 rtol             = rtol,
@@ -100,7 +98,6 @@ function dbaclust_single(
         _method,
         _dist,
     ),
-    dbalen::Int           = 0,
     iterations::Int       = 100,
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
@@ -111,12 +108,13 @@ function dbaclust_single(
     i2max::AbstractVector = [],
 )
 
+    T = floattype(eltype(sequences))
     # rename for convienence
     avgs   = init_centers
-    dbalen = length(avgs[1])
+    N = length(avgs[1])
 
     # check initial centers have the same length
-    if !all([length(a) for a in avgs] .== dbalen)
+    if !all(length(a) == N for a in avgs)
         throw(ArgumentError("all initial centers should be the same length"))
     end
 
@@ -128,11 +126,11 @@ function dbaclust_single(
     dtwdist   = DTWDistance(_method, _dist)
 
     # TODO switch to ntuples?
-    counts    = [zeros(Int, dbalen) for _ = 1:nclust]
-    sums      = [Array{T}(dbalen) for _ = 1:nclust]
+    counts    = [zeros(Int, N) for _ = 1:nclust]
+    sums      = [Array{T}(undef,N) for _ = 1:nclust]
 
     # cluster assignments for each sequence
-    clus_asgn = Array{Int}(nseq)
+    clus_asgn = Array{Int}(undef,nseq)
     c         = 0
 
     # arrays storing path through dtw cost matrix
@@ -146,11 +144,11 @@ function dbaclust_single(
     last_cost       = Inf
     total_cost      = 0.0
     cost_trace      = Float64[]
-    costs           = Array{Float64}(nseq)
+    costs           = Array{Float64}(undef,nseq)
 
     # main loop ##
     if show_progress
-        prog = ProgressMeter.ProgressThresh(rtol)
+        prog = ProgressMeter.ProgressThresh(rtol, 2)
         ProgressMeter.update!(
             prog,
             Inf;
@@ -163,14 +161,12 @@ function dbaclust_single(
     end#showprogress
 
     while !converged && iter < iterations
-        show_progress && println("1")
 
         # first, update cluster assignments based on nearest
         # centroid (measured by dtw distance). Keep track of
         # total cost (sum of all distances to centers).
         total_cost = 0.0
         for s = 1:nseq
-            show_progress && print("*")
             # process sequence s
             seq = sequences[s]
 
@@ -206,16 +202,13 @@ function dbaclust_single(
             end
         end
 
-        show_progress && println("2")
-
         # if any centers are unused, and reassign them to the sequences
         # with the highest cost
         unused = setdiff(1:nclust, unique(clus_asgn))
         if !isempty(unused)
-            println("unused")
             # reinitialize centers
             for c in unused
-                avgs[c] = deepcopy(sequences[indmax(costs)])
+                avgs[c] = deepcopy(sequences[argmax(costs)])
                 for s = 1:nseq
                     if isempty(i2min) && isempty(i2max)
                         cost, = distpath(dtwdist, avgs[c], seq)
@@ -245,7 +238,7 @@ function dbaclust_single(
 
         # update barycenter estimates
         for (a, s, c) in zip(avgs, sums, counts)
-            for t = 1:dbalen
+            for t = 1:N
                 c[t] == 0 && continue
                 a[t] = s[t] / c[t]
             end
@@ -262,7 +255,6 @@ function dbaclust_single(
             converged_inner = false
             oldcost         = 1.0e100
             while !converged_inner && inner_iter < inner_iterations
-                show_progress && print("!")
                 newcost = dba_iteration!(
                     sums[i],
                     avgs[i],
@@ -281,7 +273,6 @@ function dbaclust_single(
                     oldcost = newcost
                 end
             end
-            show_progress && println(" ")
         end
 
         # update progress bar
@@ -306,10 +297,6 @@ function dbaclust_single(
     )
 end
 
-# Wrapper for AbstractArray of one-dimensional time series.
-function dbaclust(s::AbstractArray, args...; kwargs...)
-    dbaclust(_sequentize(s), args...; kwargs...)
-end
 
 """
    dbaclust_initial_centers(sequences, nclust, dist)
@@ -321,7 +308,7 @@ function dbaclust_initial_centers(
     sequences::AbstractVector,
     nclust::Int,
     _method::DTWMethod,
-    _dist::SemiMetric = SqEuclidean();
+    _dist::Union{SemiMetric, Function} = SqEuclidean();
 )
 
     # procedure for calculating dtw

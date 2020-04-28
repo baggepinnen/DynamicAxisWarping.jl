@@ -1,6 +1,6 @@
 
 """
-    cost,i1,i2 = fastdtw(seq1,seq2,radius,[dist=SqEuclidean])
+    cost,i1,i2 = fastdtw(seq1,seq2,dist,radius])
 
 Computes FastDTW approximation to the DTW, described in Salvador & Chan,
 Intelligent Data Analysis (2007).
@@ -8,8 +8,8 @@ Intelligent Data Analysis (2007).
 function fastdtw(
         seq1::AbstractArray,
         seq2::AbstractArray,
+        dist::Union{SemiMetric, Function},
         radius::Int,
-        dist::SemiMetric=SqEuclidean()
     )
 
     MinSize = max(radius + 2, 10)
@@ -22,7 +22,7 @@ function fastdtw(
     # Call recursively on a pair of sequences half this length
     compressed1 = compress2(seq1)
     compressed2 = compress2(seq2)
-    _cost, lowrescol, lowresrow = fastdtw(compressed1, compressed2, radius, dist)
+    _cost, lowrescol, lowresrow = fastdtw(compressed1, compressed2, dist, radius)
 
     # Now resample that path to the finer resolution, find the correct
     # window around it, and get the DTW given that window.
