@@ -210,6 +210,7 @@ function dbaclust_single(
             for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
                 for s = 1:nseq
+                    seq = sequences[s]
                     if isempty(i2min) && isempty(i2max)
                         cost, = distpath(dtwdist, avgs[c], seq)
                     else
