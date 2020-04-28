@@ -3,8 +3,8 @@ floattype(T::Type{<:AbstractFloat}) = T
 floattype(_) = Float64
 
 Base.@propagate_inbounds Base.getindex(v::AbstractVector, ::typeof(!), i) = v[i]
-Base.@propagate_inbounds Base.getindex(v::AbstractMatrix, ::typeof(!), i) = @view v[:,i]
-Base.@propagate_inbounds Base.getindex(v::AbstractArray{<:Any,3}, ::typeof(!), i) = @view v[:,:,i]
+Base.@propagate_inbounds Base.getindex(v::AbstractMatrix, ::typeof(!), i) = uview(v,:,i)
+Base.@propagate_inbounds Base.getindex(v::AbstractArray{<:Any,3}, ::typeof(!), i) = uview(v,:,:,i)
 
 Base.@propagate_inbounds Base.setindex!(v::AbstractVector, val, ::typeof(!), i) = v[i] = val
 Base.@propagate_inbounds Base.setindex!(v::AbstractMatrix, val, ::typeof(!), i) = v[:,i] .= val

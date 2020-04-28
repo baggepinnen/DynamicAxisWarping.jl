@@ -8,6 +8,8 @@ Dynamic Time Warping (DTW) and related algorithms in Julia.
 
 This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
 
+*Warning:* This package is under active development and the API is likely to break.
+
 This package isn't officially registered. Install using:
 
 ```julia
@@ -44,9 +46,7 @@ using DynamicAxisWarping, Distances
 radius = 5
 a      = sin.(0.1 .* (1:100))     .+ 0.1 .* randn.()
 b      = sin.(0.1 .* (1:100_000)) .+ 0.1 .* randn.()
-w      = DTWWorkspace(a,SqEuclidean(),radius)
-res    = dtwnn(w,b) # takes about 0.1s
-# DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
+res    = dtwnn(a, b, SqEuclidean(), radius) # takes about 0.1s # DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
 plot([a b[eachindex(a) .+ (res.loc-1)]])
 ```
 

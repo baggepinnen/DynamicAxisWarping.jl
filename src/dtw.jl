@@ -160,16 +160,17 @@ This code was inspired by https://www.cs.ucr.edu/~eamonn/UCRsuite.html
 function dtw_cost(
     a::AbstractArray{QT},
     b::AbstractArray,
-    dist::Union{Distances.SemiMetric, Function},
+    dist::F,
     r::Int;
     best_so_far = typemax(floattype(QT)),
     cumulative_bound = Zeros(lastlength(a)),
     s1 = fill(typemax(floattype(QT)), 2r + 1),
     s2 = fill(typemax(floattype(QT)), 2r + 1),
-) where QT
+    kwargs...
+) where {QT, F <: Union{Distances.SemiMetric, Function}}
 
     T = floattype(QT)
-    cost = s1
+    cost      = s1 # just change the name of these variables
     cost_prev = s2
 
     # Instead of using matrix of size O(m^2) or O(mr), we will reuse two array of size O(r).
@@ -187,7 +188,7 @@ function dtw_cost(
 
         for j = max(0, i - r):min(m - 1, i + r)
             if j == 0 && i == 0
-                cost[k+1] = dist(a[!,1], b[!,1])
+                cost[k+1] = dist(a[!,1], b[!,1]; kwargs...)
                 min_cost = cost[k+1]
                 k += 1
                 continue
@@ -196,7 +197,7 @@ function dtw_cost(
             x = (i - 1 < 0) || (k + 1 > 2 * r) ? typemax(T) : cost_prev[k+2]
             z = (i - 1 < 0) || (j - 1 < 0) ? typemax(T) : cost_prev[k+1]
 
-            cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1])
+            cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1]; kwargs...)
 
             # Find minimum cost in row for early stopping
             if cost[k+1] < min_cost

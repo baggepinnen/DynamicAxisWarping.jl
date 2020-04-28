@@ -5,6 +5,8 @@ using StatsBase
 using Parameters
 using Distances
 using FillArrays
+using ProgressMeter
+using UnsafeArrays
 using Plots, Plots.PlotMeasures
 
 export dtw,
