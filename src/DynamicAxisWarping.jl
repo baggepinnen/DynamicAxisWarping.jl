@@ -1,6 +1,7 @@
 module DynamicAxisWarping
 
 import ProgressMeter
+using Statistics
 using StatsBase
 using Parameters
 using Distances
@@ -25,10 +26,12 @@ export dtw,
        dtwnn,
        DTWWorkspace
 
+export ZNormalizer
+
 include("utils.jl")
 
 include("distance_interface.jl")
-
+include("normalizers.jl")
 include("dtw.jl")
 include("dtwnn.jl")
 include("dba.jl")

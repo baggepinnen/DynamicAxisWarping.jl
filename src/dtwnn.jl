@@ -99,20 +99,21 @@ Compute the nearest neighbor to `q` in `y`.
 - `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`.
 - `saveall = false`: compute a dense result (takes longer, no early stopping methods used). If false, then a vector of lower bounds on the distance is stored in `search_result.dists`, if true, all distances are computed and stored.
 """
-function dtwnn(q, y, dist, rad; kwargs...)
+function dtwnn(q, y, dist, rad; normalizer=nothing, kwargs...)
+    q, y = setup_normalizer(normalizer, q, y)
     w = DTWWorkspace(q, dist, rad)
     dtwnn(w, y; kwargs...)
 end
 
 function dtwnn(w::DTWWorkspace{T}, data::AbstractArray;
     prune_endpoints = true,
-    prune_envelope = false,
-    saveall = false,
-    bsf_multiplier = 1,
+    prune_envelope  = false,
+    saveall         = false,
+    bsf_multiplier  = 1,
     kwargs...) where T
 
 
-    bsf_multiplier >= 1 || throw(ArgumentError("It does not make sense to have the bsf_multiplier < 1"))
+    bsf_multiplier >= 1 || throw(DomainError("It does not make sense to have the bsf_multiplier < 1"))
     best_so_far = typemax(T)
     best_loc    = 1
     q           = w.q

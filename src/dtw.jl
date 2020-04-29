@@ -193,9 +193,9 @@ function dtw_cost(
                 k += 1
                 continue
             end
-            y = (j - 1 < 0) || (k - 1 < 0) ? typemax(T) : cost[k]
+            y = (j - 1 < 0) || (k - 1 < 0)     ? typemax(T) : cost[k]
             x = (i - 1 < 0) || (k + 1 > 2 * r) ? typemax(T) : cost_prev[k+2]
-            z = (i - 1 < 0) || (j - 1 < 0) ? typemax(T) : cost_prev[k+1]
+            z = (i - 1 < 0) || (j - 1 < 0)     ? typemax(T) : cost_prev[k+1]
 
             cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1]; kwargs...)
 

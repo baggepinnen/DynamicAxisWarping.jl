@@ -1,10 +1,15 @@
-using Test
+using Test, Statistics
 using DynamicAxisWarping
 using Distances, Plots
 
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
 
+
+    @testset "Normalizers" begin
+        @info "Testing Normalizers"
+        include("test_normalizers.jl")
+    end
 
 
     @testset "Basic Dynamic Time Warping" begin
