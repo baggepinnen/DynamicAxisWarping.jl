@@ -89,7 +89,7 @@ using Statistics
     x, y, D, i1, i2 = handleargs(h; transportcost=transportcost)
     x,y = znorm.((x,y))
     s1 = x .- separation
-    s2 = x .+ separation
+    s2 = y .+ separation
 
     @series begin
         s1

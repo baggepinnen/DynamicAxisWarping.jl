@@ -34,9 +34,28 @@ dtw(a, b, dist, imin, imax) # Cost eqivalent to dtw_cost(a, b, dist, 5)
 
 ## Plotting
 ```julia
-dtwplot(a,b, [dist=SqEuclidean()]; transportcost = 1)
-matchplot(a,b, [dist=SqEuclidean()])
+dtwplot(a, b, [dist=SqEuclidean()]; transportcost = 1)
+matchplot(a, b, [dist=SqEuclidean()])
 ```
+Example:
+```julia
+using DynamicAxisWarping, Plots
+
+fs = 70
+t  = range(0,stop=1,step=1/fs)
+y0 = sin.(2pi .*t)
+y1 = sin.(3pi .*t)
+y  = [y0;y1[2:end]] .+ 0.01 .* randn.()
+q  = [y0;y0[2:end]] .+ 0.01 .* randn.()
+y[10:15] .+= 0.5
+q[13:25] .+= 0.5
+
+f1 = plot([q y])
+f2 = dtwplot(q,y,lc=:green, lw=1)
+f3 = matchplot(q,y,ds=3,separation=1)
+plot(f1,f2,f3, legend=false, layout=3, grid=false)
+```
+![figure](examples/doppler.svg)
 
 ## Find a short pattern in a long time series
 The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass `normalizer = ZNormalizer` (this only works for 1D data).
