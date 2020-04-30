@@ -207,8 +207,8 @@ function dtw_cost(
         end
 
         # We can abandon early if the current cumulative distace with lower bound together are larger than best_so_far
-        if ((i + r) < (m - 2)) && (min_cost + cumulative_bound[i+r+2] >= best_so_far)
-            return min_cost + cumulative_bound[i+r+2]
+        if ((i + r) < (m - 1)) && (min_cost + cumulative_bound[i+r+1] >= best_so_far)
+            return min_cost + cumulative_bound[i+r+1]
         end
 
         cost_prev, cost = cost, cost_prev

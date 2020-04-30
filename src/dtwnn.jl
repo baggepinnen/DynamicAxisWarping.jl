@@ -35,7 +35,51 @@ struct DTWSearchResult
     dists
 end
 
-function lower_upper_envs!#(w,buffer, bsf, query=false)
+function lower_upper_envs!(w::DTWWorkspace{T}, q, bsf, query = false) where {T}
+    du, dl = Deque{Int}(), Deque{Int}()
+    push!(du, 0)
+    push!(dl, 0)
+    r = w.r
+    if query
+        u,l = w.u, w.l
+    else
+        u,l = w.u_buff, w.l_buff
+    end
+    m = lastlength(w.q)
+    for i = 1:m-1
+        if i > r
+            u[i-r] = q[first(du)+1]
+            l[i-r] = q[first(dl)+1]
+        end
+        if q[i+1] > q[i]
+            pop!(du)
+            while (!isempty(du) && q[i+1] > q[last(du)+1])
+                pop!(du)
+            end
+        else
+            pop!(dl)
+            while (!isempty(dl) && q[i+1] < q[last(dl)+1])
+                pop!(dl)
+            end
+        end
+        push!(du, i)
+        push!(dl, i)
+        if i == 2r + 1 + first(du)
+            popfirst!(du)
+        elseif (i == 2r + 1 + first(dl))
+            popfirst!(dl)
+        end
+    end
+    for i = m:m+r
+        u[i-r] = q[first(du)+1]
+        l[i-r] = q[first(dl)+1]
+        if i - first(du) >= 2r + 1
+            popfirst!(du)
+        end
+        if i - first(dl) >= 2r + 1
+            popfirst!(dl)
+        end
+    end
 end
 
 function lb_endpoints(w, buffer, best_so_far; kwargs...)
@@ -62,28 +106,29 @@ function lb_endpoints(w, buffer, best_so_far; kwargs...)
     # TODO: can add more comparisons here
 end
 
-# function lb_env!(w::DTWWorkspace{T}, buffer, best_so_far; kwargs...) where T
-#     lb = zero(T)
-#     q, dist, u, l = w.q, w.dist, w.u, w.l
-#     for i in eachindex(q)
-#         x = buffer[i] # This function only supports data with natural ordering
-#         if x > u[i]
-#             d = dist(x, u[i]; kwargs...)
-#         elseif x < l[i]
-#             d = dist(x, l[i]; kwargs...)
-#         end
-#         lb += d
-#         w.cb[i] = d
-#         lb > best_so_far && return lb
-#     end
-#     return lb
-# end
-#
-# function rev_cumsum!(cb)
-#     for k = length(cb)-1:-1:1
-#         cb[k] = cb[k+1] + cb[k]
-#     end
-# end
+function lb_env!(w::DTWWorkspace{T}, buffer, best_so_far; kwargs...) where T
+    lb = zero(T)
+    q, dist, u, l = w.q, w.dist, w.u, w.l
+    for i in 1:lastlength(q)
+        x = buffer[!,i] # This function only supports data with natural ordering
+        d = zero(T)
+        if x > u[i]
+            d = dist(x, u[i]; kwargs...)
+        elseif x < l[i]
+            d = dist(x, l[i]; kwargs...)
+        end
+        lb += d
+        w.cb[i] = d
+        lb > best_so_far && return lb
+    end
+    return lb
+end
+
+function rev_cumsum!(cb)
+    @inbounds for k = length(cb)-1:-1:1
+        cb[k] = cb[k+1] + cb[k]
+    end
+end
 
 """
     search_result = dtwnn(q, y, dist, rad; kwargs...)
@@ -96,8 +141,8 @@ Compute the nearest neighbor to `q` in `y`.
 - `dist`: distance
 - `rad`: radius
 - `prune_endpoints = true`: use endpoint heuristic
-- `prune_envelope = false`: use envelope heuristic
-- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`.
+- `prune_envelope  = true`: use envelope heuristic
+- `bsf_multiplier  = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`.
 - `saveall = false`: compute a dense result (takes longer, no early stopping methods used). If false, then a vector of lower bounds on the distance is stored in `search_result.dists`, if true, all distances are computed and stored.
 """
 function dtwnn(q, y, dist, rad; normalizer=Val(Nothing), kwargs...)
@@ -109,7 +154,7 @@ end
 
 function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     prune_endpoints = true,
-    prune_envelope  = false,
+    prune_envelope  = true,
     saveall         = false,
     bsf_multiplier  = 1,
     kwargs...) where T

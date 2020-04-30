@@ -8,6 +8,7 @@ using Distances
 using FillArrays
 using ProgressMeter
 using UnsafeArrays
+using DataStructures
 using Plots, Plots.PlotMeasures
 
 export dtw,

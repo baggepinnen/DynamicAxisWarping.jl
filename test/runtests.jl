@@ -353,9 +353,9 @@ using Distances, Plots
         a = randn(Float32, 100)
         b = randn(Float32, 10000)
 
-        function naive(a, b)
+        function naive(a, b, r=7)
             dists = map(1:length(b)-length(a)) do i
-                dtw_cost(a, @view(b[i:i+length(a)-1]), SqEuclidean(), 7)
+                dtw_cost(a, @view(b[i:i+length(a)-1]), SqEuclidean(), r)
             end
         end
 
@@ -394,6 +394,25 @@ using Distances, Plots
         @test m[1] ≈ res.cost
         @test m[2] == res.loc
         @test res.dists ≈ resn
+
+
+        a = sin.(0.1 .* (1:100))    .+ 0.05 .* randn.()
+        b = sin.(0.1 .* (1:10_000)) .+ 0.05 .* randn.()
+
+        res = dtwnn(a, b, SqEuclidean(), 2, prune_endpoints = false, prune_envelope = true)
+        @test res.prunestats.prune_env > 0
+        resn = naive(a, b, 2)
+        m = findmin(resn)
+        @test m[2] == res.loc
+        @test m[1] ≈ res.cost
+
+        res = dtwnn(a, b, SqEuclidean(), 2, prune_endpoints = true, prune_envelope = true)
+        @test res.prunestats.prune_env > 0
+        @test res.prunestats.prune_end > 0
+        resn = naive(a, b, 2)
+        m = findmin(resn)
+        @test m[2] == res.loc
+        @test m[1] ≈ res.cost
 
     end
 
@@ -510,3 +529,21 @@ end
 # @time dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer, saveall=false)
 # @btime dtwnn($a, $b, SqEuclidean(), 5, normalizer=Nothing, saveall=false)
 # @btime naive_norm($a, $b)
+
+
+
+
+
+
+# # Bench prune_envelope
+# a = sin.(0.1 .* (1:100))    .+ 0.1 .* randn.()
+# b = sin.(0.1 .* (1:1000_000)) .+ 0.1 .* randn.()
+# @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = false, prune_envelope = false)
+# @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = false, prune_envelope = true)
+# @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = false)
+# @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = true)
+#
+#
+# a = sin.(0.1f0 .* (1:100))    .+ 0.1f0 .* randn.(Float32)
+# b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
+# @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = true, normalizer=Val(ZNormalizer))

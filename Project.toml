@@ -3,6 +3,7 @@ uuid = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 
 [deps]
 BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"

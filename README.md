@@ -64,10 +64,18 @@ Note that `dba` is known to not always produce the best barycenters. See, e.g., 
 ### Optimizations
 The following optimizations are implemented.
 - [x] Endpoint lower bound pruning
-- [ ] Envelope lower bound pruning
+- [x] Envelope lower bound pruning
 - [x] DTW early termination
 - [x] Online normalization (see `ZNormalizer`)
 - [ ] Sorting of query series
+
+`dtwnn` is fairly performant, below is a small benchmark performed on a 2014 laptop
+```julia
+a = sin.(0.1f0 .* (1:100))    .+ 0.1f0 .* randn.(Float32)
+b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
+@btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = true, normalizer=Val(ZNormalizer))
+# 853.336 ms (25519 allocations: 5.00 MiB)
+```
 
 
 

@@ -10,6 +10,8 @@ setup_normalizer(::Val{Nothing}, q, y) = q, y
 normalize(::Val{Nothing}, q) = q
 
 
+normalize(T::Type, q) = normalize(Val(T), q)
+
 """
     ZNormalizer{T} <: AbstractNormalizer{T, 1}
 
