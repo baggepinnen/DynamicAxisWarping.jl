@@ -26,7 +26,8 @@ export dtw,
        dtwnn,
        DTWWorkspace
 
-export ZNormalizer
+export ZNormalizer,
+       normalize
 
 include("utils.jl")
 

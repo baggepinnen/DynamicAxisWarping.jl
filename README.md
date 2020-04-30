@@ -39,14 +39,14 @@ matchplot(a,b, [dist=SqEuclidean()])
 ```
 
 ## Find a short pattern in a long time series
-The function `dtwnn` searches for a pattern in a long time series. It's currently not super well optimized, and *does not normalize* the data over each window (see roadmap issue).
+The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass `normalizer = ZNormalizer` (this only works for 1D data).
 
 ```julia
 using DynamicAxisWarping, Distances
 radius = 5
 a      = sin.(0.1 .* (1:100))     .+ 0.1 .* randn.()
 b      = sin.(0.1 .* (1:100_000)) .+ 0.1 .* randn.()
-res    = dtwnn(a, b, SqEuclidean(), radius, saveall=false, bsf_multiplier=1) # takes about 0.1s # DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
+res    = dtwnn(a, b, SqEuclidean(), radius, saveall=false, bsf_multiplier=1) # takes < 0.1s # DynamicAxisWarping.DTWSearchResult(0.4625287975222824, 73452, (prune_end = 79108, prune_env = 0))
 plot([a b[eachindex(a) .+ (res.loc-1)]])
 ```
 
@@ -66,7 +66,7 @@ The following optimizations are implemented.
 - [x] Endpoint lower bound pruning
 - [ ] Envelope lower bound pruning
 - [x] DTW early termination
-- [ ] Online normalization
+- [x] Online normalization (see `ZNormalizer`)
 - [ ] Sorting of query series
 
 

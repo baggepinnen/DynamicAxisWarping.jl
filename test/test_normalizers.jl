@@ -8,8 +8,9 @@ z = ZNormalizer(x,n)
 @test length(z) == n
 @test size(z) == (n,)
 @test ndims(z) == 1
-@test lastlength(z) == length(z)
+@test lastlength(z) == length(z.x)
 
+advance!(z)  # Init
 inds = 1:n
 @test z == x[inds]
 @test mean(z) ≈ mean(x[inds])
@@ -34,7 +35,24 @@ inds = inds .+ 1
 
 @test_throws BoundsError z[n+1]
 
-for i = 1:91
+@test normalize(ZNormalizer, z.x[2:11]) ≈ normalize(ZNormalizer, z)
+
+for i = 1:89
     advance!(z)
 end
+
+@test z.bufi == 0
+@test z[!, 1] ≈ (z[1]-mean(z))/std(z)
+@test z.bufi == 1
+
+@test normalize(ZNormalizer, z.x[91:end]) ≈ normalize(ZNormalizer, z) ≈ z.buffer
+@test z.bufi == n
+
+advance!(z)
 @test_throws BoundsError z[n]
+
+
+
+y = normalize(ZNormalizer, randn(10))
+@test mean(y) ≈ 0 atol=eps()
+@test std(y, corrected=false) ≈ 1 atol=eps()

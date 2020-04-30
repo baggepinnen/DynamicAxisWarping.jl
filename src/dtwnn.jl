@@ -1,4 +1,4 @@
-struct DTWWorkspace{T,AT<:AbstractArray,D}
+struct DTWWorkspace{T,AT<:AbstractArray,D,N}
     q::AT
     dist::D
     r::Int
@@ -10,9 +10,10 @@ struct DTWWorkspace{T,AT<:AbstractArray,D}
     cb::Vector{T}
     c1::Vector{T}
     c2::Vector{T}
+    normalizer::N
 end
 
-function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int) where QT
+function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Nothing) where QT
     T      = floattype(QT)
     m      = lastlength(q)
     n      = 2r + 1
@@ -24,7 +25,7 @@ function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int) where QT
     cb     = zeros(T, m)
     c1     = zeros(T, n)
     c2     = zeros(T, n)
-    DTWWorkspace(q, dist, r, buffer, l, u, l_buff, u_buff, cb, c1, c2)
+    DTWWorkspace(q, dist, r, buffer, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
 end
 
 struct DTWSearchResult
@@ -94,18 +95,19 @@ Compute the nearest neighbor to `q` in `y`.
 - `y`: data ( the long time series)
 - `dist`: distance
 - `rad`: radius
-- `prune_endpoints = true`: use endopint heuristic
+- `prune_endpoints = true`: use endpoint heuristic
 - `prune_envelope = false`: use envelope heuristic
 - `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`.
 - `saveall = false`: compute a dense result (takes longer, no early stopping methods used). If false, then a vector of lower bounds on the distance is stored in `search_result.dists`, if true, all distances are computed and stored.
 """
-function dtwnn(q, y, dist, rad; normalizer=nothing, kwargs...)
-    q, y = setup_normalizer(normalizer, q, y)
-    w = DTWWorkspace(q, dist, rad)
+function dtwnn(q, y, dist, rad; normalizer=Val(Nothing), kwargs...)
+    n = normalizer isa Val ? normalizer : Val(normalizer)
+    q, y = setup_normalizer(n, q, y)
+    w = DTWWorkspace(q, dist, rad, n)
     dtwnn(w, y; kwargs...)
 end
 
-function dtwnn(w::DTWWorkspace{T}, data::AbstractArray;
+function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     prune_endpoints = true,
     prune_envelope  = false,
     saveall         = false,
@@ -117,41 +119,43 @@ function dtwnn(w::DTWWorkspace{T}, data::AbstractArray;
     best_so_far = typemax(T)
     best_loc    = 1
     q           = w.q
-    # TODO: normalize q
     m           = lastlength(q)
-    md          = lastlength(data)
-    md >= m || throw(ArgumentError("q must be shorter than y, swap inputs."))
+    my          = lastlength(y)
+    my >= m || throw(ArgumentError("q must be shorter than y, swap inputs."))
     onedim      = ndims(q) == 1 && eltype(q) <: Real
-    onedim && prune_envelope && lower_upper_envs!(w, q, best_so_far, true)
+    onedim && prune_envelope && lower_upper_envs!(w, q, best_so_far, true) # Result stored in w
 
     # Counters to keep track of how many times lb helps
     prune_end   = 0
     prune_env   = 0
-    dists = fill(typemax(T), md-m)
+    dists = fill(typemax(T), my-m)
 
-    @showprogress 1.5 "DTW NN" for it = 1:md-m
+    prog = Progress((my-m)÷10, 1)
+    # @inbounds @showprogress 1.5 "DTW NN" for it = 1:my-m
+    @inbounds for it = 1:my-m
+        advance!(y)
         bsf = bsf_multiplier*best_so_far
-        buffer = data[!, (1:m) .+ (it-1)]
-        # TODO: normalize
-        # they copy d into circular array t at i%m and (i%m)+m, they then use t in place of buffer in many places to save time on renormalization
+        ym = y[!, (1:m) .+ (it-1)] # if y isa Normalizer, this is a noop
         if prune_endpoints && !saveall
-            lb_end = lb_endpoints(w, buffer, bsf; kwargs...)
+            lb_end = lb_endpoints(w, ym, bsf; kwargs...)
             if lb_end > bsf
                 prune_end += 1
                 continue
             end
         end
         if onedim && prune_envelope && !saveall # This bound only works when there is a natural ordering
-            lower_upper_envs!(w, buffer, bsf)
-            lb_env = lb_env!(w, buffer, bsf; kwargs...) # updates w.cb
+            # lower_upper_envs!(w, ym, bsf) # This step is only required for reverse bound
+            lb_env = lb_env!(w, ym, bsf; kwargs...) # updates w.cb
             rev_cumsum!(w.cb)
             if lb_env > bsf
                 prune_env += 1
                 continue
             end
         end
+        # If we get here, we must normalize the entire y
+        buffern = normalize(w.normalizer, ym) # This only normalizes what's not already normalized
 
-        newdist = dtw_cost( buffer, q, w.dist, w.r;
+        newdist = dtw_cost( buffern, q, w.dist, w.r;
             cumulative_bound = w.cb,
             best_so_far      = saveall ? typemax(T) : bsf,
             s1               = w.c1,
@@ -163,7 +167,29 @@ function dtwnn(w::DTWWorkspace{T}, data::AbstractArray;
             best_so_far = newdist
             best_loc = it
         end
+        it % 10 == 0 && next!(prog)
     end
     prunestats = (prune_end=prune_end, prune_env=prune_env)
     DTWSearchResult(best_so_far, best_loc, prunestats, dists)
 end
+
+
+# q is normalized first   ( we do this in wrapper that creates workspace)
+# then create envelope of q
+# sort q
+# store sorted q and u/l in qo,ql,qu
+# read in buffer
+# create envelop of buffer ( no normalization done before or inside here, but this step is only required if one does the reverse env bound as well)
+# reset norm accumulators
+# for i
+#  advance accumulator with buffer[i] ( in effect, populate it fully before doing anything)
+#  update circular array
+# now they have an if statement that is only enterd when i >= m, inside that
+#    mean,std = ...
+#    calc lbs(mean, std)
+#    if no pruning succeeded, then fully z-normalize t ( how does t relate to our z.x? length(t) == m
+#    what they send into dtw is the fully znormalized t ( collect!(buffer, z) perhaps?)
+# advance accumulators
+
+
+# I wonder how much better it is to abandon the Z-normalization rather than using SIMD to normalize the entire thing in one go. If one has calculated the entire envelop, then the entire t has already been normalized, why redo it?

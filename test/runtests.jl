@@ -366,6 +366,35 @@ using Distances, Plots
         @test m[1] ≈ res.cost
         @test m[2] == res.loc
 
+        res = dtwnn(a, b, SqEuclidean(), 7, saveall=true)
+        resn = naive(a, b)
+        m = findmin(resn)
+        @test m[1] ≈ res.cost
+        @test m[2] == res.loc
+        @test res.dists ≈ resn
+
+
+        a = randn(Float64, 100)
+        b = randn(Float64, 10000)
+
+        function naive_norm(a, b)
+            an = normalize(ZNormalizer, a)
+            dists = map(1:length(b)-length(a)) do i
+                bn = normalize(ZNormalizer, @view(b[i:i+length(a)-1]))
+                @test mean(bn) ≈ 0 atol = 10eps(eltype(a))
+                @test std(bn, corrected=false, mean=0) ≈ 1 atol = sqrt(eps(eltype(a)))
+                dtw_cost(an, bn, SqEuclidean(), 7)
+            end
+        end
+
+        @inferred dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer)
+        res = dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer, saveall=true)
+        resn = naive_norm(a, b)
+        m = findmin(resn)
+        @test m[1] ≈ res.cost
+        @test m[2] == res.loc
+        @test res.dists ≈ resn
+
     end
 
 
@@ -474,3 +503,10 @@ end
 # m = findmin(naive(a,b))
 # @test m[1] ≈ res.cost
 # @test m[2] == res.loc
+
+
+# a      = sin.((1:1000))     .+ 0.05 .* randn.()
+# b      = sin.((1:1000_000)) .+ 0.05 .* randn.()
+# @time dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer, saveall=false)
+# @btime dtwnn($a, $b, SqEuclidean(), 5, normalizer=Nothing, saveall=false)
+# @btime naive_norm($a, $b)
