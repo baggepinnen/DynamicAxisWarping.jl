@@ -123,28 +123,3 @@ Statistics.std(z::ZNormalizer) = z.σ
 lastlength(z::ZNormalizer) = length(z.x)
 Base.length(z::ZNormalizer) = z.n
 Base.size(z::ZNormalizer) = (z.n,)
-
-
-
-function running_mean_std(x::AbstractArray{T}, m) where T
-    @assert length(x) > m
-    n = length(x)-m+1
-    s = ss = zero(T)
-    μ = similar(x, n)
-    σ = similar(x, n)
-    @inbounds for i = 1:m
-        s += x[i]
-        ss += x[i]^2
-    end
-    μ[1] = s/m
-    σ[1] = sqrt(ss/m - μ[1]^2)
-    @inbounds for i = 1:n-1
-        s -= x[i]
-        ss -= x[i]^2
-        s += x[i+m]
-        ss += x[i+m]^2
-        μ[i+1] = s/m
-        σ[i+1] = sqrt(ss/m - μ[i+1]^2)
-    end
-    μ,σ
-end

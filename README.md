@@ -98,22 +98,6 @@ result     = dbaclust(data, nclust, DTW())
 Note that `dba` is known to not always produce the best barycenters. See, e.g., ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
 
 
-## Matrix profile
-The function `stomp` returns the matrix profile and profile indices.
-```julia
-t   = range(0, stop=1, step=1/10)
-y0  = sin.(2pi .* t)
-T   = [randn(50); y0; randn(50); y0; randn(50)]
-window_length = length(y0)
-P,I = stomp(T, window_length)
-plot(T, layout=2)
-plot!(P, sp=2) # Should have minima at 51 and 112
-```
-
-`stomp` benefits greatly in speed from the use of `Flaot32` instead of `Float64`.
-
-Reference: [Matrix profile II](https://www.cs.ucr.edu/~eamonn/STOMP_GPU_final_submission_camera_ready.pdf).
-
 ## `transportcost`
 `transportcost` adds an additional penalty multiplier for "transporting", i.e., deviations from the Euclidean matching. The standard DTW distance does not consider this added cost and the default is 1. A value greater than 1 multiplies the cost of moving horizontally or vertically in the coupling matrix, promoting a diagonal move, corresponding to the standard Euclidean matching. The influence of the transport cost can be visualized with
 ```julia

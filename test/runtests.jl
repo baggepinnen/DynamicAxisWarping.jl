@@ -11,12 +11,6 @@ using Distances, Plots
         include("test_normalizers.jl")
     end
 
-    @testset "matrix profile" begin
-        @info "Testing matrix profile"
-        include("test_mp.jl")
-    end
-
-
     @testset "Basic Dynamic Time Warping" begin
         a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
         b = [1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
@@ -26,27 +20,27 @@ using Distances, Plots
         @test match1 ==
               [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         a[end] += 2
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 4
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         a = collect(1:10)
         b = a .+ 1
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 2
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         a = zeros(Int, 6)
         b = 1 .+ a
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == length(a)
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         # Verify that a tie prefers diagonal moves
         a = [1, 1, 1]

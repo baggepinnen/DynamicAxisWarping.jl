@@ -8,8 +8,6 @@ using FillArrays
 using ProgressMeter
 using UnsafeArrays
 using DataStructures
-using LoopVectorization
-using DSP
 using Plots, Plots.PlotMeasures
 
 export dtw,
@@ -45,6 +43,5 @@ include("windowed_matrix.jl")
 include("fastdtw.jl")
 include("datasets/datasets.jl")
 include("plots.jl")
-include("mp.jl")
 
 end # module
