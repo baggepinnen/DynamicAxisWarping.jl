@@ -80,6 +80,7 @@ The following optimizations are implemented.
 - [x] DTW early termination
 - [x] Online normalization (see `ZNormalizer`)
 - [ ] Sorting of query series
+- [x] All algorithms operate on arbitrary precision numbers. If you pass them `Float32` instead of `Float64`, they can become up to twice as fast.
 
 `dtwnn` is fairly performant, below is a small benchmark performed on a 2014 laptop
 ```julia
@@ -108,6 +109,9 @@ P,I = stomp(T, window_length)
 plot(T, layout=2)
 plot!(P, sp=2) # Should have minima at 51 and 112
 ```
+
+`stomp` benefits greatly in speed from the use of `Flaot32` instead of `Float64`.
+
 Reference: [Matrix profile II](https://www.cs.ucr.edu/~eamonn/STOMP_GPU_final_submission_camera_ready.pdf).
 
 ## `transportcost`

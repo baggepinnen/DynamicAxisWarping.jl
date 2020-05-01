@@ -138,7 +138,7 @@ function running_mean_std(x::AbstractArray{T}, m) where T
     end
     μ[1] = s/m
     σ[1] = sqrt(ss/m - μ[1]^2)
-    @inbounds for i = 1:n
+    @inbounds for i = 1:n-1
         s -= x[i]
         ss -= x[i]^2
         s += x[i+m]

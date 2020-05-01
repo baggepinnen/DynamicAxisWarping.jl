@@ -17,7 +17,7 @@ function stomp(T, m)
     I   = ones(Int, l)
     @inbounds for i = 2:l
         for j = l:-1:2
-            QT[j] = QT[j-1]-T[j-1]*T[i-1]+T[j+m-1]*T[i+m-1]
+            @fastmath QT[j] = QT[j-1]-T[j-1]*T[i-1]+T[j+m-1]*T[i+m-1]
         end
         QT[1] = QT₀[i]
         distance_profile!(D, QT, μ, σ, m, i)
@@ -26,11 +26,9 @@ function stomp(T, m)
     P, I
 end
 
-using LoopVectorization
-
 function distance_profile!(D, QT, μ, σ, m, i)
     @assert i <= length(D)
-    @avx for j = 1:length(D)
+    @avx for j = eachindex(D)
         frac = (QT[j] - m*μ[i]*μ[j]) / (m*σ[i]*σ[j])
         D[j] = sqrt(max(2m*(1-frac), 0))
     end
@@ -56,11 +54,11 @@ Input: A query Q, and a user provided time series T
 Output: The dot product between Q and all subsequences in T
 """
 function window_dot(Q, T::AbstractArray{S}) where S
-    n    = length(T)
-    m    = length(Q)
-    Qr   = reverse(Q)
-    Qra  = Qr
-    QT = conv(Qr, T)
+    n   = length(T)
+    m   = length(Q)
+    Qr  = reverse(Q)
+    Qra = Qr
+    QT  = conv(Qr, T)
     return QT[m:n]
 end
 # function window_dot(Q, T::AbstractArray{S}) where S

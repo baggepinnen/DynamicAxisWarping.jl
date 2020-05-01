@@ -13,7 +13,7 @@ using Distances, Plots
 
     @testset "matrix profile" begin
         @info "Testing matrix profile"
-        include("test_normalizers.jl")
+        include("test_mp.jl")
     end
 
 
@@ -439,15 +439,15 @@ using Distances, Plots
         @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
 
 
-        result = dbaclust(
+        result = [dbaclust(
             data,
             nclust,
             FastDTW(10);
             n_init = 20,
             iterations = 10,
-        )
+        ) for _ in 1:2]
         inds = 1:5
-        @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
+        @test any(all([allsame(result.clustids[inds .+ 5i]) for i in 0:3]) for result in result)
     end
 
 
