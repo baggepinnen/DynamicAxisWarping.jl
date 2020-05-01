@@ -14,3 +14,11 @@ m = findmin(P)
 
 # @btime stomp($randn(Float32, 10_000), 20)
 # @profiler stomp(randn(10_000), 20)
+
+
+# Q = randn(5)
+# T = randn(10)
+# d1 = DynamicAxisWarping.window_dot(Q,T)
+# d2 = DynamicAxisWarping.window_dot2(Q,T)
+# d3 = DynamicAxisWarping.window_dot3(Q,T)
+# [d1 d2 d3]

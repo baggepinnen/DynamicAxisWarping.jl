@@ -10,7 +10,7 @@ using ProgressMeter
 using UnsafeArrays
 using DataStructures
 using LoopVectorization
-using FFTW
+using DSP
 using Plots, Plots.PlotMeasures
 
 export dtw,
