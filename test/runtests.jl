@@ -11,6 +11,11 @@ using Distances, Plots
         include("test_normalizers.jl")
     end
 
+    @testset "matrix profile" begin
+        @info "Testing matrix profile"
+        include("test_normalizers.jl")
+    end
+
 
     @testset "Basic Dynamic Time Warping" begin
         a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
