@@ -3,7 +3,6 @@ module DynamicAxisWarping
 import ProgressMeter
 using Statistics
 using StatsBase
-using Parameters
 using Distances
 using FillArrays
 using ProgressMeter
