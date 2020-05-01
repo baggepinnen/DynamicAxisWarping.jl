@@ -8,7 +8,7 @@ using FillArrays
 using ProgressMeter
 using UnsafeArrays
 using DataStructures
-using Plots, Plots.PlotMeasures
+using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 
 export dtw,
        dtw_cost,
