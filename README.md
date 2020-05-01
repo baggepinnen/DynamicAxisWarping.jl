@@ -69,8 +69,8 @@ res    = dtwnn(a, b, SqEuclidean(), radius, saveall=false, bsf_multiplier=1) # t
 plot([a b[eachindex(a) .+ (res.loc-1)]])
 ```
 
-- `saveall` allows you to return the entire distance profile. This will take longer time to compute.
-- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. Will only have effect if `saveall = false`. This allows you to find several nearby points without having to compute the entire distance profile.
+- `saveall` causes the entire distance profile to be computed. This will take longer time to compute. It is stored in `res.dists`.
+- `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. This allows you to find several nearby points without having to compute the entire distance profile.
 
 
 ### Optimizations
@@ -93,7 +93,7 @@ b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
 ## Clustering and barycenter averaging
 ```julia
 barycenter = dba(vector_of_arrays)
-result     = dbaclust(data, nclust, ClassicDTW())
+result     = dbaclust(data, nclust, DTW())
 ```
 Note that `dba` is known to not always produce the best barycenters. See, e.g., ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
 
@@ -128,6 +128,13 @@ You can try a `transportcost < 1` as well, but then it is preferable to make wei
 The distance between two datapoints can be any distance supporting the [Distances.jl](https://github.com/JuliaStats/Distances.jl/) interface.
 
 See the file [`frequency_warping.jl`](https://github.com/baggepinnen/DynamicAxisWarping.jl/blob/master/examples/frequency_warping.jl) ([notebook](https://nbviewer.jupyter.org/github/baggepinnen/julia_examples/blob/master/frequency_warping.ipynb)) for an example combining dynamic time warping with optimal transport along the frequency axis for spectrograms. This example makes use of [SpectralDistances.jl](https://github.com/baggepinnen/SpectralDistances.jl).
+
+## Distances.jl interface
+
+```julia
+d = DTWDistance(method=DTW(), dist=SqEuclidean())
+```
+`method` can be either of `DTW()` or `FastDTW(radius)`.
 
 ## Acknowledgements
 

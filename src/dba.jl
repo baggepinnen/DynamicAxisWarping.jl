@@ -27,7 +27,7 @@ Example usage:
 """
 function dba(
     sequences::AbstractVector,
-    method::DTWMethod = ClassicDTW(),
+    method::DTWMethod,
     dist::SemiMetric = SqEuclidean();
     init_center = rand(sequences),
     iterations::Int = 1000,

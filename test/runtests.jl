@@ -56,7 +56,7 @@ using Distances, Plots
         @test cost == 0
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         # Verify that trackback ends properly if it reaches an edge before reaching [1,1]
         # Also check that trackback prefers diagonal moves
@@ -67,18 +67,18 @@ using Distances, Plots
         @test cost == 0
         @test pa == [1, 1, 2, 3, 4]
         @test pb == [1, 2, 3, 3, 4]
-        @test evaluate(DTWDistance(), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
         # test the distance api with different distances
         a, b = randn(10), randn(10)
         cost, = dtw(a, b, Euclidean())
-        @test evaluate(DTWDistance(Euclidean()), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10),Euclidean()), a, b) == cost
         @test dtw_cost(a, b, Euclidean(), length(a)) == cost
         cost, = dtw(a, b, Cityblock())
-        @test evaluate(DTWDistance(Cityblock()), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10),Cityblock()), a, b) == cost
         @test dtw_cost(a, b, Cityblock(), length(a)) == cost
         cost, = dtw(a, b, Chebyshev())
-        @test evaluate(DTWDistance(Chebyshev()), a, b) == cost
+        @test evaluate(DTWDistance(DTW(10),Chebyshev()), a, b) == cost
         @test dtw_cost(a, b, Chebyshev(), length(a)) == cost
 
 
@@ -348,7 +348,7 @@ using Distances, Plots
         x = [1.0, 2.0, 2.0, 3.0, 3.0, 4.0]
         y = [1.0, 3.0, 4.0]
         z = [1.0, 2.0, 2.0, 4.0]
-        avg, _ = dba([x, y, z], init_center = z)
+        avg, _ = dba([x, y, z], DTW(5), init_center = z)
         @test avg == [1.0, 1.75, 2.75, 4.0]
     end
 
@@ -426,12 +426,10 @@ using Distances, Plots
         allsame(x) = all(==(x[1]), x)
         data = [randn(100) .+ 2(i ÷ 5) for i = 0:19]
         nclust = 4
-        init_centers =
-            DynamicAxisWarping.dbaclust_initial_centers(data, nclust, ClassicDTW())
         result = dbaclust(
             data,
             nclust,
-            ClassicDTW();
+            DTW(10);
             n_init = 20,
             iterations = 10,
         )
