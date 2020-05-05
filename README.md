@@ -116,7 +116,7 @@ See the file [`frequency_warping.jl`](https://github.com/baggepinnen/DynamicAxis
 ## Distances.jl interface
 
 ```julia
-d = DTWDistance(method=DTW(), dist=SqEuclidean())
+d = DTWDistance(method=DTW(radius), dist=SqEuclidean())
 ```
 `method` can be either of `DTW()` or `FastDTW(radius)`.
 

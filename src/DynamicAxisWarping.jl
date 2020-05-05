@@ -8,6 +8,8 @@ using FillArrays
 using ProgressMeter
 using UnsafeArrays
 using DataStructures
+using SlidingDistancesBase
+import SlidingDistancesBase: floattype, lastlength
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 
 export dtw,
