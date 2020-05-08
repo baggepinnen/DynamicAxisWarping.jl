@@ -175,12 +175,13 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     prune_env   = 0
     dists = fill(typemax(T), my-m)
 
-    prog = Progress((my-m)÷10, 1)
+    prog = Progress((my-m)÷10, dt=1, desc="DTW NN")
     # @inbounds @showprogress 1.5 "DTW NN" for it = 1:my-m
     @inbounds for it = 1:my-m
+        it % 10 == 0 && next!(prog)
         advance!(y)
         bsf = bsf_multiplier*best_so_far
-        ym = y[!, (1:m) .+ (it-1)] # if y isa Normalizer, this is a noop
+        ym = getwindow(y, m, it) # if y isa Normalizer, this is a noop
         if prune_endpoints && !saveall
             lb_end = lb_endpoints(w, ym, bsf; kwargs...)
             if lb_end > bsf
@@ -212,7 +213,6 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
             best_so_far = newdist
             best_loc = it
         end
-        it % 10 == 0 && next!(prog)
     end
     prunestats = (prune_end=prune_end, prune_env=prune_env)
     DTWSearchResult(best_so_far, best_loc, prunestats, dists)

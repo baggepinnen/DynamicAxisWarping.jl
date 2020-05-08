@@ -25,3 +25,5 @@ distpath(d::DTWDistance{DTW}, x, y) = dtw(x, y, d.dist)
 distpath(d::DTWDistance{DTW}, x, y, i2min::AbstractVector, i2max::AbstractVector) =
     dtw(x, y, i2min, i2max, d.dist)
 distpath(d::DTWDistance{FastDTW}, x, y) = fastdtw(x, y, d.dist, d.method.radius)
+
+(d::DTWDistance)(x,y) = Distances.evaluate(d,x,y)

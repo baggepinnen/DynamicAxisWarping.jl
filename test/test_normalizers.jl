@@ -54,5 +54,5 @@ advance!(z)
 
 
 y = normalize(ZNormalizer, randn(10))
-@test mean(y) ≈ 0 atol=eps()
-@test std(y, corrected=false) ≈ 1 atol=eps()
+@test mean(y) ≈ 0 atol=1e-12
+@test std(y, corrected=false) ≈ 1 atol=1e-12
