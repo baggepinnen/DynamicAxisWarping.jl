@@ -1,4 +1,4 @@
-using DynamicAxisWarping: advance!, lastlength
+using DynamicAxisWarping: advance!, lastlength, actuallastlength
 using Statistics
 
 n = 10
@@ -8,7 +8,7 @@ z = ZNormalizer(x,n)
 @test length(z) == n
 @test size(z) == (n,)
 @test ndims(z) == 1
-@test lastlength(z) == length(z.x)
+@test actuallastlength(z) == length(z.x)
 
 advance!(z)  # Init
 inds = 1:n
