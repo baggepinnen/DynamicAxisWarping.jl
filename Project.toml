@@ -26,15 +26,14 @@ Distances = "0.8"
 FillArrays = "0.8"
 Plots = "1.0"
 ProgressMeter = "1.2"
+Requires = "1.0"
 SlidingDistancesBase = "0.1"
 StatsBase = "0.33"
 UnsafeArrays = "1.0"
 julia = "1"
 
-
 [extras]
 MatrixProfile = "24e37439-14ec-4097-bda3-6a65822e2305"
-
 
 [targets]
 test = ["MatrixProfile"]
