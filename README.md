@@ -97,6 +97,12 @@ result     = dbaclust(data, nclust, DTW())
 ```
 Note that `dba` is known to not always produce the best barycenters. See, e.g., ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
 
+## Sparse distance matrix
+The early termination and some of the stopping heuristics can be used to efficiently calculate a sparse distance matrix where only the k nearest neighbors are fully caluclated and stored. To this end, we have the function
+```julia
+dists, inds = sparse_distmat(y::Vector{Vector}, k, dist, radius)
+```
+
 
 ## `transportcost`
 `transportcost` adds an additional penalty multiplier for "transporting", i.e., deviations from the Euclidean matching. The standard DTW distance does not consider this added cost and the default is 1. A value greater than 1 multiplies the cost of moving horizontally or vertically in the coupling matrix, promoting a diagonal move, corresponding to the standard Euclidean matching. The influence of the transport cost can be visualized with
