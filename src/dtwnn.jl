@@ -2,7 +2,6 @@ struct DTWWorkspace{T,AT<:AbstractArray,D,N}
     q::AT
     dist::D
     r::Int
-    buffer::AT
     l::Vector{T}
     u::Vector{T}
     l_buff::Vector{T}
@@ -17,7 +16,6 @@ function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Nothing) wh
     T      = floattype(QT)
     m      = lastlength(q)
     n      = 2r + 1
-    buffer = similar(q)
     l      = zeros(T, m)
     u      = zeros(T, m)
     l_buff = zeros(T, m)
@@ -25,7 +23,7 @@ function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Nothing) wh
     cb     = zeros(T, m)
     c1     = zeros(T, n)
     c2     = zeros(T, n)
-    DTWWorkspace(q, dist, r, buffer, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
+    DTWWorkspace(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
 end
 
 struct DTWSearchResult
@@ -142,6 +140,7 @@ Compute the nearest neighbor to `q` in `y`.
 - `prune_envelope  = true`: use envelope heuristic
 - `bsf_multiplier  = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`.
 - `saveall = false`: compute a dense result (takes longer, no early stopping methods used). If false, then a vector of lower bounds on the distance is stored in `search_result.dists`, if true, all distances are computed and stored.
+- `avoid`: If an integer index (or set of indices) is provided, this index will be avoided in the search. This is useful in case `q` is a part of `y`.
 """
 function dtwnn(q, y, dist, rad; normalizer=Val(Nothing), kwargs...)
     n = normalizer isa Val ? normalizer : Val(normalizer)
@@ -155,6 +154,8 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     prune_envelope  = true,
     saveall         = false,
     bsf_multiplier  = 1,
+    transportcost   = 1,
+    avoid           = nothing,
     kwargs...) where T
 
 
@@ -171,13 +172,14 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     # Counters to keep track of how many times lb helps
     prune_end   = 0
     prune_env   = 0
-    dists = fill(typemax(T), my-m)
+    dists = fill(typemax(T), my-m+1)
 
     prog = Progress((my-m)÷10, dt=1, desc="DTW NN")
     # @inbounds @showprogress 1.5 "DTW NN" for it = 1:my-m
-    @inbounds for it = 1:my-m
+    @inbounds for it = 1:my-m+1
         it % 10 == 0 && next!(prog)
         advance!(y)
+        avoid !== nothing && it ∈ avoid && continue
         bsf = bsf_multiplier*best_so_far
         ym = getwindow(y, m, it) # if y isa Normalizer, this is a noop
         if prune_endpoints && !saveall
@@ -204,6 +206,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
             best_so_far      = saveall ? typemax(T) : bsf,
             s1               = w.c1,
             s2               = w.c2,
+            transportcost    = transportcost,
             kwargs...
         )
         dists[it] = newdist
@@ -236,7 +239,8 @@ Compute the `k` nearest neighbors between signals in `y`, corresponding to the `
 - `dist`: the inner metric, e.g., `SqEuclidean()`
 - `kwargs`: these are sent to `dtw_cost`.
 """
-function sparse_distmat(y::Vector{<:AbstractVector{T}}, k, dist, rad; kwargs...) where T
+function sparse_distmat(y::Vector{<:AbstractVector{S}}, k, dist, rad; kwargs...) where S
+    T = floattype(S)
     N = length(y)
     INDS = [zeros(Int, k) for _ in 1:N]
     DISTS = [zeros(T, k) for _ in 1:N]
@@ -249,7 +253,7 @@ function sparse_distmat(y::Vector{<:AbstractVector{T}}, k, dist, rad; kwargs...)
             if d < bsf
                 d = dtw_cost(y[i], y[j], dist, rad; best_so_far = bsf, kwargs...)
             end
-            push!(dists, Neighbor(j,d))
+            push!(dists, Neighbor(j,T(d)))
             if length(dists) > k
                 bsf = pop!(dists)
             end

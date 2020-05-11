@@ -11,6 +11,7 @@ using DataStructures
 using SlidingDistancesBase
 import SlidingDistancesBase: floattype, lastlength
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
+using Requires
 
 export dtw,
        dtw_cost,
@@ -26,7 +27,8 @@ export dtw,
        fastdtw,
        radiuslimits,
        dtwnn,
-       DTWWorkspace
+       DTWWorkspace,
+       sparse_distmat
 
 export ZNormalizer,
        normalize
@@ -45,5 +47,10 @@ include("windowed_matrix.jl")
 include("fastdtw.jl")
 include("datasets/datasets.jl")
 include("plots.jl")
+
+function __init__()
+    @require MatrixProfile = "24e37439-14ec-4097-bda3-6a65822e2305" include("matrix_profile.jl")
+end
+
 
 end # module

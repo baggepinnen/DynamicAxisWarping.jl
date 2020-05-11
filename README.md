@@ -103,6 +103,12 @@ The early termination and some of the stopping heuristics can be used to efficie
 dists, inds = sparse_distmat(y::Vector{Vector}, k, dist, radius)
 ```
 
+## Matrix Profile
+This package defines specialized methods for [`MatrixProfile`](https://github.com/baggepinnen/MatrixProfile.jl)`.matrix_profile`, making use of early stopping to accelerate the computation of the matrix profile. The interface is
+```julia
+profile = matrix_profile(y, m, DTWDistance(DTW(radius, [transportcost])))
+```
+
 
 ## `transportcost`
 `transportcost` adds an additional penalty multiplier for "transporting", i.e., deviations from the Euclidean matching. The standard DTW distance does not consider this added cost and the default is 1. A value greater than 1 multiplies the cost of moving horizontally or vertically in the coupling matrix, promoting a diagonal move, corresponding to the standard Euclidean matching. The influence of the transport cost can be visualized with
