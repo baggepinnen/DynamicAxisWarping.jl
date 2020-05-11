@@ -12,7 +12,7 @@ Dynamic Time Warping (DTW), matrix profile and related algorithms in Julia.
 This package is not registered. Install using:
 ```julia
 using Pkg
-pkg"add https://github.com/baggepinnen/DynamicAxisWarping.jl"
+pkg"add DynamicAxisWarping"
 ```
 
 ## Simple usage

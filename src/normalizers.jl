@@ -120,6 +120,9 @@ end
 Statistics.mean(z::ZNormalizer) = z.μ
 Statistics.std(z::ZNormalizer) = z.σ
 
-lastlength(z::ZNormalizer) = length(z.x)
+SlidingDistancesBase.lastlength(z::ZNormalizer) = z.n
 Base.length(z::ZNormalizer) = z.n
 Base.size(z::ZNormalizer) = (z.n,)
+
+actuallastlength(x) = lastlength(x)
+actuallastlength(x::ZNormalizer) = length(x.x)

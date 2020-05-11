@@ -164,7 +164,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     best_loc    = 1
     q           = w.q
     m           = lastlength(q)
-    my          = lastlength(y)
+    my          = actuallastlength(y)
     my >= m || throw(ArgumentError("q must be shorter than y, swap inputs."))
     onedim      = ndims(q) == 1 && eltype(q) <: Real
     onedim && prune_envelope && lower_upper_envs!(w, q, best_so_far, true) # Result stored in w
