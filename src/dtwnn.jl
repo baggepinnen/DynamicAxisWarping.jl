@@ -82,9 +82,7 @@ function lower_upper_envs!(w::DTWWorkspace{T}, q, bsf, query = false) where {T}
     end
 end
 
-function lb_endpoints(w, buffer, best_so_far; kwargs...)
-    dist = w.dist
-    q = w.q
+function lb_endpoints(dist, q, buffer, best_so_far; kwargs...)
     m = lastlength(q)
 
     x1 = buffer[!,1]
@@ -183,7 +181,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
         bsf = bsf_multiplier*best_so_far
         ym = getwindow(y, m, it) # if y isa Normalizer, this is a noop
         if prune_endpoints && !saveall
-            lb_end = lb_endpoints(w, ym, bsf; kwargs...)
+            lb_end = lb_endpoints(w.dist, w.q, ym, bsf; kwargs...)
             if lb_end > bsf
                 prune_end += 1
                 continue
@@ -218,23 +216,39 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     DTWSearchResult(best_so_far, best_loc, prunestats, dists)
 end
 
+struct Neighbor{T}
+    i::Int
+    d::T
+end
 
-# q is normalized first   ( we do this in wrapper that creates workspace)
-# then create envelope of q
-# sort q
-# store sorted q and u/l in qo,ql,qu
-# read in buffer
-# create envelop of buffer ( no normalization done before or inside here, but this step is only required if one does the reverse env bound as well)
-# reset norm accumulators
-# for i
-#  advance accumulator with buffer[i] ( in effect, populate it fully before doing anything)
-#  update circular array
-# now they have an if statement that is only enterd when i >= m, inside that
-#    mean,std = ...
-#    calc lbs(mean, std)
-#    if no pruning succeeded, then fully z-normalize t ( how does t relate to our z.x? length(t) == m
-#    what they send into dtw is the fully znormalized t ( collect!(buffer, z) perhaps?)
-# advance accumulators
+Base.isless(n1::Neighbor,n2::Neighbor) = isless(n1.d, n2.d)
+Base.isless(n1, n2::Neighbor) = isless(n1, n2.d)
+Base.isless(n1::Neighbor,n2) = isless(n1.d, n2)
 
+function sparse_distmat(y::Vector{<:AbstractVector{T}}, k, dist, rad; kwargs...) where T
+    N = length(y)
+    INDS = [zeros(Int, k) for _ in 1:N]
+    DISTS = [zeros(T, k) for _ in 1:N]
+    for i = 1:N
+        bsf = typemax(T)
+        dists = BinaryMaxHeap{Neighbor{T}}()
+        for j = 1:N
+            j == i && continue
+            d = lb_endpoints(dist, y[i], y[j], bsf; kwargs...)
+            if d < bsf
+                d = dtw_cost(y[i], y[j], dist, rad; best_so_far = bsf, kwargs...)
+            end
+            push!(dists, Neighbor(j,d))
+            if length(dists) > k
+                bsf = pop!(dists)
+            end
+        end
 
-# I wonder how much better it is to abandon the Z-normalization rather than using SIMD to normalize the entire thing in one go. If one has calculated the entire envelop, then the entire t has already been normalized, why redo it?
+        for j = k:-1:1
+            n = pop!(dists)
+            INDS[i][j] = n.i
+            DISTS[i][j] = n.d
+        end
+    end
+    DISTS, INDS
+end

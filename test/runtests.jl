@@ -27,6 +27,10 @@ using Distances, Plots
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 4
         @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        cost, match1, match2 = dtw(Float64.(a), Float64.(b), transportcost=1.1)
+        @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
+        @test evaluate(DTWDistance(DTW(10, 1.1)), a, b) == cost
+
 
         a = collect(1:10)
         b = a .+ 1
@@ -443,6 +447,21 @@ using Distances, Plots
     end
 
 
+    @testset "sparse_distmat" begin
+        @info "Testing sparse_distmat"
+        using Distances
+        y = [sin.(0.1 .* (1:100) .+ 2pi*rand()) .+ 0.1randn(100) for _ in 1:200]
+        dists,inds = DynamicAxisWarping.sparse_distmat(y, 4, SqEuclidean(), 5)
+        D = [dtw_cost(y1,y2,SqEuclidean(), 5) for y1 in y, y2 in y]
+        for i = 1:200
+            @test partialsort(D[:,i], 2:5) == dists[i]
+            @test partialsortperm(D[:,i], 2:5) == inds[i]
+        end
+
+    end
+
+
+
     @testset "datasets" begin
         @info "Testing datasets"
 
@@ -457,7 +476,6 @@ using Distances, Plots
         end
 
     end
-
 
 end
 

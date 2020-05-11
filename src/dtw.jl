@@ -162,6 +162,7 @@ function dtw_cost(
     b::AbstractArray,
     dist::F,
     r::Int;
+    transportcost = 1,
     best_so_far = typemax(floattype(QT)),
     cumulative_bound = Zeros(lastlength(a)),
     s1 = fill(typemax(floattype(QT)), 2r + 1),
@@ -194,8 +195,8 @@ function dtw_cost(
                 continue
             end
             y = (j - 1 < 0) || (k - 1 < 0)     ? typemax(T) : cost[k]
-            x = (i - 1 < 0) || (k + 1 > 2 * r) ? typemax(T) : cost_prev[k+2]
-            z = (i - 1 < 0) || (j - 1 < 0)     ? typemax(T) : cost_prev[k+1]
+            x = (i - 1 < 0) || (k + 1 > 2 * r) ? typemax(T) : transportcost*cost_prev[k+2]
+            z = (i - 1 < 0) || (j - 1 < 0)     ? typemax(T) : transportcost*cost_prev[k+1]
 
             cost[k+1] = min(x, y, z) + dist(a[!,i+1], b[!,j+1]; kwargs...)
 

@@ -2,8 +2,13 @@
 abstract type DTWMethod end
 
 struct DTW <: DTWMethod
+    "The maximum allowed deviation of the matching path from the diagonal"
     radius::Int
+    "If >1, an additional penalty factor for non-diagonal moves is added."
+    transportcost::Float64
+    DTW(r,transportcost=1) = new(r,transportcost)
 end
+
 
 struct FastDTW <: DTWMethod
     radius::Int
