@@ -24,7 +24,7 @@ Any distance implementing the [Distances.jl](https://github.com/JuliaStats/Dista
 ```julia
 using DynamicAxisWarping, Distances, Plots
 cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
-cost, i1, i2 = fastdtw(a,b, dist, radius)
+cost, i1, i2 = fastdtw(a,b, dist, radius) # note https://arxiv.org/abs/2003.11246
 cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. Supports early stopping, see docstring. Can be made completely allocation free.
 
 # dtw supports arbitrary upper and lower bound vectors constraining the warping path.
@@ -136,4 +136,4 @@ d = DTWDistance(method=DTW(radius), dist=SqEuclidean())
 
 This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
 
-Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of the code for TimeWarp.jl
+Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of the initial code for TimeWarp.jl
