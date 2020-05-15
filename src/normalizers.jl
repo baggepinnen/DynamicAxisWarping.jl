@@ -72,7 +72,7 @@ end
     return z.buffer
 end
 
-setup_normalizer(z::Val{ZNormalizer}, q, y) = z, normalize(z, q), ZNormalizer(y, length(q))
+setup_normalizer(z::Val{ZNormalizer}, q::AbstractVector, y::AbstractVector) = z, normalize(z, q), ZNormalizer(y, length(q))
 
 @propagate_inbounds function advance!(z::ZNormalizer{T}) where T
 
@@ -210,14 +210,15 @@ end
 end
 
 @inline @propagate_inbounds function getindex(z::IsoZNormalizer, ::typeof(!), i, inorder = i == z.bufi + 1)
+    j = inorder ? i : z.n
+    xj = z.i + i - 1
+    @avx for k = 1:size(z.x, 1)
+        z.buffer[k, j] = (z.x[k, xj] - z.μ[k]) / z.σ[k]
+    end
     if inorder
         z.bufi = i
-        z.buffer[!, i] = (z[:, i] .- z.μ) ./ z.σ
-        y = z.buffer[!, i] # TODO: this will not be type stable
-    else
-        y = (z[:, i] .- z.μ) ./ z.σ
     end
-    y
+    z.buffer[!, j]
 end
 
 @inline @propagate_inbounds function getindex(z::IsoZNormalizer, ::typeof(!), i::AbstractRange)

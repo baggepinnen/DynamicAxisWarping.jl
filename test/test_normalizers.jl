@@ -18,8 +18,8 @@ inds = 1:n
 @test std(z) ≈ std(x[inds], corrected=false)
 @test z.i == 1
 
-@test z[!,1] == (x[1]-mean(z))/std(z)
-@test z[!,n] == (x[n]-mean(z))/std(z)
+@test @inferred(z[!,1]) == (x[1]-mean(z))/std(z)
+@test @inferred(z[!,n]) == (x[n]-mean(z))/std(z)
 
 advance!(z)
 inds = inds .+ 1
@@ -29,7 +29,7 @@ inds = inds .+ 1
 @test mean(z) ≈ mean(x[inds])
 @test std(z) ≈ std(x[inds], corrected=false)
 
-@test z[!,1] == (x[2]-mean(z))/std(z)
+@test @inferred(z[!,1]) == (x[2]-mean(z))/std(z)
 @test z[!,n] == (x[n+1]-mean(z))/std(z)
 
 
@@ -77,8 +77,8 @@ inds = 1:n
 @test std(z) ≈ std(x[:,inds], corrected=false, dims=2)
 @test z.i == 1
 
-@test z[!,1] == (x[:,1]-mean(z))./std(z)
-@test z[!,n] == (x[:,n]-mean(z))./std(z)
+@test @inferred(z[!,1]) == (x[:,1]-mean(z))./std(z)
+@test @inferred(z[!,n]) == (x[:,n]-mean(z))./std(z)
 
 advance!(z)
 inds = inds .+ 1
@@ -88,12 +88,9 @@ inds = inds .+ 1
 @test mean(z) ≈ mean(x[:, inds], dims=2)
 @test std(z) ≈ std(x[:, inds], dims=2, corrected=false)
 
-@test z[!,1] == (x[:,2]-mean(z))./std(z)
-@test z[!,n] == (x[:,n+1]-mean(z))./std(z)
+@test @inferred(z[!,1]) == (x[:,2]-mean(z))./std(z)
+@test @inferred(z[!,n]) == (x[:,n+1]-mean(z))./std(z)
 
-
-
-@test_throws BoundsError z[:,n+1]
 
 @test normalize(IsoZNormalizer, z.x[:,2:11]) ≈ normalize(IsoZNormalizer, z)
 
@@ -118,6 +115,7 @@ y = normalize(IsoZNormalizer, randn(2,10))
 @test std(y, corrected=false) ≈ 1 atol=1e-12
 
 
+# Test that they work for real
 a = randn(2,100)
 @test dtwnn(a,a,SqEuclidean(),3,normalizer=IsoZNormalizer).cost < 1e-20
 @test dtwnn(a,a,SqEuclidean(),3,normalizer=ZNormalizer).cost < 1e-20
