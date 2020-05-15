@@ -10,6 +10,7 @@ using UnsafeArrays
 using DataStructures
 using SlidingDistancesBase
 import SlidingDistancesBase: floattype, lastlength
+using LoopVectorization
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 using Requires
 
@@ -31,6 +32,7 @@ export dtw,
        sparse_distmat
 
 export ZNormalizer,
+       IsoZNormalizer,
        normalize
 
 export stomp

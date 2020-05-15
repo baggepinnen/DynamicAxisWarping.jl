@@ -12,6 +12,8 @@ normalize(::Val{Nothing}, q) = q
 
 normalize(T::Type, q) = normalize(Val(T), q)
 
+abstract type AbstractZNormalizer{T,N} <: AbstractNormalizer{T,N} end
+
 """
     ZNormalizer{T} <: AbstractNormalizer{T, 1}
 
@@ -29,7 +31,7 @@ Works like a vector, index into window with `z[i]`, index into normalized window
 - `buffer::Vector{T}`: stores calculated normalized values, do not access this, it might not be complete
 - `bufi::Int`: index of last normalized value
 """
-mutable struct ZNormalizer{T} <: AbstractNormalizer{T,1}
+mutable struct ZNormalizer{T} <: AbstractZNormalizer{T,1}
     x::Vector{T}
     n::Int
     μ::T
@@ -41,7 +43,7 @@ mutable struct ZNormalizer{T} <: AbstractNormalizer{T,1}
     bufi::Int
 end
 
-function ZNormalizer(x::AbstractArray{T}, n) where T
+function ZNormalizer(x::AbstractArray{T,1}, n) where T
     @assert length(x) >= n
     s = ss = zero(T)
     @inbounds @simd for i in 1:n
@@ -54,12 +56,13 @@ function ZNormalizer(x::AbstractArray{T}, n) where T
     ZNormalizer(x, n, μ, σ, s, ss, 0, buffer, 0)
 end
 
-function normalize(::Val{ZNormalizer}, q)
+
+function normalize(::Val{ZNormalizer}, q::Vector)
     q = q .- mean(q)
     q ./= std(q, corrected=false, mean=0)
 end
 
-@inline @propagate_inbounds function normalize(::Val{ZNormalizer}, z::ZNormalizer)
+@inline @propagate_inbounds function normalize(::Val{T}, z::T) where T <: AbstractZNormalizer
     if z.bufi == z.n
         return z.buffer
     end
@@ -112,17 +115,111 @@ end
     y
 end
 
-@inline @propagate_inbounds function getindex(z::ZNormalizer, ::typeof(!), i::AbstractRange)
+@inline @propagate_inbounds function getindex(z::AbstractZNormalizer, ::typeof(!), i::AbstractRange)
     @boundscheck (i[1] == z.i && length(i) == z.n) || throw(ArgumentError("ZNormalizers can only be indexed by ranges corresponding to their current state. Got range $i but state was $(z.i)"))
     z
 end
 
-Statistics.mean(z::ZNormalizer) = z.μ
-Statistics.std(z::ZNormalizer) = z.σ
+Statistics.mean(z::AbstractZNormalizer) = z.μ
+Statistics.std(z::AbstractZNormalizer) = z.σ
 
-SlidingDistancesBase.lastlength(z::ZNormalizer) = z.n
-Base.length(z::ZNormalizer) = z.n
+SlidingDistancesBase.lastlength(z::AbstractZNormalizer) = z.n
+Base.length(z::AbstractZNormalizer) = z.n
 Base.size(z::ZNormalizer) = (z.n,)
 
 actuallastlength(x) = lastlength(x)
-actuallastlength(x::ZNormalizer) = length(x.x)
+actuallastlength(x::AbstractZNormalizer) = lastlength(x.x)
+
+
+
+
+# Multi dim ==================================================================================
+mutable struct IsoZNormalizer{T} <: AbstractZNormalizer{T,2}
+    x::Array{T,2}
+    n::Int
+    μ::Array{T,1}
+    σ::Array{T,1}
+    s::Array{T,1}
+    ss::Array{T,1}
+    i::Int
+    buffer::Array{T,2}
+    bufi::Int
+end
+
+
+
+function IsoZNormalizer(x::AbstractArray{T,2}, n) where T
+    @assert length(x) >= n
+    s  = zeros(T, size(x,1))
+    ss = zeros(T, size(x,1))
+    @inbounds @simd for i in 1:n
+        s  .+= x[!, i]
+        ss .+= x[!, i].^2
+    end
+    μ = s./n
+    σ = sqrt.(ss./n .- μ.^2)
+    buffer = similar(x, size(x,1), n)
+    IsoZNormalizer(x, n, μ, σ, s, ss, 0, buffer, 0)
+end
+
+function normalize(::Val{IsoZNormalizer}, q::Matrix) # MAtrix to avoid ambiguity
+    q = q .- mean(q, dims=2)
+    q ./= std(q, dims=2, corrected=false)
+end
+
+setup_normalizer(z::Val{IsoZNormalizer}, q, y) = normalize(z, q), IsoZNormalizer(y, length(q))
+
+@propagate_inbounds function advance!(z::IsoZNormalizer{T}) where T
+
+    if z.i == 0
+        return z.i = 1
+    end
+    @boundscheck if z.i + z.n > length(z.x)
+        return z.i += 1
+    end
+    z.bufi = 0
+
+    # Remove old point
+    x = z.x[!, z.i]
+    @avx z.s .-= x
+    @avx z.ss .-= x.^2
+
+    # Add new point
+    x = z.x[!, z.i+z.n]
+    @avx z.s .+= x
+    @avx z.ss .+= x.^2
+    @avx z.μ .= z.s./z.n
+    @avx z.σ .= sqrt.(z.ss./z.n .- z.μ.^2)
+    z.i += 1
+end
+
+
+@inline @propagate_inbounds function getindex(z::IsoZNormalizer, i::Int)
+    n = size(z.x, 1)
+    z.x[i-z.i÷n]
+end
+
+@inline @propagate_inbounds function getindex(z::IsoZNormalizer, i, j)
+    @boundscheck 1 <= j <= z.n || throw(BoundsError(z,j))
+    @boundscheck 1 <= 1 <= size(z.x, 1) || throw(BoundsError(z,i))
+    xj = j+z.i-1
+    @boundscheck xj <= lastlength(z.x) || throw(BoundsError(z,j))
+    z.x[i, xj]
+end
+
+@inline @propagate_inbounds function getindex(z::IsoZNormalizer, ::typeof(!), i, inorder = i == z.bufi + 1)
+    if inorder
+        z.bufi = i
+        z.buffer[!, i] = (z[:, i] .- z.μ) ./ z.σ
+        y = z.buffer[!, i] # TODO: this will not be type stable
+    else
+        y = (z[:, i] .- z.μ) ./ z.σ
+    end
+    y
+end
+
+Base.Matrix(z::IsoZNormalizer) = z.x[:,z.i:z.i+z.n-1]
+
+
+Base.length(z::IsoZNormalizer) = size(z.x,1) * z.n
+Base.size(z::IsoZNormalizer) = (size(z.x,1), z.n)

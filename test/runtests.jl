@@ -31,6 +31,8 @@ using Distances, Plots
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test evaluate(DTWDistance(DTW(10, 1.1)), a, b) == cost
 
+        @test dtw_cost(a, b, SqEuclidean(), 0) ≈ norm(a-b)^2 # Test that radius 0 reduces to SqEuclidean distance
+        @test dtw_cost(a, b, Euclidean(), 0) ≈ sum(abs, a-b) # Test that radius 0 reduces to SqEuclidean distance
 
         a = collect(1:10)
         b = a .+ 1
