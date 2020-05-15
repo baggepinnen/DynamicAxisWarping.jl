@@ -144,7 +144,7 @@ Compute the nearest neighbor to `q` in `y`.
 """
 function dtwnn(q, y, dist, rad; normalizer=Val(Nothing), kwargs...)
     n = normalizer isa Val ? normalizer : Val(normalizer)
-    q, y = setup_normalizer(n, q, y)
+    n, q, y = setup_normalizer(n, q, y)
     w = DTWWorkspace(q, dist, rad, n)
     dtwnn(w, y; kwargs...)
 end
@@ -201,7 +201,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
         # If we get here, we must normalize the entire y
         buffern = normalize(w.normalizer, ym) # This only normalizes what's not already normalized
 
-        newdist = dtw_cost( buffern, q, w.dist, w.r;
+        newdist = dtw_cost(q, buffern, w.dist, w.r;
             cumulative_bound = w.cb,
             best_so_far      = saveall ? typemax(T) : bsf,
             s1               = w.c1,

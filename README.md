@@ -58,7 +58,7 @@ plot(f1,f2,f3, legend=false, layout=3, grid=false)
 ![figure](examples/doppler.svg)
 
 ## Find a short pattern in a long time series
-The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass `normalizer = ZNormalizer` (this only works for 1D data).
+The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass `normalizer = ZNormalizer` (this only works for 1D and 2D data).
 
 ```julia
 using DynamicAxisWarping, Distances

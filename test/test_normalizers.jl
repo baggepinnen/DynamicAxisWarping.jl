@@ -116,3 +116,8 @@ end
 y = normalize(IsoZNormalizer, randn(2,10))
 @test mean(y) ≈ 0 atol=1e-12
 @test std(y, corrected=false) ≈ 1 atol=1e-12
+
+
+a = randn(2,100)
+@test dtwnn(a,a,SqEuclidean(),3,normalizer=IsoZNormalizer).cost < 1e-20
+@test dtwnn(a,a,SqEuclidean(),3,normalizer=ZNormalizer).cost < 1e-20

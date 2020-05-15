@@ -5,7 +5,7 @@ abstract type AbstractNormalizer{T,N} <: AbstractArray{T,N} end
 
 advance!(x) = 0 # Catches everything that's not a normalizer
 
-setup_normalizer(::Val{Nothing}, q, y) = q, y
+setup_normalizer(n::Val{Nothing}, q, y) = n, q, y
 
 normalize(::Val{Nothing}, q) = q
 
@@ -72,7 +72,7 @@ end
     return z.buffer
 end
 
-setup_normalizer(z::Val{ZNormalizer}, q, y) = normalize(z, q), ZNormalizer(y, length(q))
+setup_normalizer(z::Val{ZNormalizer}, q, y) = z, normalize(z, q), ZNormalizer(y, length(q))
 
 @propagate_inbounds function advance!(z::ZNormalizer{T}) where T
 
@@ -106,7 +106,7 @@ end
     z.x[xi]
 end
 
-@inline @propagate_inbounds function getindex(z::ZNormalizer, ::typeof(!), i, inorder = i == z.bufi + 1)
+@inline @propagate_inbounds function getindex(z::ZNormalizer, ::typeof(!), i::Int, inorder = i == z.bufi + 1)
     y = (z[i]-z.μ) / z.σ
     if inorder
         z.bufi = i
@@ -115,8 +115,8 @@ end
     y
 end
 
-@inline @propagate_inbounds function getindex(z::AbstractZNormalizer, ::typeof(!), i::AbstractRange)
-    @boundscheck (i[1] == z.i && length(i) == z.n) || throw(ArgumentError("ZNormalizers can only be indexed by ranges corresponding to their current state. Got range $i but state was $(z.i)"))
+@inline @propagate_inbounds function getindex(z::ZNormalizer, ::typeof(!), i::AbstractRange)
+    @boundscheck (i[1] == z.i && length(i) == z.n) || throw(ArgumentError("ZNormalizers can only be indexed by ranges corresponding to their current state. Got range $i but state was $(z.i) corresponding to range $(z.i):$(z.i+z.n-1)"))
     z
 end
 
@@ -167,7 +167,9 @@ function normalize(::Val{IsoZNormalizer}, q::Matrix) # MAtrix to avoid ambiguity
     q ./= std(q, dims=2, corrected=false)
 end
 
-setup_normalizer(z::Val{IsoZNormalizer}, q, y) = normalize(z, q), IsoZNormalizer(y, length(q))
+setup_normalizer(z::Val{IsoZNormalizer}, q, y) = z, normalize(z, q), IsoZNormalizer(y, lastlength(q))
+setup_normalizer(z::Val{ZNormalizer}, q::AbstractMatrix, y::AbstractMatrix) = setup_normalizer(Val(IsoZNormalizer), q, y) # Only need to expose ZNormalizer to the user
+
 
 @propagate_inbounds function advance!(z::IsoZNormalizer{T}) where T
 
@@ -199,7 +201,7 @@ end
     z.x[i-z.i÷n]
 end
 
-@inline @propagate_inbounds function getindex(z::IsoZNormalizer, i, j)
+@inline @propagate_inbounds function getindex(z::IsoZNormalizer, i::Union{Number, AbstractRange}, j)
     @boundscheck 1 <= j <= z.n || throw(BoundsError(z,j))
     @boundscheck 1 <= 1 <= size(z.x, 1) || throw(BoundsError(z,i))
     xj = j+z.i-1
@@ -216,6 +218,11 @@ end
         y = (z[:, i] .- z.μ) ./ z.σ
     end
     y
+end
+
+@inline @propagate_inbounds function getindex(z::IsoZNormalizer, ::typeof(!), i::AbstractRange)
+    @boundscheck (i[1] == z.i && length(i) == z.n) || throw(ArgumentError("ZNormalizers can only be indexed by ranges corresponding to their current state. Got range $i but state was $(z.i) corresponding to range $(z.i):$(z.i+z.n-1)"))
+    z
 end
 
 Base.Matrix(z::IsoZNormalizer) = z.x[:,z.i:z.i+z.n-1]

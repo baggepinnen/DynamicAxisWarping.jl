@@ -175,8 +175,8 @@ function dtw_cost(
     cost_prev = s2
 
     # Instead of using matrix of size O(m^2) or O(mr), we will reuse two array of size O(r).
-    m = lastlength(a)
-    lastlength(b) == m || throw(ArgumentError("a and b must have the same length."))
+    m, mb = lastlength(a), lastlength(b)
+    mb == m || throw(ArgumentError("a and b must have the same length, got $m and $mb. To compare two series of different lengths, use function dtw"))
     length(cumulative_bound) == m || throw(ArgumentError("cumulative_bound and a must have the same length."))
     length(s1) == 2r+1 || throw(ArgumentError("s1 must be length 2r+1."))
     length(s2) == 2r+1 || throw(ArgumentError("s2 must be length 2r+1."))

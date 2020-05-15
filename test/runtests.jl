@@ -1,4 +1,4 @@
-using Test, Statistics
+using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping
 using Distances, Plots
 
@@ -385,7 +385,7 @@ using Distances, Plots
         function naive_norm(a, b)
             an = normalize(ZNormalizer, a)
             dists = map(1:length(b)-length(a)+1) do i
-                bn = normalize(ZNormalizer, @view(b[i:i+length(a)-1]))
+                bn = normalize(ZNormalizer, b[i:i+length(a)-1])
                 @test mean(bn) ≈ 0 atol = 10eps(eltype(a))
                 @test std(bn, corrected=false, mean=0) ≈ 1 atol = sqrt(eps(eltype(a)))
                 dtw_cost(an, bn, SqEuclidean(), 7)
