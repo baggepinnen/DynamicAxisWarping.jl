@@ -72,6 +72,19 @@ plot([a b[eachindex(a) .+ (res.loc-1)]])
 - `saveall` causes the entire distance profile to be computed. This will take longer time to compute. It is stored in `res.dists`.
 - `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. This allows you to find several nearby points without having to compute the entire distance profile.
 
+### Multi-threaded search
+Below is an example of how several long series `y ∈ Y` can be searched for the occurance of query `q` in a multithreaded fashion, using `tmap` from [ThreadTools.jl](https://github.com/baggepinnen/ThreadTools.jl). In this example, we first create a unique workspace object for each thread to save on allocations
+```julia
+using ThreadTools
+const workspaces = map(1:Threads.nthreads()) do i
+    DTWWorkspace(q, dist, radius)
+end
+@time results = tmap(Y) do y
+    dtwnn(workspaces[Threads.threadid()], y, showprogress = false)
+end
+mincost, minind = findmin(results) # special method for Vector{DTWSearchResult}
+```
+
 
 ### Optimizations
 The following optimizations are implemented.

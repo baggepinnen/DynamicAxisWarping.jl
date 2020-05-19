@@ -26,11 +26,28 @@ function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Nothing) wh
     DTWWorkspace(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
 end
 
-struct DTWSearchResult
-    cost
-    loc
+struct DTWSearchResult{QT,C,D} <: AbstractSearchResult{QT}
+    q::QT
+    cost::C
+    loc::Int
     prunestats
-    dists
+    dists::D
+end
+
+SlidingDistancesBase.value(r::DTWSearchResult) = r.cost
+SlidingDistancesBase.location(r::DTWSearchResult) = r.loc
+SlidingDistancesBase.payload(r::DTWSearchResult) = r.dists
+SlidingDistancesBase.target(r::AbstractSearchResult) = r.q
+
+Base.findmin(results::Vector{<:DTWSearchResult}) = (i=argmin(results); (results[i].cost,i))
+Base.findmax(results::Vector{<:DTWSearchResult}) = _findres(results, >)
+Base.minimum(results::Vector{<:DTWSearchResult}) = findmin(results)[1]
+Base.maximum(results::Vector{<:DTWSearchResult}) = findmax(results)[1]
+
+function _findres(results::Vector{<:DTWSearchResult}, comp)
+    mapreduce((a,b)->comp(a[1], b[1]) ? a : b, enumerate(results)) do (i,r)
+        minimum(r.dists), i
+    end
 end
 
 function lower_upper_envs!(w::DTWWorkspace{T}, q, bsf, query = false) where {T}
@@ -136,6 +153,7 @@ Compute the nearest neighbor to `q` in `y`.
 - `y`: data ( the long time series)
 - `dist`: distance
 - `rad`: radius
+- `showprogress`: Defaults to true
 - `prune_endpoints = true`: use endpoint heuristic
 - `prune_envelope  = true`: use envelope heuristic
 - `bsf_multiplier  = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`.
@@ -155,10 +173,12 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     saveall         = false,
     bsf_multiplier  = 1,
     transportcost   = 1,
+    showprogress    = true,
     avoid           = nothing,
     kwargs...) where T
 
 
+    w.normalizer !== Nothing && !isa(y, AbstractNormalizer) && @warn("Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance", maxlog=10)
     bsf_multiplier >= 1 || throw(DomainError("It does not make sense to have the bsf_multiplier < 1"))
     best_so_far = typemax(T)
     best_loc    = 1
@@ -172,12 +192,12 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     # Counters to keep track of how many times lb helps
     prune_end   = 0
     prune_env   = 0
-    dists = fill(typemax(T), my-m+1)
+    dists       = fill(typemax(T), my-m+1)
 
-    prog = Progress((my-m)÷10, dt=1, desc="DTW NN")
+    prog = Progress((my-m)÷max(my÷100,1), dt=1, desc="DTW NN")
     # @inbounds @showprogress 1.5 "DTW NN" for it = 1:my-m
     @inbounds for it = 1:my-m+1
-        it % 10 == 0 && next!(prog)
+        showprogress && it % max(my÷100,1) == 0 && next!(prog)
         advance!(y)
         avoid !== nothing && it ∈ avoid && continue
         bsf = bsf_multiplier*best_so_far
@@ -216,7 +236,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
         end
     end
     prunestats = (prune_end=prune_end, prune_env=prune_env)
-    DTWSearchResult(best_so_far, best_loc, prunestats, dists)
+    DTWSearchResult(q, best_so_far, best_loc, prunestats, dists)
 end
 
 struct Neighbor{T}

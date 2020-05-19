@@ -29,6 +29,7 @@ export dtw,
        radiuslimits,
        dtwnn,
        DTWWorkspace,
+       DTWSearchResult,
        sparse_distmat
 
 export ZNormalizer,
