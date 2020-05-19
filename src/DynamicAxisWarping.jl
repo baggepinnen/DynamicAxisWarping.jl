@@ -9,7 +9,7 @@ using ProgressMeter
 using UnsafeArrays
 using DataStructures
 using SlidingDistancesBase
-import SlidingDistancesBase: floattype, lastlength
+import SlidingDistancesBase: floattype, lastlength, setup_normalizer
 using LoopVectorization
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 using Requires
@@ -41,7 +41,6 @@ export stomp
 include("utils.jl")
 
 include("distance_interface.jl")
-include("normalizers.jl")
 include("dtw.jl")
 include("dtwnn.jl")
 include("dba.jl")

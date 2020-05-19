@@ -8,7 +8,9 @@ using Distances, Plots
 
     @testset "Normalizers" begin
         @info "Testing Normalizers"
-        include("test_normalizers.jl")
+        a = randn(2,100)
+        @test dtwnn(a,a,SqEuclidean(),3,normalizer=IsoZNormalizer).cost < 1e-20
+        @test dtwnn(a,a,SqEuclidean(),3,normalizer=ZNormalizer).cost < 1e-20
     end
 
     @testset "Basic Dynamic Time Warping" begin
@@ -365,7 +367,6 @@ using Distances, Plots
         end
 
         @inferred dtwnn(a, b, SqEuclidean(), 7)
-        @test_logs (:warn,"Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance") dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer)
 
         res = dtwnn(a, b, SqEuclidean(), 7)
         m = findmin(naive(a, b))
