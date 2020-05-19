@@ -1,5 +1,5 @@
 using Test, Statistics, LinearAlgebra
-using DynamicAxisWarping
+using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
 
 @testset "DynamicAxisWarping" begin
