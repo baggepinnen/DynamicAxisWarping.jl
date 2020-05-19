@@ -178,7 +178,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     kwargs...) where T
 
 
-    w.normalizer !== Nothing && !isa(y, AbstractNormalizer) && @warn("Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance", maxlog=10)
+    w.normalizer !== Val(Nothing) && !isa(y, AbstractNormalizer) && @warn("Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance", maxlog=10)
     bsf_multiplier >= 1 || throw(DomainError("It does not make sense to have the bsf_multiplier < 1"))
     best_so_far = typemax(T)
     best_loc    = 1

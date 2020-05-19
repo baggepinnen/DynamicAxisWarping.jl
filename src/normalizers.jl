@@ -57,19 +57,9 @@ function ZNormalizer(x::AbstractArray{T,1}, n) where T
 end
 
 
-function normalize(::Val{ZNormalizer}, q::Vector)
+function normalize(::Val{ZNormalizer}, q::AbstractVector)
     q = q .- mean(q)
     q ./= std(q, corrected=false, mean=0)
-end
-
-@inline @propagate_inbounds function normalize(::Val{T}, z::T) where T <: AbstractZNormalizer
-    if z.bufi == z.n
-        return z.buffer
-    end
-    for i = z.bufi+1:z.n
-        z[!, i, true] # This populates the buffer
-    end
-    return z.buffer
 end
 
 setup_normalizer(z::Val{ZNormalizer}, q::AbstractVector, y::AbstractVector) = z, normalize(z, q), ZNormalizer(y, length(q))
@@ -162,8 +152,8 @@ function IsoZNormalizer(x::AbstractArray{T,2}, n) where T
     IsoZNormalizer(x, n, μ, σ, s, ss, 0, buffer, 0)
 end
 
-function normalize(::Val{IsoZNormalizer}, q::Matrix) # MAtrix to avoid ambiguity
-    q = q .- mean(q, dims=2)
+function normalize(::Val{IsoZNormalizer}, q::AbstractMatrix)
+    q = q .- mean(q, dims=2) # TODO: this will cause a ton of allocations
     q ./= std(q, dims=2, corrected=false)
 end
 
@@ -231,3 +221,17 @@ Base.Matrix(z::IsoZNormalizer) = z.x[:,z.i:z.i+z.n-1]
 
 Base.length(z::IsoZNormalizer) = size(z.x,1) * z.n
 Base.size(z::IsoZNormalizer) = (size(z.x,1), z.n)
+
+
+
+for T in [ZNormalizer, IsoZNormalizer]
+    @eval @inline @propagate_inbounds function normalize(::Val{$T}, z::$T)
+        if z.bufi == z.n
+            return z.buffer
+        end
+        for i = z.bufi+1:z.n
+            z[!, i, true] # This populates the buffer
+        end
+        return z.buffer
+    end
+end

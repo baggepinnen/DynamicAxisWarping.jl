@@ -365,6 +365,7 @@ using Distances, Plots
         end
 
         @inferred dtwnn(a, b, SqEuclidean(), 7)
+        @test_logs (:warn,"Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance") dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer)
 
         res = dtwnn(a, b, SqEuclidean(), 7)
         m = findmin(naive(a, b))
@@ -392,8 +393,8 @@ using Distances, Plots
             end
         end
 
-        @inferred dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer)
-        res = dtwnn(a, b, SqEuclidean(), 7, normalizer=ZNormalizer, saveall=true)
+        @inferred dtwnn(a, b, SqEuclidean(), 7, normalizer=Val(ZNormalizer))
+        res = dtwnn(a, b, SqEuclidean(), 7, normalizer=Val(ZNormalizer), saveall=true)
         resn = naive_norm(a, b)
         m = findmin(resn)
         @test m[1] ≈ res.cost
