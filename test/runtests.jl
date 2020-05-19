@@ -421,6 +421,20 @@ using Distances, Plots
         @test m[2] == res.loc
         @test m[1] ≈ res.cost
 
+        @test value(res) == res.cost
+        @test location(res) == res.loc
+        @test payload(res) == res.dists
+        @test target(res) == a
+
+        res = dtwnn(a, b, SqEuclidean(), 2, prune_endpoints = true, prune_envelope = true, saveall=true)
+        rr = [res, res]
+        @test_nowarn 2res
+        @test minimum(rr) == value(res)
+        @test findmin(rr) == (res.cost, 1)
+        @test maximum(rr) == value(res)
+        @test findmax(rr) == (res.cost, 2)
+
+
     end
 
 

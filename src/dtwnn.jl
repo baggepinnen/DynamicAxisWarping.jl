@@ -37,7 +37,7 @@ end
 SlidingDistancesBase.value(r::DTWSearchResult) = r.cost
 SlidingDistancesBase.location(r::DTWSearchResult) = r.loc
 SlidingDistancesBase.payload(r::DTWSearchResult) = r.dists
-SlidingDistancesBase.target(r::AbstractSearchResult) = r.q
+SlidingDistancesBase.target(r::DTWSearchResult) = r.q
 
 Base.findmin(results::Vector{<:DTWSearchResult}) = (i=argmin(results); (results[i].cost,i))
 Base.findmax(results::Vector{<:DTWSearchResult}) = _findres(results, >)
