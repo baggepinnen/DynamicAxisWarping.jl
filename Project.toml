@@ -23,7 +23,7 @@ UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 [compat]
 BinDeps = "1.0"
 DataStructures = "0.17"
-Distances = "0.8"
+Distances = "0.8, 0.9"
 FillArrays = "0.8"
 LoopVectorization = "0.7"
 Plots = "1.0"
