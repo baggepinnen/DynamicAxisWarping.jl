@@ -6,6 +6,8 @@
     cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean])
     cost,i1,i2 = dtw(seq1, seq2, dist, i2min, i2max)
 
+Perform dynamic-time warping to measure the distance between two sequences.
+
 Find a set of indices (`i1`,`i2`) that align two series (`seq1`,`seq2`) by
 dynamic axis warping. Also returns the distance (after warping) according to
 the SemiMetric `dist`, which defaults to squared Euclidean distance (see
@@ -15,6 +17,8 @@ an observation.
 If `i2min/max` are provided, do DTW to align `seq1` and `seq2` confined to a window. Vectors `i2min` and
 `i2max` specify (inclusive) lower and upper bounds for `seq2` for each index in
 `seq1`. Thus, `i2min` and `i2max` are required to be the same length as `seq1`.
+
+See also [`dtw_cost`](@ref) and [`dtwnn`](@ref).
 """
 function dtw(args...; kwargs...)
     D = dtw_cost_matrix(args...; kwargs...)
@@ -145,6 +149,8 @@ end
 """
     dtw_cost(a::AbstractArray, b::AbstractArray, dist::Distances.SemiMetric, r::Int; best_so_far = Inf, cumulative_bound = Zeros(length(a)))
 
+Perform dynamic time warping to measure the distance between two sequences.
+
 Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You may provide values of `best_so_far` and `cumulative_bound` in order to enable early stopping.
 
 # Keyword arguments:
@@ -155,6 +161,7 @@ Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You 
 
 Providing the two vectors `s1, s2` does not save very much time, but it makes the function completely allocation free. Can be useful in a threaded context.
 
+See also [`dtw`](@ref) and [`dtwnn`](@ref).
 This code was inspired by https://www.cs.ucr.edu/~eamonn/UCRsuite.html
 """
 function dtw_cost(
