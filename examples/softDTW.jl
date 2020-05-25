@@ -19,7 +19,7 @@ function dtwmeancost(data, γ)
     end
 end
 
-input = c1[1,:]
+input = mean(c1v) # Our initial guess will be the Euclidean mean
 costfun = dtwmeancost(c1v, 1)
 costfun(input)
 
@@ -27,7 +27,7 @@ cfg = ReverseDiff.GradientConfig(input)
 tape = ReverseDiff.GradientTape(costfun, input)
 ctape = ReverseDiff.compile(tape)
 results = DiffResults.GradientResult(similar(input))
-ReverseDiff.CompiledGradient
+
 
 function fg!(F,G,x)
     if G != nothing
@@ -55,10 +55,13 @@ res = Optim.optimize(
         x_tol             = 1e-3,
         f_tol             = 1e-4,
         g_tol             = 1e-4,
-        f_calls_limit     = 0,
-        g_calls_limit     = 0,
     ),
 )
 
-plot(c1', legend=false)
-plot!(res.minimizer, l=(4, :red))
+##
+using Plots, Plots.PlotMeasures
+f1 = plot(c1', lab="", axis=false, legend=:bottom)
+plot!(input, l=(4, :red), lab="Euclidean mean")
+plot!(res.minimizer, l=(4, :green), lab="Soft-DTW mean")
+f2 = plot(c1[1:3,:]', layout=(1,3), legend=false, axis=false, margin=-5mm)
+plot(f1,f2, layout=(2,1))

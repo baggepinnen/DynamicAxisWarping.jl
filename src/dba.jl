@@ -13,7 +13,7 @@ mutable struct DBAResult
 end
 
 """
-    avgseq, results = dba(sequences, [dist=SqEuclidean()]; kwargs...)
+    avgseq, results = dba(sequences, dist::DTWDistance; kwargs...)
 
 Perfoms DTW Barycenter Averaging (DBA) given a collection of `sequences`
 and the current estimate of the average sequence.
@@ -23,12 +23,11 @@ Example usage:
     x = [1., 2., 2., 3., 3., 4.]
     y = [1., 3., 4.]
     z = [1., 2., 2., 4.]
-    avg,result = dba([x,y,z])
+    avg,result = dba([x,y,z], DTW(3))
 """
 function dba(
     sequences::AbstractVector,
-    method::DTWMethod,
-    dist::SemiMetric = SqEuclidean();
+    dtwdist::DTWDistance;
     init_center = rand(sequences),
     iterations::Int = 1000,
     rtol::Float64 = 1e-5,
@@ -37,9 +36,6 @@ function dba(
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
 )
-
-    # method for computing dtw
-    dtwdist = DTWDistance(method, dist)
 
     # initialize dbavg as a random sample from the dataset
     nseq = length(sequences)
@@ -107,7 +103,6 @@ end
 
 
 """
-    newavg, cost = dba_iteration(dbavg, sequences, dist)
 
 Performs one iteration of DTW Barycenter Averaging (DBA) given a collection of
 `sequences` and the current estimate of the average sequence, `dbavg`. Returns

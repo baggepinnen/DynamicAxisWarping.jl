@@ -10,7 +10,7 @@ D = [dtw_cost(getwindow(y, m, i), getwindow(y, m, j), SqEuclidean(), r) for i in
 for i = -r:r
     D[diagind(D,i)] .= Inf
 end
-profile = matrix_profile(y,m,DTWDistance(DTW(r)))
+profile = matrix_profile(y,m,DTW(r))
 for i = 1:10:size(D,2)
     @test findmin(D[:,i]) == (profile.P[i], profile.I[i])
 end

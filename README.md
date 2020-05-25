@@ -118,7 +118,7 @@ da = ReverseDiff.gradient(a->soft_dtw_cost(a,b; γ=1), a)
 Zygote.jl will not work due to the array-mutation limitation.
 See also function `soft_dtw_cost_matrix`.
 
-The following [example](https://github.com/baggepinnen/DynamicAxisWarping.jl/blob/master/examples/softDTW.jl) illustrates how to calculate a barycenter using Soft DTW and [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl), the result is shown below.
+The following [example](https://github.com/baggepinnen/DynamicAxisWarping.jl/blob/master/examples/softDTW.jl) illustrates how to calculate a barycenter (generalized average) using Soft DTW and [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl), the result is shown below, together with three instances of the input series
 
 ![barycenter](examples/barycenter.svg)
 
@@ -160,9 +160,10 @@ See the file [`frequency_warping.jl`](https://github.com/baggepinnen/DynamicAxis
 ## Distances.jl interface
 
 ```julia
-d = DTWDistance(method=DTW(radius), dist=SqEuclidean())
+d = DTW(radius=radius, dist=SqEuclidean()) # Or FastDTW / SoftDTW
+d(a,b)
 ```
-`method` can be either of `DTW()` or `FastDTW(radius)`.
+
 
 ## Acknowledgements
 

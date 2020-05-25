@@ -1,35 +1,65 @@
 # methods for estimating dtw #
-abstract type DTWMethod end
 
-struct DTW <: DTWMethod
+abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} end
+
+
+"""
+    struct DTW{D} <: DTWDistance{D}
+
+# Arguments:
+- `radius`: The maximum allowed deviation of the matching path from the diagonal
+- `dist`: Inner distance
+- `transportcost` If >1, an additional penalty factor for non-diagonal moves is added.
+"""
+Base.@kwdef struct DTW{D} <: DTWDistance{D}
     "The maximum allowed deviation of the matching path from the diagonal"
     radius::Int
+    dist::D = SqEuclidean()
     "If >1, an additional penalty factor for non-diagonal moves is added."
-    transportcost::Float64
-    DTW(r,transportcost=1) = new(r,transportcost)
+    transportcost::Float64 = 1.0
+    DTW(r,dist=SqEuclidean(),transportcost=1) = new{typeof(dist)}(r,dist,transportcost)
+end
+
+"""
+    struct SoftDTW{D, T} <: DTWDistance{D}
+
+# Arguments:
+- `γ`: smoothing parameter
+- `dist`
+- `transportcost`
+"""
+Base.@kwdef struct SoftDTW{D,T} <: DTWDistance{D}
+    γ::T
+    "The maximum allowed deviation of the matching path from the diagonal"
+    dist::D = SqEuclidean()
+    "If >1, an additional penalty factor for non-diagonal moves is added."
+    transportcost::Float64 = 1.0
+    SoftDTW(γ=1.0, dist=SqEuclidean(),transportcost=1) = new{typeof(dist), typeof(γ)}(γ,dist,transportcost)
 end
 
 
-struct FastDTW <: DTWMethod
+"""
+    struct FastDTW{D} <: DTWDistance{D}
+
+- `radius`
+- `dist` inner distance
+"""
+Base.@kwdef struct FastDTW{D} <: DTWDistance{D}
     radius::Int
-end
-
-# distance interface #
-Base.@kwdef struct DTWDistance{M<:DTWMethod,D<:SemiMetric} <: SemiMetric
-    method::M
     dist::D = SqEuclidean()
 end
 
-DTWDistance(m::DTWMethod) = DTWDistance(m, SqEuclidean())
 
-Distances.evaluate(d::DTWDistance{DTW}, x, y) = dtw_cost(x, y, d.dist, d.method.radius)
-Distances.evaluate(d::DTWDistance{FastDTW}, x, y) =
-    fastdtw(x, y, d.dist, d.method.radius)[1]
 
-distpath(d::DTWDistance{DTW}, x, y) = dtw(x, y, d.dist)
-distpath(d::DTWDistance{DTW}, x, y, i2min::AbstractVector, i2max::AbstractVector) =
+Distances.evaluate(d::DTW, x, y) = dtw_cost(x, y, d.dist, d.radius)
+Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ)
+Distances.evaluate(d::FastDTW, x, y) =
+    fastdtw(x, y, d.dist, d.radius)[1]
+
+distpath(d::DTW, x, y) = dtw(x, y, d.dist)
+distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector) =
     dtw(x, y, i2min, i2max, d.dist)
-distpath(d::DTWDistance{FastDTW}, x, y) = fastdtw(x, y, d.dist, d.method.radius)
+distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
 (d::DTWDistance)(x,y) = Distances.evaluate(d,x,y)
 
@@ -43,6 +73,6 @@ function distance_profile(d::DTWDistance, Q::AbstractArray{S}, T::AbstractArray{
     n = lastlength(T)
     n >= m || throw(ArgumentError("Q cannot be longer than T"))
     l = n-m+1
-    res = dtwnn(Q, Y, d.dist, d.method.radius; saveall=true, kwargs...)
+    res = dtwnn(Q, Y, d.dist, d.radius; saveall=true, kwargs...)
     res.dists
 end

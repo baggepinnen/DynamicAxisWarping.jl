@@ -14,15 +14,15 @@ using Distances, Plots
     end
 
     @testset "Basic Dynamic Time Warping" begin
-        a = [1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
-        b = [1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
+        a = Float64[1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
+        b = Float64[1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test match1 ==
               [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
 
         @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001)) > -0.001
 
@@ -30,42 +30,46 @@ using Distances, Plots
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 4
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
         cost, match1, match2 = dtw(Float64.(a), Float64.(b), transportcost=1.1)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
-        @test evaluate(DTWDistance(DTW(10, 1.1)), a, b) == cost
+        @test evaluate(DTW(radius=10, transportcost=1.1), a, b) == cost
 
         @test dtw_cost(a, b, SqEuclidean(), 0) ≈ norm(a-b)^2 # Test that radius 0 reduces to SqEuclidean distance
         @test dtw_cost(a, b, Euclidean(), 0) ≈ sum(abs, a-b) # Test that radius 0 reduces to SqEuclidean distance
 
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
 
-        a = collect(1:10)
+        a = collect(1.0:10)
         b = a .+ 1
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 2
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
 
         a = zeros(Int, 6)
         b = 1 .+ a
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == length(a)
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
 
         # Verify that a tie prefers diagonal moves
-        a = [1, 1, 1]
-        b = [1, 1, 1]
+        a = Float64[1, 1, 1]
+        b = Float64[1, 1, 1]
         cost, pa, pb = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost atol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
 
         # Verify that trackback ends properly if it reaches an edge before reaching [1,1]
         # Also check that trackback prefers diagonal moves
@@ -76,18 +80,18 @@ using Distances, Plots
         @test cost == 0
         @test pa == [1, 1, 2, 3, 4]
         @test pb == [1, 2, 3, 3, 4]
-        @test evaluate(DTWDistance(DTW(10)), a, b) == cost
+        @test evaluate(DTW(10), a, b) == cost
 
         # test the distance api with different distances
         a, b = randn(10), randn(10)
         cost, = dtw(a, b, Euclidean())
-        @test evaluate(DTWDistance(DTW(10),Euclidean()), a, b) == cost
+        @test evaluate(DTW(10,Euclidean()), a, b) == cost
         @test dtw_cost(a, b, Euclidean(), length(a)) == cost
         cost, = dtw(a, b, Cityblock())
-        @test evaluate(DTWDistance(DTW(10),Cityblock()), a, b) == cost
+        @test evaluate(DTW(10,Cityblock()), a, b) == cost
         @test dtw_cost(a, b, Cityblock(), length(a)) == cost
         cost, = dtw(a, b, Chebyshev())
-        @test evaluate(DTWDistance(DTW(10),Chebyshev()), a, b) == cost
+        @test evaluate(DTW(10,Chebyshev()), a, b) == cost
         @test dtw_cost(a, b, Chebyshev(), length(a)) == cost
 
 

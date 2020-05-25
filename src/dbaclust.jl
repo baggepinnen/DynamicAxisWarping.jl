@@ -13,69 +13,73 @@ mutable struct DBAclustResult{T}
 end
 
 """
-    avgseq, results = dba(sequences, [dist=SqEuclidean()]; kwargs...)
+    dbaclust(
+        sequences,
+        nclust::Int,
+        dtwdist::DTWDistance;
+        n_init::Int           = 1,
+        iterations::Int       = 100,
+        inner_iterations::Int = 10,
+        rtol::Float64         = 1e-4,
+        rtol_inner::Float64   = rtol,
+        n_jobs::Int           = 1,
+        show_progress::Bool   = true,
+        store_trace::Bool     = true,
+        i2min::AbstractVector = [],
+        i2max::AbstractVector = [],
+    )
 
-Perfoms DTW Barycenter Averaging (DBA) given a collection of `sequences`
-and the current estimate of the average sequence.
 
-Example usage:
-
-    x = [1,2,2,3,3,4]
-    y = [1,3,4]
-    z = [1,2,2,4]
-    avg,result = dba([x,y,z])
+# Arguments:
+- `nclust`: Number of clsuters
+- `n_init`: Number of initialization tries
+- `inner_iterations`: Number of iterations in the inner alg.
+- `i2min`: Bounds on the warping path
 """
 function dbaclust(
     sequences,
     nclust::Int,
-    _method::DTWMethod,
-    _dist::SemiMetric     = SqEuclidean();
+    dtwdist::DTWDistance;
     n_init::Int           = 1,
     iterations::Int       = 100,
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
-    n_jobs::Int           = 1,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
 )
 
-    if n_jobs == 1
-        best_result = []
-        best_cost = []
-        for i = 1:n_init
-            dbaclust_result = dbaclust_single(
-                sequences,
-                nclust,
-                _method,
-                _dist;
-                iterations       = iterations,
-                inner_iterations = inner_iterations,
-                rtol             = rtol,
-                rtol_inner       = rtol_inner,
-                show_progress    = show_progress,
-                store_trace      = store_trace,
-                i2min            = i2min,
-                i2max            = i2max,
-            )
-            if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
-                best_result = deepcopy(dbaclust_result)
-                best_cost = best_result.dbaresult.cost
-            end
-        end #1:n_init
-    else
-        #results = Array{DBAclustResult}(n)_
-        error("parallelism for dbaclust not implemented yet")
 
-    end # n_jobs
+    best_result = []
+    best_cost = []
+    for i = 1:n_init
+        dbaclust_result = dbaclust_single(
+            sequences,
+            nclust,
+            dtwdist;
+            iterations = iterations,
+            inner_iterations = inner_iterations,
+            rtol = rtol,
+            rtol_inner = rtol_inner,
+            show_progress = show_progress,
+            store_trace = store_trace,
+            i2min = i2min,
+            i2max = i2max,
+        )
+        if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
+            best_result = deepcopy(dbaclust_result)
+            best_cost = best_result.dbaresult.cost
+        end
+    end #1:n_init
+
     return best_result
 end
 
 
 """
-    avgseq, results = dbaclust_single(sequences, [dist=SqEuclidean()]; kwargs...)
+    avgseq, results = dbaclust_single(sequences, dist; kwargs...)
 
 Perfoms a single DTW Barycenter Averaging (DBA) given a collection of `sequences`
 and the current estimate of the average sequence.
@@ -85,18 +89,16 @@ Example usage:
     x = [1,2,2,3,3,4]
     y = [1,3,4]
     z = [1,2,2,4]
-    avg,result = dba([x,y,z])
+    avg,result = dba([x,y,z], DTW(3))
 """
 function dbaclust_single(
     sequences::AbstractVector,
     nclust::Int,
-    _method::DTWMethod,
-    _dist::SemiMetric = SqEuclidean();
+    dtwdist::DTWDistance;
     init_centers::AbstractVector = dbaclust_initial_centers(
         sequences,
         nclust,
-        _method,
-        _dist,
+        dtwdist
     ),
     iterations::Int       = 100,
     inner_iterations::Int = 10,
@@ -122,8 +124,6 @@ function dbaclust_single(
     nseq      = length(sequences)
     maxseqlen = maximum([length(s) for s in sequences])
 
-    # initialize procedure for computing DTW
-    dtwdist   = DTWDistance(_method, _dist)
 
     # TODO switch to ntuples?
     counts    = [zeros(Int, N) for _ = 1:nclust]
@@ -300,7 +300,7 @@ end
 
 
 """
-   dbaclust_initial_centers(sequences, nclust, dist)
+   dbaclust_initial_centers(sequences, nclust, dtwdist::DTWDistance)
 
 Uses kmeans++ (but with dtw distance) to initialize the centers
 for dba clustering.
@@ -308,12 +308,9 @@ for dba clustering.
 function dbaclust_initial_centers(
     sequences::AbstractVector,
     nclust::Int,
-    _method::DTWMethod,
-    _dist::Union{SemiMetric, Function} = SqEuclidean();
+    dtwdist::DTWDistance,
 )
 
-    # procedure for calculating dtw
-    dtwdist       = DTWDistance(_method, _dist)
     # number of sequences in dataset
     nseq          = length(sequences)
     # distance of each datapoint to each center

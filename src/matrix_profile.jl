@@ -1,8 +1,8 @@
 
-function MatrixProfile.matrix_profile(T, m::Int, dist::DTWDistance; showprogress=true, normalizer=Val(Nothing))
+function MatrixProfile.matrix_profile(T, m::Int, dist::DTW; showprogress=true, normalizer=Val(Nothing))
     n   = lastlength(T)
     l   = n-m+1
-    r   = dist.method.radius
+    r   = dist.radius
     # n > 2m+1 || throw(ArgumentError("Window length too long, maximum length is $((n+1)÷2)"))
     P    = Vector{floattype(T)}(undef, l)
     I    = Vector{Int}(undef, l)
@@ -10,7 +10,7 @@ function MatrixProfile.matrix_profile(T, m::Int, dist::DTWDistance; showprogress
     bsf = typemax(floattype(T))
     @inbounds for i = 1:l
         Ti = getwindow(T,m,i)
-        res = dtwnn(Ti, T, dist.dist, r, transportcost=dist.method.transportcost, avoid=i-r:i+r, normalizer=normalizer)
+        res = dtwnn(Ti, T, dist.dist, r, transportcost=dist.transportcost, avoid=i-r:i+r, normalizer=normalizer)
         I[i] = res.loc
         P[i] = res.cost
         showprogress && i % 5 == 0 && next!(prog)
