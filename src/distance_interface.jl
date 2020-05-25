@@ -34,7 +34,7 @@ Base.@kwdef struct SoftDTW{D,T} <: DTWDistance{D}
     dist::D = SqEuclidean()
     "If >1, an additional penalty factor for non-diagonal moves is added."
     transportcost::Float64 = 1.0
-    SoftDTW(γ=1.0, dist=SqEuclidean(),transportcost=1) = new{typeof(dist), typeof(γ)}(γ,dist,transportcost)
+    SoftDTW(γ, dist=SqEuclidean(),transportcost=1) = new{typeof(dist), typeof(γ)}(γ,dist,transportcost)
 end
 
 
@@ -69,7 +69,7 @@ distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
 Optimized method for computing the distance profile using DTW distances. kwargs are sent to [`dtwnn`](@ref).
 """
-function distance_profile(d::DTWDistance, Q::AbstractArray{S}, T::AbstractArray{S}; kwargs...) where S
+function SlidingDistancesBase.distance_profile(d::DTWDistance, Q::AbstractArray{S}, T::AbstractArray{S}; kwargs...) where S
     m = lastlength(Q)
     n = lastlength(T)
     n >= m || throw(ArgumentError("Q cannot be longer than T"))
