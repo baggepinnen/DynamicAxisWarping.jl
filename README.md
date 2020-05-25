@@ -6,10 +6,9 @@
 
 Dynamic Time Warping (DTW), matrix profile and related algorithms in Julia.
 
-- **Warning:** This package is under active development and the API is likely to break.
-- This package supports arbitrary metrics and arbitrary "spaces", i.e., as long as you are passing a vector or higher dimensional array of something that your distance can operate on, you're good to go. Time is always considered to be the last dimension.
+This package supports arbitrary metrics and arbitrary "spaces", i.e., as long as you are passing a vector or higher dimensional array of something that your distance can operate on, you're good to go. Time is always considered to be the last dimension.
 
-This package is not registered. Install using:
+This package is registered and can be installed with:
 ```julia
 using Pkg
 pkg"add DynamicAxisWarping"
