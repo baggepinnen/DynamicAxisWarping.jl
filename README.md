@@ -103,6 +103,21 @@ b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
 # 853.336 ms (25519 allocations: 5.00 MiB)
 ```
 
+## Differentiable Soft-DTW
+The [Soft-DTW](https://arxiv.org/pdf/1703.01541.pdf) algorithm is provided through the function
+```julia
+soft_dtw_cost(a, b, [SqEuclidean()]; γ = 1, transportcost = 1)
+```
+`γ` is the smoothing parameters and a smaller value of `γ` makes the distance closer to the standard DTW distance.
+
+To differentiate w.r.t. the first argument, try
+```julia
+using ReverseDiff
+da = ReverseDiff.gradient(a->soft_dtw_cost(a,b; γ=1), a)
+```
+Zygote.jl will not work due to the array-mutation limitation.
+See also function `soft_dtw_cost_matrix`.
+
 ## Clustering and barycenter averaging
 ```julia
 barycenter = dba(vector_of_arrays)

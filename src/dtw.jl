@@ -30,6 +30,7 @@ end
 ##############################
 
 Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s1, transpose(s2))
+
 function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; dims=2)
     [evaluate(d, s1[!,i], s2[!,j]) for i in 1:lastlength(s1), j in lastlength(s2)]
 end
@@ -225,4 +226,69 @@ function dtw_cost(
     # the DTW distance is in the last cell in the matrix of size O(m^2) or at the middle of our array.
     final_dtw = cost_prev[k]
     return T(final_dtw)
+end
+
+
+
+
+@inbounds function soft_dtw_cost_matrix(seq1::AbstractArray, seq2::AbstractArray, dist::SemiMetric = SqEuclidean(); γ = 1,
+    transportcost=1)
+    # Build the cost matrix
+    m = lastlength(seq2)
+    n = lastlength(seq1)
+
+    # Initialize first column and first row
+    D = pairwise(dist, seq2, seq1, dims=2)
+    @assert size(D) == (m,n)
+
+    for r=2:m
+        D[r,1] += D[r-1,1]
+    end
+    for c=2:n
+        D[1,c] += D[1,c-1]
+    end
+
+    # Complete the cost matrix
+    for c = 2:n
+        for r = 2:m
+            best_neighbor_cost = softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
+            D[r, c] += best_neighbor_cost
+        end
+    end
+
+    return D
+end
+
+
+
+"""
+    soft_dtw_cost(args...; γ = 1, kwargs...)
+
+Perform Soft DTW. This is a differentiable version of DTW. The "distance" returned by this function is quite far from a true distance and can be negative. A smaller value of `γ` makes the distance closer to the standard DTW distance.
+
+
+To differentiate w.r.t. the first argument, try
+```julia
+using ReverseDiff
+da = ReverseDiff.gradient(a->soft_dtw_cost(a,b), a)
+```
+
+Ref: "Soft-DTW: a Differentiable Loss Function for Time-Series" https://arxiv.org/pdf/1703.01541.pdf
+
+#Arguments:
+- `args`: same as for [`dtw`](@ref)
+- `γ`: The smoothing factor. A small value means less smoothing and a result closer to [`dtw_cost`](@ref)
+- `kwargs`: same as for [`dtw`](@ref)
+"""
+function soft_dtw_cost(args...; γ = 1, kwargs...)
+    D = soft_dtw_cost_matrix(args...; γ = γ, kwargs...)
+    D[end,end]
+end
+
+@fastmath function softmin(a,b,c, γ=1)
+    γ = -γ
+    a,b,c = a/γ,b/γ,c/γ
+    maxv = max(a,b,c)
+    ae,be,ce = exp(a - maxv), exp(b - maxv), exp(c - maxv)
+    γ*(log(ae+be+ce) + maxv)
 end
