@@ -285,10 +285,41 @@ function soft_dtw_cost(args...; γ = 1, kwargs...)
     D[end,end]
 end
 
-@fastmath function softmin(a,b,c, γ=1)
+
+@fastmath function softmin(a,b,c, γ)
     γ = -γ
-    a,b,c = a/γ,b/γ,c/γ
+    a,b,c = a/γ, b/γ, c/γ
     maxv = max(a,b,c)
     ae,be,ce = exp(a - maxv), exp(b - maxv), exp(c - maxv)
     γ*(log(ae+be+ce) + maxv)
 end
+
+# using SIMD
+# function softmin(a::T,b::T,c, γ) where T <: Union{Float64, Float32}
+#     γ = -T(γ)
+#     v = SIMD.Vec{4,T}((a, b, c, zero(T)))
+#     v = v / γ
+#     maxv = maximum(v)
+#     ve = exp(v - maxv) * SIMD.Vec{4,T}((one(T), one(T), one(T), zero(T)))
+#
+#     γ*(log(sum(ve)) + maxv)
+# end
+
+# @fastmath @inline function softmin(a::T,b,c, γ=1) where T
+#     γ = -γ
+#     a,b,c,_ = a/γ, b/γ, c/γ, one(T)/γ
+#     maxv = max(a,b,c,typemin(T))
+#     ae,be,ce,_ = exp(a - maxv), exp(b - maxv), exp(c - maxv), exp(one(T) - maxv)
+#     γ*(log(ae+be+ce+zero(T)) + maxv)
+# end
+#
+#
+# using StaticArrays
+# @inline function softmin(a::T,b,c, γ=1) where T
+#     γ = -γ
+#     v = SVector(a, b, c)
+#     v = v ./ γ
+#     maxv = maximum(v)
+#     ve = exp.(v .- maxv)
+#     γ*(log(sum(ve)) + maxv)
+# end

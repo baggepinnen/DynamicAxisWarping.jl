@@ -118,12 +118,16 @@ da = ReverseDiff.gradient(a->soft_dtw_cost(a,b; γ=1), a)
 Zygote.jl will not work due to the array-mutation limitation.
 See also function `soft_dtw_cost_matrix`.
 
+The following [example](https://github.com/baggepinnen/DynamicAxisWarping.jl/blob/master/examples/softDTW.jl) illustrates how to calculate a barycenter using Soft DTW and [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl), the result is shown below.
+
+![barycenter](examples/barycenter.svg)
+
 ## Clustering and barycenter averaging
 ```julia
 barycenter = dba(vector_of_arrays)
 result     = dbaclust(data, nclust, DTW())
 ```
-Note that `dba` is known to not always produce the best barycenters. See, e.g., ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
+Note that `dba` is known to not always produce the best barycenters. See, e.g., `soft_dtw_cost` above and ["Soft-DTW: a Differentiable Loss Function for Time-Series"](https://arxiv.org/pdf/1703.01541.pdf) or ["Spatio-Temporal Alignments: Optimal transport through space and time"](https://arxiv.org/pdf/1910.03860.pdf) for a method that produces better barycenters at the expense of a much higher computational cost.
 
 ## Sparse distance matrix
 The early termination and some of the stopping heuristics can be used to efficiently calculate a sparse distance matrix where only the k nearest neighbors are fully caluclated and stored. To this end, we have the function

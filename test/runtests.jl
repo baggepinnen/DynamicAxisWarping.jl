@@ -24,7 +24,7 @@ using Distances, Plots
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
         @test evaluate(DTWDistance(DTW(10)), a, b) == cost
 
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) > -0.001
+        @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001)) > -0.001
 
         a[end] += 2
         cost, match1, match2 = dtw(a, b)
