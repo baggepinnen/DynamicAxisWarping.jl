@@ -47,6 +47,7 @@ end
 Base.@kwdef struct FastDTW{D} <: DTWDistance{D}
     radius::Int
     dist::D = SqEuclidean()
+    FastDTW(r, dist=SqEuclidean()) = new{typeof(dist)}(r, dist)
 end
 
 

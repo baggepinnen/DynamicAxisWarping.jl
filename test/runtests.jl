@@ -50,7 +50,7 @@ using Distances, Plots
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
 
-        a = zeros(Int, 6)
+        a = zeros(6)
         b = 1 .+ a
         cost, match1, match2 = dtw(a, b)
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
