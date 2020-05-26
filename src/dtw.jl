@@ -299,7 +299,7 @@ const LVB = LoopVectorization.VectorizationBase
     ninvγ = one(T) / γ
     v = LVB.SVec{4,T}((a, b, c, typemax(T)))
     v = v * ninvγ
-    maxv = maximum(v)#Base.FastMath.max_fast(a,b,c) * ninvγ
+    @fastmath maxv = min(a,b,c) * ninvγ
     ve = exp(v - maxv) * LVB.SVec{4,T}((one(T), one(T), one(T), zero(T)))
     γ*(log(sum(ve)) + maxv)
 end
