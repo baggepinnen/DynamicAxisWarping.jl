@@ -74,6 +74,6 @@ function SlidingDistancesBase.distance_profile(d::DTWDistance, Q::AbstractArray{
     n = lastlength(T)
     n >= m || throw(ArgumentError("Q cannot be longer than T"))
     l = n-m+1
-    res = dtwnn(Q, Y, d.dist, d.radius; saveall=true, kwargs...)
+    res = dtwnn(Q, T, d.dist, d.radius; saveall=true, kwargs...)
     res.dists
 end

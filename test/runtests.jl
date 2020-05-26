@@ -489,10 +489,22 @@ using Distances, Plots
 
     end
 
-@testset "matrix_profile" begin
-    @info "Testing matrix_profile"
-    include("test_matrixprofile.jl")
-end
+    @testset "matrix_profile" begin
+        @info "Testing matrix_profile"
+        include("test_matrixprofile.jl")
+    end
+
+    @testset "distance profile" begin
+        @info "Testing distance profile"
+        Q = randn(10)
+        T = randn(100)
+        d = DTW(5)
+        D = distance_profile(d, Q, T)
+        @test D[1] ≈ d(Q, getwindow(T,10,1))
+        @test D[2] ≈ d(Q, getwindow(T,10,2))
+        @test D[91] ≈ d(Q, getwindow(T,10,91))
+
+    end
 
 
     @testset "datasets" begin
