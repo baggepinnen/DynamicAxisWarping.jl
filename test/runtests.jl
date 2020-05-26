@@ -500,10 +500,8 @@ using Distances, Plots
         T = randn(100)
         d = DTW(5)
         D = distance_profile(d, Q, T)
-        @test D[1] ≈ d(Q, getwindow(T,10,1))
-        @test D[2] ≈ d(Q, getwindow(T,10,2))
-        @test D[91] ≈ d(Q, getwindow(T,10,91))
-
+        @test length(D) == 100-10+1
+        foreach(i->@test(D[i] ≈ d(Q, getwindow(T,10,i))), 1:91)
     end
 
 
