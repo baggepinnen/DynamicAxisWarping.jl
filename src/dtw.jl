@@ -251,8 +251,7 @@ end
     # Complete the cost matrix
     for c = 2:n
         for r = 2:m
-            best_neighbor_cost = softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
-            D[r, c] += best_neighbor_cost
+            D[r, c] += softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
         end
     end
 
@@ -286,7 +285,7 @@ function soft_dtw_cost(args...; γ = 1, kwargs...)
 end
 
 
-@fastmath function softmin(a,b,c, γ)
+@fastmath @inline function softmin(a, b, c, γ)
     γ = -γ
     a,b,c = a/γ, b/γ, c/γ
     maxv = max(a,b,c)
@@ -294,32 +293,13 @@ end
     γ*(log(ae+be+ce) + maxv)
 end
 
-# using SIMD
-# function softmin(a::T,b::T,c, γ) where T <: Union{Float64, Float32}
-#     γ = -T(γ)
-#     v = SIMD.Vec{4,T}((a, b, c, zero(T)))
-#     v = v / γ
-#     maxv = maximum(v)
-#     ve = exp(v - maxv) * SIMD.Vec{4,T}((one(T), one(T), one(T), zero(T)))
-#
-#     γ*(log(sum(ve)) + maxv)
-# end
+const LVB = LoopVectorization.VectorizationBase
+@inline function softmin(a::T, b::T, c::T, γ) where T <: Union{Float64, Float32}
+    γ = -γ
+    v = LVB.SVec{4,T}((a, b, c, typemax(T)))
+    v = v / γ
+    maxv = maximum(v)
+    ve = exp(v - maxv) * LVB.SVec{4,T}((one(T), one(T), one(T), zero(T)))
 
-# @fastmath @inline function softmin(a::T,b,c, γ=1) where T
-#     γ = -γ
-#     a,b,c,_ = a/γ, b/γ, c/γ, one(T)/γ
-#     maxv = max(a,b,c,typemin(T))
-#     ae,be,ce,_ = exp(a - maxv), exp(b - maxv), exp(c - maxv), exp(one(T) - maxv)
-#     γ*(log(ae+be+ce+zero(T)) + maxv)
-# end
-#
-#
-# using StaticArrays
-# @inline function softmin(a::T,b,c, γ=1) where T
-#     γ = -γ
-#     v = SVector(a, b, c)
-#     v = v ./ γ
-#     maxv = maximum(v)
-#     ve = exp.(v .- maxv)
-#     γ*(log(sum(ve)) + maxv)
-# end
+    γ*(log(sum(ve)) + maxv)
+end

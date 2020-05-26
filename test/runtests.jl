@@ -24,7 +24,7 @@ using Distances, Plots
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
         @test evaluate(DTW(10), a, b) == cost
 
-        @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001)) > -0.001
+        @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001)) > -0.01
 
         a[end] += 2
         cost, match1, match2 = dtw(a, b)
@@ -38,8 +38,8 @@ using Distances, Plots
         @test dtw_cost(a, b, SqEuclidean(), 0) ≈ norm(a-b)^2 # Test that radius 0 reduces to SqEuclidean distance
         @test dtw_cost(a, b, Euclidean(), 0) ≈ sum(abs, a-b) # Test that radius 0 reduces to SqEuclidean distance
 
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) == SoftDTW(0.001)(a,b)
 
         a = collect(1.0:10)
         b = a .+ 1
@@ -47,8 +47,8 @@ using Distances, Plots
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 2
         @test evaluate(DTW(10), a, b) == cost
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.01) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.01) == SoftDTW(0.01)(a,b) ≈ SoftDTW(0.01)(big.(a),big.(b))
 
         a = zeros(6)
         b = 1 .+ a
@@ -56,8 +56,8 @@ using Distances, Plots
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == length(a)
         @test evaluate(DTW(10), a, b) == cost
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost rtol = 1e-2
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.01) ≈ cost rtol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.01) == SoftDTW(0.01)(a,b)
 
         # Verify that a tie prefers diagonal moves
         a = Float64[1, 1, 1]
@@ -68,8 +68,8 @@ using Distances, Plots
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
         @test evaluate(DTW(10), a, b) == cost
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) ≈ cost atol = 1e-2
-        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.0001) == SoftDTW(0.0001)(a,b)
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) ≈ cost atol = 1e-2
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) == SoftDTW(0.001)(a,b)
 
         # Verify that trackback ends properly if it reaches an edge before reaching [1,1]
         # Also check that trackback prefers diagonal moves
