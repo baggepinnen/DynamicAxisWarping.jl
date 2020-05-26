@@ -296,10 +296,11 @@ end
 const LVB = LoopVectorization.VectorizationBase
 @inline function softmin(a::T, b::T, c::T, γ) where T <: Union{Float64, Float32}
     γ = -γ
-    v = LVB.SVec{4,T}((a, b, c, typemax(T)))
-    v = v / γ
-    maxv = maximum(v)
-    ve = exp(v - maxv) * LVB.SVec{4,T}((one(T), one(T), one(T), zero(T)))
+    ninvγ = one(T) / γ
+    v = LVB.SVec{4,T}((a, b, c, zero(T)))
+    v = v * ninvγ
+    maxv = Base.FastMath.max_fast(a,b,c) * ninvγ
+    ve = SLEEFPirates.exp(v - maxv) * LVB.SVec{4,T}((one(T), one(T), one(T), zero(T)))
 
     γ*(log(sum(ve)) + maxv)
 end
