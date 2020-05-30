@@ -83,7 +83,7 @@ end
 
 @userplot MatchPlot
 
-znorm(x) = (x .-mean(x); x ./= std(x))
+znorm(x) = (x -= mean(x); x ./= std(x))
 using Statistics
 @recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1)
     x, y, D, i1, i2 = handleargs(h; transportcost=transportcost)
