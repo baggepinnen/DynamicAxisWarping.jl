@@ -1,7 +1,7 @@
 name = "DynamicAxisWarping"
 uuid = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 authors = ["Fredrik Bagge Carlson <baggepinnen@gmail.com>"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
@@ -30,7 +30,7 @@ Plots = "1.0"
 ProgressMeter = "1.2"
 Requires = "1.0"
 SlidingDistancesBase = "0.1.3"
-StatsBase = "0.33"
+StatsBase = "0.32, 0.33"
 UnsafeArrays = "1.0"
 julia = "1"
 
