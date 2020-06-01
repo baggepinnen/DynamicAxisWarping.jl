@@ -10,21 +10,21 @@ struct DTWWorkspace{T,AT<:AbstractArray,D,N}
     c1::Vector{T}
     c2::Vector{T}
     normalizer::N
+    function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Val(Nothing)) where QT
+        T      = floattype(QT)
+        m      = lastlength(q)
+        n      = 2r + 1
+        l      = zeros(T, m)
+        u      = zeros(T, m)
+        l_buff = zeros(T, m)
+        u_buff = zeros(T, m)
+        cb     = zeros(T, m)
+        c1     = zeros(T, n)
+        c2     = zeros(T, n)
+        new{T, typeof(q), typeof(dist), typeof(normalizer)}(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
+    end
 end
 
-function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Nothing) where QT
-    T      = floattype(QT)
-    m      = lastlength(q)
-    n      = 2r + 1
-    l      = zeros(T, m)
-    u      = zeros(T, m)
-    l_buff = zeros(T, m)
-    u_buff = zeros(T, m)
-    cb     = zeros(T, m)
-    c1     = zeros(T, n)
-    c2     = zeros(T, n)
-    DTWWorkspace(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
-end
 
 struct DTWSearchResult{QT,C,D} <: AbstractSearchResult{QT}
     q::QT
@@ -201,7 +201,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
         advance!(y)
         avoid !== nothing && it ∈ avoid && continue
         bsf = bsf_multiplier*best_so_far
-        ym = getwindow(y, m, it) # if y isa Normalizer, this is a noop
+        ym = getwindow(y, m, it)
         if prune_endpoints && !saveall
             lb_end = lb_endpoints(w.dist, w.q, ym, bsf; kwargs...)
             if lb_end > bsf

@@ -2,9 +2,9 @@
 
 # In this example we will compare different distances when used as the inner metric in a dynamic time-warping of spectrograms.
 # Setup
-using DynamicAxisWarping, SpectralDistances, LPVSpectral, DSP, Plots, Statistics, BenchmarkTools, Distances, Random, ThreadTools, AlphaStableDistributions
+using DynamicAxisWarping, SpectralDistances, LPVSpectral, DSP, Plots, Statistics, BenchmarkTools, Distances, Random, ThreadTools, AlphaStableDistributions, SlidingDistancesBase
 theme(:default)
-plotly();
+gr();
 Random.seed!(0);
 
 # We start by creating a short patter, the *query*, we then create a long time series that contains a quite similar sound, but where the frequencies of the chirp are slightly higher. This is a realistic scenario when doing, e.g., acoustic detection. Different individuals within the same animal species might have similar calls, but slightly different pitch etc. We also add some alpha sub-gaussian noise in order to make the problem a bit harder.
@@ -28,23 +28,22 @@ plot(plot(Q, title = "Query"), plot(Y, title = "Data"), link = :both, layout = (
 # We now see if we can detect the pattern using DTW with the standard squared Euclidean distance
 rad  = 10 # This is the maximum allowed warping radius
 dist = SqEuclidean()
-w    = DTWWorkspace(sqrt.(Q.power), dist, rad)
+w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Val(Nothing))
 res  = dtwnn(w, sqrt.(Y.power))
 plot(Y);
-vline!([Y.time[res.loc]], l = (4, :blue), primary=false)
+vline!([Y.time[res.loc]], l = (4, :blue), primary=false, yscale=:identity)
 # That did probably not go well at all! The line indicates where the smallest distance to the pattern was, i.e., where the nearest neighbor search thinks the *onset* of the pattern is.
 #---
 # Let's do the same with a transport-based distance
 n, m = size(Q.power)
-dist = DiscreteGridTransportDistance(Cityblock(), n, n)
-w    = DTWWorkspace(sqrt.(Q.power), dist, rad)
+dist = DiscreteGridTransportDistance(Cityblock(), Float32, n, n)
+w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Val(Nothing))
 res  = dtwnn(w, sqrt.(Y.power))
 plot(Y);
 vline!([Y.time[res.loc]], l = (4, :blue), primary=false)
 # The line should now be a better indication of the onset of the pattern
 #---
 # Next, we plot the cost function for each time shift to see how they behave
-using DynamicAxisWarping: lastlength
 function naive(a, b, dist = SqEuclidean(), r = 7)
     dists = map(1:lastlength(b)-lastlength(a)) do i
         dtw_cost(a, b[!, i:i+lastlength(a)-1], dist, r)
@@ -52,7 +51,7 @@ function naive(a, b, dist = SqEuclidean(), r = 7)
 end
 
 plot()
-for dist in [DiscreteGridTransportDistance(Cityblock(), n, n), SqEuclidean()]
+for dist in [DiscreteGridTransportDistance(Cityblock(), Float32, n, n), SqEuclidean()]
     @time res = naive(Q.power, Y.power, dist, rad)
     res .-= minimum(res)
     res ./= maximum(res)
@@ -121,6 +120,12 @@ GC.gc(true); GC.gc(true) #src
 #---
 # # Transport in time
 # We can also consider using optimal transport along the time axis instead of DTW. Let's do the same stuff as above for the TimeDistance from SpectralDistances.jl
+dist = TimeDistance(inner=OptimalTransportRootDistance(p=1, β=0.5),tp=1,c=0.1)
+res   = SpectralDistances.distance_profile(dist, Qm, Ym)
+res .-= minimum(res)
+res ./= maximum(res)
+plot!(fig1, res, lab = "Time transport")
+#---
 function naive_time(a, b, dist)
     n = length(a)
     dists = map(1:length(b.models)-length(a.models)) do i
@@ -128,14 +133,6 @@ function naive_time(a, b, dist)
         dist(a, Y, tol=1e-3, check_interval=2)
     end
 end
-dist = TimeDistance(inner=OptimalTransportRootDistance(p=1, β=0.5),tp=1,c=0.1)
-
-res2  = naive_time(Qm, Ym, dist)
-res   = SpectralDistances.distance_profile(dist, Qm, Ym)
-res .-= minimum(res)
-res ./= maximum(res)
-plot!(fig1, res, lab = "Time transport")
-#---
 @btime naive_time($Qm, $Ym, $dist);
 @btime SpectralDistances.distance_profile($dist, $(change_precision(Float32,Qm)), $(change_precision(Float32,Ym)), check_interval=5)
 # It appears to be surprisingly competitive, both in terms of accuracy and performance, even though it's evaluated using a rather naive method. Since the solver used to find the `TimeDistance` internally solves the *dual* problem, a lower bound of the objective function is always available for free during the optimization. This lower bound could be used to terminate the optimization early if it rises above the smallest distance found so far.
