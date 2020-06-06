@@ -264,7 +264,7 @@ function sparse_distmat(y::AbstractVector{<:AbstractVector{S}}, k, dist, rad; sh
     N = length(y)
     INDS = [zeros(Int, k) for _ in 1:N]
     DISTS = [zeros(T, k) for _ in 1:N]
-    showprogress && (p = Progress(N, 1, "Processing..."))
+    showprogress && (p = Progress(N^2, 1, "Processing..."))
     for i = 1:N
         bsf = typemax(T)
         dists = BinaryMaxHeap{Neighbor{T}}()
