@@ -269,7 +269,7 @@ function sparse_distmat(y::AbstractVector{<:AbstractVector{S}}, k, dist, rad; sh
         bsf = typemax(T)
         dists = BinaryMaxHeap{Neighbor{T}}()
         for j = 1:N
-            j == i && continue
+            j == i && (showprogress && next!(p);continue)
             d = lb_endpoints(dist, y[i], y[j], bsf; kwargs...)
             if d < bsf
                 d = dtw_cost(y[i], y[j], dist, rad; best_so_far = bsf, kwargs...)
