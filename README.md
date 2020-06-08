@@ -137,7 +137,7 @@ dists, inds = sparse_distmat(y::Vector{Vector}, k, dist, radius)
 ## Matrix Profile
 This package defines specialized methods for [`MatrixProfile`](https://github.com/baggepinnen/MatrixProfile.jl)`.matrix_profile`, making use of early stopping to accelerate the computation of the matrix profile. The interface is
 ```julia
-profile = matrix_profile(y, m, DTWDistance(DTW(radius, [transportcost])))
+profile = matrix_profile(y, m, DTW(radius, [transportcost]))
 ```
 
 
