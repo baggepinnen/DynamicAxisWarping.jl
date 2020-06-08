@@ -259,7 +259,7 @@ Compute the `k` nearest neighbors between signals in `y`, corresponding to the `
 - `dist`: the inner metric, e.g., `SqEuclidean()`
 - `kwargs`: these are sent to `dtw_cost`.
 """
-function sparse_distmat(y::AbstractVector{<:AbstractVector{S}}, k, dist, rad; showprogress::Bool=false, kwargs...) where S
+function sparse_distmat(y::AbstractVector{<:AbstractArray{S,SN}}, k, dist, rad; showprogress::Bool=false, kwargs...) where {S,SN}
     T = floattype(S)
     N = length(y)
     INDS = [zeros(Int, k) for _ in 1:N]
