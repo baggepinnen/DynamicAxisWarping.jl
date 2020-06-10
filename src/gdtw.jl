@@ -12,19 +12,19 @@ struct GDTWWorkspace{T1, T2, T3}
 end
 
 """
-    GDTWWorkspace{T}(N, M)
+    GDTWWorkspace{T}(M, N)
 
 Creates a cache of numeric type `T` for use in [`gdtw`](@ref).
 """
-function GDTWWorkspace{T}(N, M) where {T}
+function GDTWWorkspace{T}(M, N) where {T}
     GDTWWorkspace{Vector{T}, Matrix{T}, Array{T, 3}}(
-        zeros(T, N, M), zeros(T, N), zeros(T, N),
+        zeros(T, M, N), zeros(T, N), zeros(T, N),
         zeros(T, N), zeros(T, N), zeros(T, N),
-        zeros(T, N), zeros(T, N, M), zeros(T, M, M, N)
+        zeros(T, N), zeros(T, M, N), zeros(T, M, M, N)
     )
 end
 
-GDTWWorkspace(N, M) = GDTWWorkspace{Float64}(N, M)
+GDTWWorkspace(M, N) = GDTWWorkspace{Float64}(M, N)
 
 # refine the bounds, as described in Section 4.2 of DB19
 function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
@@ -49,9 +49,9 @@ end
 # produces `τ` as described in Section 4.1 of DB19.
 function update_τ!(τ, t, M, l, u)
     N = length(t)
-    @assert size(τ) == (N, M)
-    @inbounds for j = 1:M, i = 1:N
-        τ[i, j] = l[i] + ((j - 1) / (M - 1)) * (u[i] - l[i])
+    @assert size(τ) == (M, N)
+    @inbounds for t = 1:N, j = 1:M
+        τ[j, t] = l[t] + ((j - 1) / (M - 1)) * (u[t] - l[t])
     end
     return nothing
 end
@@ -62,7 +62,7 @@ end
     Rcum=u -> u * u, smin::Real=0.001, smax::Real=5.0,
     Rinst=u -> smin <= u <= smax ? u^2 : Inf,
     verbose=false,
-    cache=GDTWWorkspace(N, M), warp=zeros(N))
+    cache=GDTWWorkspace(M, N), warp=zeros(N))
 
 Computes a general DTW distance following [DB19](https://arxiv.org/abs/1905.12893). The parameters are:
 
@@ -94,7 +94,7 @@ function prepare_gdtw(x, y; M::Int=100, N=100, t = range(0, stop=1, length=N), �
                       Rcum=u -> u^2, smin::Real=0.001, smax::Real=5.0,
                       Rinst=u -> smin <= u <= smax ? u^2 : Inf,
                       verbose=false,
-                      cache=GDTWWorkspace(length(t), M), warp=zeros(length(t)),
+                      cache=GDTWWorkspace(M, length(t)), warp=zeros(length(t)),
                       callback=nothing)
     N = length(t)
 
@@ -107,11 +107,11 @@ function prepare_gdtw(x, y; M::Int=100, N=100, t = range(0, stop=1, length=N), �
 
     update_τ!(τ, t, M, l₀, u₀)
 
-    node_weight(i, j) = metric(x(τ[i, j]), y(t[i])) + λcum * Rcum(τ[i, j] - t[i])
+    node_weight(j, s) = metric(x(τ[j, s]), y(t[s])) + λcum * Rcum(τ[j, s] - t[s])
 
-    function edge_weight((i, j), (l, k))
-        i + 1 ≠ l && return Inf
-        u = (τ[i+1, k] - τ[i, j]) / (t[i+1] - t[i])
+    function edge_weight((j, s), (k, s2))
+        s + 1 ≠ s2 && return Inf
+        u = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
         λinst * Rinst(u)
     end
 
@@ -169,23 +169,23 @@ function single_gdtw!(data::T) where {T}
 end
 
 function calc_costs!(min_costs, costs, N, M, node_weight::F1, edge_weight::F2) where {F1,F2}
-    @boundscheck checkbounds(min_costs, 1:N, 1:M)
+    @boundscheck checkbounds(min_costs, 1:M, 1:N)
     @boundscheck checkbounds(costs, 1:M, 1:M, 1:N)
 
     @inbounds begin
-        min_costs .= node_weight.(1:N, permutedims(1:M))
+        min_costs .= node_weight.(1:M, permutedims(1:N))
         # t = 2 case
         for j = 1:M
-            costs[1, j, 2] = min_costs[1, 1] + edge_weight((1, 1), (2, j))
-            min_costs[2, j] += costs[1, j, 2]
+            costs[1, j, 2] = min_costs[1, 1] + edge_weight((1, 1), (j, 2))
+            min_costs[j, 2] += costs[1, j, 2]
         end
         for t = 3:N
             for j = 1:M
                 for k = 1:M
-                    costs[k, j, t] = min_costs[t-1, k] + edge_weight((t - 1, k), (t, j))
+                    costs[k, j, t] = min_costs[k, t-1] + edge_weight((k, t - 1), (j, t))
                 end
-                min_costs[t, j] += minimum(@views costs[:, j, t])
-            end
+                min_costs[j, t] += minimum(@views costs[:, j, t])
+            end 
         end
     end
     return nothing
@@ -196,10 +196,10 @@ function trackback!(warp, costs, τ)
     @boundscheck checkbounds(costs, 1:M, 1:M, 1:N)
     c = M
     @inbounds for t = N:-1:3
-        warp[t] = τ[t, c]
+        warp[t] = τ[c, t]
         c = argmin(@views costs[:, c, t])
     end
-    warp[2] = τ[2, c]
+    warp[2] = τ[c, 2]
     warp[1] = τ[1, 1]
 
     return nothing
