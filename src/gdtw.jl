@@ -11,6 +11,11 @@ struct GDTWCache{T1, T2, T3}
     costs::T3
 end
 
+"""
+    GDTWCache{T}(N, M)
+
+Creates a cache of numeric type `T` for use in [`gdtw`](@ref).
+"""
 function GDTWCache{T}(N, M) where {T}
     GDTWCache{Vector{T}, Matrix{T}, Array{T, 3}}(
         zeros(T, N, M), zeros(T, N), zeros(T, N),
@@ -18,6 +23,8 @@ function GDTWCache{T}(N, M) where {T}
         zeros(T, N), zeros(T, N, M), zeros(T, N, M, M)
     )
 end
+
+GDTWCache(N, M) = GDTWCache{Float64}(N, M)
 
 # refine the bounds, as described in Section 4.2 of DB19
 function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
@@ -55,7 +62,7 @@ end
     Rcum=u -> u * u, smin::Real=0.001, smax::Real=5.0,
     Rinst=u -> smin <= u <= smax ? u^2 : Inf,
     verbose=false,
-    cache=GDTWCache{Float64}(N, M), warp=zeros(N))
+    cache=GDTWCache(N, M), warp=zeros(N))
 
 Computes a general DTW distance following [DB19](https://arxiv.org/abs/1905.12893). The parameters are:
 
@@ -87,7 +94,7 @@ function prepare_gdtw(x, y; M::Int=100, N=100, t = range(0, stop=1, length=N), �
                       Rcum=u -> u^2, smin::Real=0.001, smax::Real=5.0,
                       Rinst=u -> smin <= u <= smax ? u^2 : Inf,
                       verbose=false,
-                      cache=GDTWCache{Float64}(length(t), M), warp=zeros(length(t)),
+                      cache=GDTWCache(length(t), M), warp=zeros(length(t)),
                       callback=nothing)
     N = length(t)
 
