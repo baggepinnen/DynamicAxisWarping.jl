@@ -6,7 +6,6 @@ using StatsBase
 using Distances
 using FillArrays
 using ProgressMeter
-using UnsafeArrays
 using DataStructures
 using SlidingDistancesBase
 import SlidingDistancesBase: floattype, lastlength, setup_normalizer
