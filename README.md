@@ -151,9 +151,9 @@ dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagnoal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
 
-## `gdtw`
+## Generalized DTW
 
-The `gdtw` method implements the algorithm from [*A General Optimization Framework for Dynamic Time Warping*](https://arxiv.org/abs/1905.12893), which takes two continuous time signals `x` and `y` on the interval `[0,1]`, and warps the first into the second by means of a warping function `ϕ`, so that `x ∘ ϕ ≈ y`. The method allows regularization by imposing penalities on `ϕ(t) - t` (the "cumulative warping") and on `ϕ'(t)` (the "instantaneous warping").
+The `gdtw` method implements the algorithm from [*A General Optimization Framework for Dynamic Time Warping*](https://arxiv.org/abs/1905.12893), which takes two continuous-time signals `x` and `y` on the interval `[0,1]`, and warps the first into the second by means of a warping function `ϕ`, so that `x ∘ ϕ ≈ y`. The method allows regularization by imposing penalties on `ϕ(t) - t` (the "cumulative warping") and on `ϕ'(t)` (the "instantaneous warping").
 
 ```julia
 ts = range(0, stop=4π, length=128)
@@ -185,4 +185,3 @@ d(a,b)
 This package is a fork of https://github.com/ahwillia/TimeWarp.jl which is no longer maintained.
 
 Special thanks to Joseph Fowler ([@joefowler](https://github.com/joefowler)) who contributed a substantial portion of the initial code for TimeWarp.jl
-

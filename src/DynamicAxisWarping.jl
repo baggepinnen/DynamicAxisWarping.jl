@@ -33,7 +33,7 @@ export dtw,
        dtwnn,
        DTWWorkspace,
        DTWSearchResult,
-       GDTWCache,
+       GDTWWorkspace,
        sparse_distmat,
        gdtw,
        LinearInterpolation
