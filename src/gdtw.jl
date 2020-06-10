@@ -228,16 +228,13 @@ LinearInterpolation(x) = LinearInterpolation(x, axes(x, ndims(x)))
 
 function (xt::LinearInterpolation)(s)
     x = xt.x
-    0 <= s <= 1 || return zero(time_slice(x, 1))
+    0 <= s <= 1 || return zero(x[!, 1])
     t = xt.t
     i = searchsortedlast(t, s)
-    (i == 0) && return time_slice(x, 1)
-    (i == lastlength(x)) && return time_slice(x, lastlength(x))
-    (s == t[i]) && return time_slice(x, i)
+    (i == 0) && return x[!, 1]
+    (i == lastlength(x)) && return x[!, lastlength(x)]
+    (s == t[i]) && return x[!, i]
     weight = (s - t[i]) / (t[i+1] - t[i])
     omw = 1 - weight
-    time_slice(x, i) .* omw .+ time_slice(x, i + 1) .* weight
+    x[!, i] .* omw .+ x[!, i+1] .* weight
 end
-
-time_slice(input::AbstractVector, t) = input[t]
-time_slice(input::AbstractArray, t) = view(input, Base.front(ntuple(i -> Colon(), ndims(input)))..., t)
