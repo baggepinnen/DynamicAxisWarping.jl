@@ -20,7 +20,7 @@ function GDTWWorkspace{T}(N, M) where {T}
     GDTWWorkspace{Vector{T}, Matrix{T}, Array{T, 3}}(
         zeros(T, N, M), zeros(T, N), zeros(T, N),
         zeros(T, N), zeros(T, N), zeros(T, N),
-        zeros(T, N), zeros(T, N, M), zeros(T, N, M, M)
+        zeros(T, N), zeros(T, N, M), zeros(T, M, M, N)
     )
 end
 
@@ -170,21 +170,21 @@ end
 
 function calc_costs!(min_costs, costs, N, M, node_weight::F1, edge_weight::F2) where {F1,F2}
     @boundscheck checkbounds(min_costs, 1:N, 1:M)
-    @boundscheck checkbounds(costs, 1:N, 1:M, 1:M)
+    @boundscheck checkbounds(costs, 1:M, 1:M, 1:N)
 
     @inbounds begin
         min_costs .= node_weight.(1:N, permutedims(1:M))
         # t = 2 case
         for j = 1:M
-            costs[2, j, 1] = min_costs[1, 1] + edge_weight((1, 1), (2, j))
-            min_costs[2, j] += costs[2, j, 1]
+            costs[1, j, 2] = min_costs[1, 1] + edge_weight((1, 1), (2, j))
+            min_costs[2, j] += costs[1, j, 2]
         end
         for t = 3:N
             for j = 1:M
                 for k = 1:M
-                    costs[t, j, k] = min_costs[t-1, k] + edge_weight((t - 1, k), (t, j))
+                    costs[k, j, t] = min_costs[t-1, k] + edge_weight((t - 1, k), (t, j))
                 end
-                min_costs[t, j] += minimum(@views costs[t, j, :])
+                min_costs[t, j] += minimum(@views costs[:, j, t])
             end
         end
     end
@@ -192,12 +192,12 @@ function calc_costs!(min_costs, costs, N, M, node_weight::F1, edge_weight::F2) w
 end
 
 function trackback!(warp, costs, τ)
-    (N, M, _) = size(costs)
-    @boundscheck checkbounds(costs, 1:N, 1:M, 1:M)
+    (M, _, N) = size(costs)
+    @boundscheck checkbounds(costs, 1:M, 1:M, 1:N)
     c = M
     @inbounds for t = N:-1:3
         warp[t] = τ[t, c]
-        c = argmin(@views costs[t, c, :])
+        c = argmin(@views costs[:, c, t])
     end
     warp[2] = τ[2, c]
     warp[1] = τ[1, 1]
