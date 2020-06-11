@@ -40,6 +40,7 @@ using Distances, Plots
     end
 
     @testset "Basic Dynamic Time Warping" begin
+        @info "Testing Basic Dynamic Time Warping"
         a = Float64[1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
         b = Float64[1, 1, 2, 4, 6, 6, 6, 5, 4, 4, 4, 3, 3, 3, 1]
         cost, match1, match2 = dtw(a, b)
@@ -127,6 +128,7 @@ using Distances, Plots
 
 
     @testset "DTW with windows" begin
+        @info "Testing DTW with windows"
         # Verify that a tie prefers diagonal moves
         dist = SqEuclidean()
         a = [1, 1, 1]
@@ -272,6 +274,7 @@ using Distances, Plots
 
 
     @testset "Window Computations" begin
+        @info "Testing Window Computations"
         computewindow = DynamicAxisWarping.computewindow
 
         # Simplest path (along the diagonal)
