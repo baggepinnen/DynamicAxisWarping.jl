@@ -28,7 +28,7 @@ GDTWWorkspace(M, N) = GDTWWorkspace{Float64}(M, N)
 
 # refine the bounds, as described in Section 4.2 of DB19
 function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
-    @inbounds for i in eachindex(l_current, u_current, l_prev, u_prev, l₀, u₀, warp)
+    @avx for i in eachindex(l_current, u_current, l_prev, u_prev, l₀, u₀, warp)
         δ = η * (u_prev[i] - l_prev[i]) / 2
         l_current[i] = max(warp[i] - δ, l₀[i])
         u_current[i] = min(warp[i] + δ, u₀[i])
@@ -109,7 +109,7 @@ function prepare_gdtw(x, y; M::Int=100, N=100, t = range(0, stop=1, length=N), �
 
     node_weight(j, s) = metric(x(τ[j, s]), y(t[s])) + λcum * Rcum(τ[j, s] - t[s])
 
-    function edge_weight((j, s), (k, s2))
+    @inline function edge_weight((j, s), (k, s2))
         s + 1 ≠ s2 && return Inf
         u = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
         λinst * Rinst(u)
@@ -181,11 +181,14 @@ function calc_costs!(min_costs, costs, N, M, node_weight::F1, edge_weight::F2) w
         end
         for t = 3:N
             for j = 1:M
+                mi = typemax(eltype(costs))
                 for k = 1:M
-                    costs[k, j, t] = min_costs[k, t-1] + edge_weight((k, t - 1), (j, t))
+                    c = min_costs[k, t-1] + edge_weight((k, t - 1), (j, t))
+                    costs[k, j, t] = c
+                    mi = ifelse(c < mi, c, mi)
                 end
-                min_costs[j, t] += minimum(@views costs[:, j, t])
-            end 
+                min_costs[j, t] += mi
+            end
         end
     end
     return nothing
