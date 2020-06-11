@@ -265,7 +265,8 @@ struct LinearInterpolation{Tx,Tt} <: Function
     t::Tt
     function LinearInterpolation(x::Tx, ts::Ts) where {Tx,Ts}
         @assert issorted(ts)
-        t = (ts .- first(ts)) ./ ( last(ts) - first(ts))
+        T = eltype(Tx)
+        t = (ts .- T(first(ts))) ./ T( last(ts) - first(ts))
         Tt = typeof(t)
         new{Tx,Tt}(x, t)
     end
