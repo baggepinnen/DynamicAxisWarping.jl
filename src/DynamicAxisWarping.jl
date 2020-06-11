@@ -6,13 +6,13 @@ using StatsBase
 using Distances
 using FillArrays
 using ProgressMeter
-using UnsafeArrays
 using DataStructures
 using SlidingDistancesBase
 import SlidingDistancesBase: floattype, lastlength, setup_normalizer
 using LoopVectorization
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 using Requires
+using UnPack
 
 export dtw,
        dtw_cost,
@@ -32,7 +32,10 @@ export dtw,
        dtwnn,
        DTWWorkspace,
        DTWSearchResult,
-       sparse_distmat
+       GDTWWorkspace,
+       sparse_distmat,
+       gdtw,
+       LinearInterpolation
 
 export ZNormalizer,
        IsoZNormalizer,
@@ -44,6 +47,7 @@ include("utils.jl")
 
 include("distance_interface.jl")
 include("dtw.jl")
+include("gdtw.jl")
 include("dtwnn.jl")
 include("dba.jl")
 include("dbaclust.jl")
