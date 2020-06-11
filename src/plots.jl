@@ -100,7 +100,7 @@ using Statistics
     @series begin
         primary := false
         linecolor --> :black
-        alpha --> 0.2
+        seriesalpha --> 0.2
         i = fill(Inf, 1, length(i1))
         vec([i1'; i2'; i][:,1:ds:end]), vec([s1[i1]'; s2[i2]'; i][:,1:ds:end])
     end

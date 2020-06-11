@@ -5,7 +5,7 @@ using Distances, Plots
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
 
-    include("gdtw.jl")
+    include("test_gdtw.jl")
 
     @testset "LinearInterpolation" begin
         # Test arrays
