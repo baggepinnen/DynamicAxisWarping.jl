@@ -5,7 +5,29 @@ using Distances, Plots
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
 
+    include("gdtw.jl")
 
+    @testset "LinearInterpolation" begin
+        # Test arrays
+        x = rand(20, 20, 100)
+        x_interp = LinearInterpolation(x)
+        @test x_interp isa Function # helps for plotting
+        @test x_interp(0) == x[:, :, 1]
+        @test x_interp(4/99) == x[:, :, 5]
+        @test x_interp(98/99) == x[:, :, end-1]
+        @test x_interp( 4.5/99 ) ≈ (x[:, :, 5] + x[:, :, 6])/2
+        @test x_interp(1) == x[:, :, end]
+        @test x_interp(-1) == zeros(20, 20)
+        @test x_interp(2.0) == zeros(20, 20)
+
+        # Test scalars
+        x = rand(100)
+        x_interp = LinearInterpolation(x)
+        @test x_interp(0) == x[1]
+        @test x_interp(1) == x[end]
+        @test x_interp(4/99) == x[5]
+    end
+    
     @testset "Normalizers" begin
         @info "Testing Normalizers"
         a = randn(2,100)

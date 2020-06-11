@@ -151,6 +151,22 @@ dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagnoal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
 
+## Generalized DTW
+
+The `gdtw` method implements the algorithm from [*A General Optimization Framework for Dynamic Time Warping*](https://arxiv.org/abs/1905.12893), which takes two continuous-time signals `x` and `y` on the interval `[0,1]`, and warps the first into the second by means of a warping function `ϕ`, so that `x ∘ ϕ ≈ y`. The method allows regularization by imposing penalties on `ϕ(t) - t` (the "cumulative warping") and on `ϕ'(t)` (the "instantaneous warping").
+
+```julia
+ts = range(0, stop=4π, length=128)
+x = LinearInterpolation(sin.(ts) .+ 0.1 .* randn.())
+y = LinearInterpolation(sin.(1.1 .* ts))
+
+norm(x.(ts) - y.(ts)) # 1.7184237220575787
+
+cost, ϕ = gdtw(x,y)
+
+norm(x.(ϕ.(ts)) - y.(ts)) # 0.9266090849096682
+```
+
 ## Combine with optimal transport
 The distance between two datapoints can be any distance supporting the [Distances.jl](https://github.com/JuliaStats/Distances.jl/) interface.
 
