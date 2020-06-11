@@ -5,9 +5,13 @@ using Distances, Plots
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
 
-    include("test_gdtw.jl")
+    @testset "GDTW" begin
+        @info "Testing GDTW"
+        include("test_gdtw.jl")
+    end
 
     @testset "LinearInterpolation" begin
+        @info "Testing LinearInterpolation"
         # Test arrays
         x = rand(20, 20, 100)
         x_interp = LinearInterpolation(x)
@@ -27,7 +31,7 @@ using Distances, Plots
         @test x_interp(1) == x[end]
         @test x_interp(4/99) == x[5]
     end
-    
+
     @testset "Normalizers" begin
         @info "Testing Normalizers"
         a = randn(2,100)
