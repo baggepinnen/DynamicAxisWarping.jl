@@ -57,7 +57,7 @@ function update_τ!(τ, t, M, l, u)
 end
 
 """
-    prepare_gdtw(
+    gdtw(
         x,
         y,
         ::Type{T}  = Float64;
@@ -264,7 +264,7 @@ struct LinearInterpolation{Tx,Tt} <: Function
     x::Tx
     t::Tt
     function LinearInterpolation(x::Tx, ts::Ts) where {Tx,Ts}
-        @assert issorted(ts)
+        issorted(ts) || throw(ArgumentError("Time parameter `ts` must be sorted in increasing order."))
         T = eltype(Tx)
         t = (ts .- T(first(ts))) ./ T( last(ts) - first(ts))
         Tt = typeof(t)
