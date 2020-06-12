@@ -36,8 +36,13 @@ function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
     return nothing
 end
 
-# inital choices of `l` and `u`, as given in Eq (7) of DB19
+# inital choices of `l` and `u`, modified from Eq (7) of DB19
 function inital_bounds!(l, u, t, smin, smax)
+    # We need to loosen the bounds to account for floating point error
+    # Otherwise these bounds can be too tight and disallow valid moves
+    # which can lead to very wrong results.
+    smin = .99*smin
+    smax = 1.01*smax
     @inbounds for i in eachindex(t, l, u)
         l[i] = max(smin * t[i], 1 - smax * (1 - t[i]))
         u[i] = min(smax * t[i], 1 - smin * (1 - t[i]))
