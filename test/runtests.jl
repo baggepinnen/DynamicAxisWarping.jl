@@ -1,6 +1,7 @@
 using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
+using ForwardDiff, QuadGK
 
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
