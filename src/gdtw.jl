@@ -125,7 +125,7 @@ function prepare_gdtw(
     Rcum       = u -> u^2,
     smin::Real = T(0.001),
     smax::Real = T(5.0),
-    Rinst      = u -> smin <= u <= smax ? u^2 : typemax(T),
+    Rinst      = u -> smin <= u <= smax ? (u-1)^2 : typemax(T),
     verbose    = false,
     warp       = zeros(length(t)),
     callback   = nothing,
@@ -138,15 +138,18 @@ function prepare_gdtw(
 
     @unpack l₀, u₀, τ = cache
     inital_bounds!(l₀, u₀, t, smin, smax)
-
     update_τ!(τ, t, M, l₀, u₀)
-
-    node_weight(j, s) = metric(x(τ[j, s]), y(t[s])) + λcum * Rcum(τ[j, s] - t[s])
+    
+    function node_weight(j, s)
+        s == length(t) && return zero(T)
+        Rval = Rcum(τ[j, s] - t[s])
+        (t[s+1] - t[s])*(metric(x(τ[j, s]), y(t[s])) + λcum * Rval)
+    end
 
     @inline function edge_weight((j, s), (k, s2))
         s + 1 ≠ s2 && return typemax(T)
-        u = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
-        λinst * Rinst(u)
+        ϕ′ = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
+        (t[s+1] - t[s]) * (λinst * Rinst(ϕ′))
     end
 
     return (
