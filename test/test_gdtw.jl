@@ -51,7 +51,7 @@ end
     ts = range(0, stop=π/12, length=128)
     x = LinearInterpolation(sin.(ts))
     y = LinearInterpolation(sin.(1.1 .* ts))
-
+    metric = (x,y) -> norm(x-y)
     λinst = .1
     λcum = .1
     # We need high `N` and `M` to have low discretization error
