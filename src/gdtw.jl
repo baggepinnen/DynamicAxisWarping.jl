@@ -43,7 +43,15 @@ function inital_bounds!(l, u, t, smin, smax)
     # which can lead to very wrong results.
     smin = .99*smin
     smax = 1.01*smax
+
     @inbounds for i in eachindex(t, l, u)
+        # You must be able to get to `warp[i]` in time `t[i]`, so
+        #   `smax >= warp[i] / t[i] >= smin`
+        # This gives a lower and upper bound on `warp[i]`, i.e., on `τ[:, i]`.
+        # You must be able to get to `1` from `warp[i]` in time `1-t[i]`, so
+        #   `smin <= (1-warp[i])/(1-t[i]) <= smax`
+        # this gives another lower and upper bound.
+        # The resulting bounds:
         l[i] = max(smin * t[i], 1 - smax * (1 - t[i]))
         u[i] = min(smax * t[i], 1 - smin * (1 - t[i]))
     end
