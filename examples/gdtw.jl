@@ -12,7 +12,7 @@ ylabel!("Amplitude")
 title!("Original signals")
 
 
-cost, ϕ = gdtw(x, y; N = 200)
+cost, ϕ = gdtw(x, y)
 gdtw_plot = plot(t, x ∘ ϕ, label="x∘ϕ(t)")
 plot!(t, y, label="y(t)")
 xlabel!("Time")

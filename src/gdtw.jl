@@ -36,9 +36,22 @@ function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
     return nothing
 end
 
-# inital choices of `l` and `u`, as given in Eq (7) of DB19
+# inital choices of `l` and `u`, modified from Eq (7) of DB19
 function inital_bounds!(l, u, t, smin, smax)
+    # We need to loosen the bounds to account for floating point error
+    # Otherwise these bounds can be too tight and disallow valid moves
+    # which can lead to very wrong results.
+    smin = .99*smin
+    smax = 1.01*smax
+
     @inbounds for i in eachindex(t, l, u)
+        # You must be able to get to `warp[i]` in time `t[i]`, so
+        #   `smax >= warp[i] / t[i] >= smin`
+        # This gives a lower and upper bound on `warp[i]`, i.e., on `τ[:, i]`.
+        # You must be able to get to `1` from `warp[i]` in time `1-t[i]`, so
+        #   `smin <= (1-warp[i])/(1-t[i]) <= smax`
+        # this gives another lower and upper bound.
+        # The resulting bounds:
         l[i] = max(smin * t[i], 1 - smax * (1 - t[i]))
         u[i] = min(smax * t[i], 1 - smin * (1 - t[i]))
     end
@@ -57,7 +70,7 @@ function update_τ!(τ, t, M, l, u)
 end
 
 """
-    prepare_gdtw(
+    gdtw(
         x,
         y,
         ::Type{T}  = Float64;
@@ -120,7 +133,7 @@ function prepare_gdtw(
     Rcum       = u -> u^2,
     smin::Real = T(0.001),
     smax::Real = T(5.0),
-    Rinst      = u -> smin <= u <= smax ? u^2 : typemax(T),
+    Rinst      = u -> smin <= u <= smax ? (u-1)^2 : typemax(T),
     verbose    = false,
     warp       = zeros(length(t)),
     callback   = nothing,
@@ -133,15 +146,18 @@ function prepare_gdtw(
 
     @unpack l₀, u₀, τ = cache
     inital_bounds!(l₀, u₀, t, smin, smax)
-
     update_τ!(τ, t, M, l₀, u₀)
-
-    node_weight(j, s) = metric(x(τ[j, s]), y(t[s])) + λcum * Rcum(τ[j, s] - t[s])
+    
+    function node_weight(j, s)
+        s == length(t) && return zero(T)
+        Rval = Rcum(τ[j, s] - t[s])
+        (t[s+1] - t[s])*(metric(x(τ[j, s]), y(t[s])) + λcum * Rval)
+    end
 
     @inline function edge_weight((j, s), (k, s2))
         s + 1 ≠ s2 && return typemax(T)
-        u = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
-        λinst * Rinst(u)
+        ϕ′ = (τ[k, s+1] - τ[j, s]) / (t[s+1] - t[s])
+        (t[s+1] - t[s]) * (λinst * Rinst(ϕ′))
     end
 
     return (
@@ -264,7 +280,7 @@ struct LinearInterpolation{Tx,Tt} <: Function
     x::Tx
     t::Tt
     function LinearInterpolation(x::Tx, ts::Ts) where {Tx,Ts}
-        @assert issorted(ts)
+        issorted(ts) || throw(ArgumentError("Time parameter `ts` must be sorted in increasing order."))
         T = eltype(Tx)
         t = (ts .- T(first(ts))) ./ T( last(ts) - first(ts))
         Tt = typeof(t)
