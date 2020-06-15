@@ -35,6 +35,9 @@ export dtw,
        GDTWWorkspace,
        sparse_distmat,
        gdtw,
+       prepare_gdtw,
+       iterative_gdtw!,
+       gdtw_warpings,
        LinearInterpolation
 
 export ZNormalizer,

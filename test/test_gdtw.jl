@@ -11,11 +11,11 @@ include("gdtw_graph_implementation.jl")
 
     # choices that change the result
     for metric in (Distances.SqEuclidean(), (x, y) -> norm(x - y, 1)),
-        max_iters in (1, 2, 3), symmetric in (true, false)
+        symmetric in (true, false)
 
-        kwargs = (N=N, M=M, verbose=false, max_iters=max_iters, metric=metric, symmetric = symmetric)
+        kwargs = (N=N, M=M, verbose=false, metric=metric, symmetric = symmetric)
 
-        data = DynamicAxisWarping.prepare_gdtw(x, y; kwargs...)
+        data = prepare_gdtw(x, y; kwargs...)
         cost = DynamicAxisWarping.single_gdtw!(data)
         warp = copy(data.warp)
 
@@ -27,10 +27,10 @@ include("gdtw_graph_implementation.jl")
             @test new_cost ≈ cost
             @test data.warp ≈ warp
         end
+
     end
 
 end
-
 
 @testset "GDTW: test that refinements reduce cost" begin
     x = LinearInterpolation(rand(2, 20))
@@ -77,4 +77,23 @@ end
     t = range(0, stop = 1, length=100)
     @test ϕ_xy.(t) ≈ ψ_yx.(t)
     @test ψ_xy.(t) ≈ ϕ_yx.(t)
+end
+
+@testset "GDTW: `iterative_gdtw!`" begin
+    x = LinearInterpolation(rand(20))
+    y = LinearInterpolation(rand(20))
+    t = range(0, stop = 1, length=100)
+    for symmetric in (true, false), max_iters in (1, 2, 5)
+        cost, ϕ, ψ = gdtw(x, y; symmetric = symmetric, max_iters = max_iters)
+
+        data = prepare_gdtw(x, y; symmetric = symmetric)
+        local cost2
+        for i = 1:max_iters
+            cost2 = iterative_gdtw!(data, max_iters = i)
+        end
+        ϕ2, ψ2 = gdtw_warpings(data)
+        @test cost ≈ cost2
+        @test ϕ.(t) ≈ ϕ2.(t)
+        @test ψ.(t) ≈ ψ2.(t)
+    end
 end
