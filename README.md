@@ -123,18 +123,21 @@ The following [example](https://github.com/baggepinnen/DynamicAxisWarping.jl/blo
 
 ## Generalized DTW
 
-The `gdtw` function implements the algorithm from [*A General Optimization Framework for Dynamic Time Warping*](https://arxiv.org/abs/1905.12893), which takes two continuous-time signals `x` and `y` on the interval `[0,1]`, and warps the first into the second by means of a warping function `ϕ`, so that `x ∘ ϕ ≈ y`. The method allows regularization by imposing penalties on `ϕ(t) - t` (the "cumulative warping") and on `ϕ'(t)` (the "instantaneous warping").
+The `gdtw` function implements the algorithm from [*A General Optimization Framework for Dynamic Time Warping*](https://arxiv.org/abs/1905.12893), which takes two continuous-time signals `x` and `y` on the interval `[0,1]`, and warps them by means of warping functions `ϕ, ψ`, so that `x ∘ ϕ ≈ y ∘ ψ`, where either
+`ψ(s) = 2s - ϕ(s)` (both signals warped symmetrically, the default), or `ψ(s)=s` (only the `x` signal is warped). The method allows regularization by imposing penalties on `ϕ(t) - t` (the "cumulative warping") and on `ϕ'(t) - 1` (the "instantaneous warping").
 
 ```julia
+using LinearAlgebra
 ts = range(0, stop=4π, length=128)
 x = LinearInterpolation(sin.(ts) .+ 0.1 .* randn.())
 y = LinearInterpolation(sin.(1.1 .* ts))
 
 norm(x.(ts) - y.(ts)) # 1.7184237220575787
 
-cost, ϕ = gdtw(x,y)
+cost, ϕ, ψ = gdtw(x,y)
 
-norm(x.(ϕ.(ts)) - y.(ts)) # 0.9266090849096682
+norm(x.(ϕ.(ts)) - y.(ψ.(ts))) # 0.9266090849096682
+
 ```
 
 ## Clustering and barycenter averaging
