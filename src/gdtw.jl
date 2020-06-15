@@ -16,7 +16,7 @@ end
 
 Creates a cache of numeric type `T` for use in [`gdtw`](@ref).
 """
-function GDTWWorkspace{T}(M, N) where {T}
+function GDTWWorkspace(::Type{T}, M, N) where {T}
     GDTWWorkspace{Vector{T}, Matrix{T}, Array{T, 3}}(
         zeros(T, M, N), zeros(T, N), zeros(T, N),
         zeros(T, N), zeros(T, N), zeros(T, N),
@@ -24,7 +24,7 @@ function GDTWWorkspace{T}(M, N) where {T}
     )
 end
 
-GDTWWorkspace(M, N) = GDTWWorkspace{Float64}(M, N)
+GDTWWorkspace(M, N) = GDTWWorkspace(Float64, M, N)
 
 # refine the bounds, as described in Section 4.2 of DB19
 function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
@@ -88,7 +88,7 @@ end
         M::Int     = 100,
         N::Int     = 100,
         t          = range(T(0), stop = T(1), length = N),
-        cache::GDTWWorkspace = GDTWWorkspace{T}(M, length(t)),
+        cache::GDTWWorkspace = GDTWWorkspace(T, M, length(t)),
         λcum       = T(0.01),
         λinst      = T(0.01),
         η          = T(1 / 8),
@@ -164,7 +164,7 @@ function prepare_gdtw(
     M::Int     = 100,
     N::Int     = 100,
     t::AbstractVector{T} = range(T(0), stop = T(1), length = N),
-    cache::GDTWWorkspace = GDTWWorkspace{T}(M, length(t)),
+    cache::GDTWWorkspace = GDTWWorkspace(T, M, length(t)),
     λcum::T    = T(0.01),
     λinst::T   = T(0.01),
     η::T       = T(1 / 8),
