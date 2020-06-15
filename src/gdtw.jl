@@ -37,7 +37,7 @@ function refine!(l_current, u_current, l_prev, u_prev, l₀, u₀, warp; η)
 end
 
 # inital choices of `l` and `u`, modified from Eq (7) of DB19
-function inital_bounds!(l, u, t, smin, smax)
+function inital_bounds!(l, u, t, smin, smax, symmetric)
     # We need to loosen the bounds to account for floating point error
     # Otherwise these bounds can be too tight and disallow valid moves
     # which can lead to very wrong results.
@@ -52,8 +52,18 @@ function inital_bounds!(l, u, t, smin, smax)
         #   `smin <= (1-warp[i])/(1-t[i]) <= smax`
         # this gives another lower and upper bound.
         # The resulting bounds:
-        l[i] = max(smin * t[i], 1 - smax * (1 - t[i]))
-        u[i] = min(smax * t[i], 1 - smin * (1 - t[i]))
+        lower = max(smin * t[i], 1 - smax * (1 - t[i]))
+        upper = min(smax * t[i], 1 - smin * (1 - t[i]))
+
+        if symmetric
+            # We need to apply the above bounds to `ψ(s) = 2s - ϕ(s) = 2t[i] - warp[i]`
+            # as well Which leads to the following.
+            l[i] = max(lower, 2*t[i] - upper)
+            u[i] = min(upper, 2*t[i] - lower)
+        else
+            l[i] = lower
+            u[i] = upper
+        end
     end
     return nothing
 end
@@ -74,9 +84,11 @@ end
         x,
         y,
         ::Type{T}  = Float64;
+        symmetric::Bool = true,
         M::Int     = 100,
-        N          = 100,
+        N::Int     = 100,
         t          = range(T(0), stop = T(1), length = N),
+        cache::GDTWWorkspace = GDTWWorkspace{T}(M, length(t)),
         λcum       = T(0.01),
         λinst      = T(0.01),
         η          = T(1 / 8),
@@ -85,17 +97,40 @@ end
         Rcum       = u -> u^2,
         smin::Real = T(0.001),
         smax::Real = T(5.0),
-        Rinst      = u -> smin <= u <= smax ? u^2 : typemax(T),
+        Rinst      = symmetric  ? 
+                        ϕ′ -> ( (smin <= ϕ′ <= smax)
+                            && (smin <= 2 - ϕ′ <= smax) ) ? (ϕ′-1)^2 : typemax(T)
+                                :
+                        ϕ′ -> (smin <= ϕ′ <= smax) ? (ϕ′-1)^2 : typemax(T),
         verbose    = false,
         warp       = zeros(length(t)),
         callback   = nothing,
-        cache::GDTWWorkspace{T} = GDTWWorkspace(M, length(t)),
-    )
+    ) where T -> cost, ϕ, ψ
 
-Computes a general DTW distance following [DB19](https://arxiv.org/abs/1905.12893). The parameters are:
+Computes a general DTW distance following [DB19](https://arxiv.org/abs/1905.12893). 
+
+Aims to find `ϕ(s)` to minimize
+
+    ∫ metric(x(ϕ(s)), y(ψ(s))) + λinst*Rinst(ϕ'(s) - 1) + λcum*Rcum(ϕ(s) - s) ds
+
+over the interval `s ∈ [0,1]`, where `ψ(s) = 2s - ϕ(s)` (if `symmetric=true`) or `ψ(s) = s`
+(if `symmetric = false`). The integral is discretized in time into `N` points (or according
+to the times `t`, if `t` is specified). Additionally, the possible values obtained by `ϕ`
+(and hence `ψ`) at each possible time `s` are discretized into `M` points.
+
+If `max_iters > 1`, then after solving the doubly-discretized problem to obtain the optimal `ϕ`,
+the problem is solved again by choosing a new discretization of `M` possible values
+of `ϕ(s)` in an interval (whose width is governed by the parameter `η`) around the
+previous optimal value. This is repeated until the problem has been solved `max_iters`
+times in total. Setting `verbose=true` prints the cost at each iteration; a "high enough"
+value of `max_iters` can be chosen by inspecting when the cost stabilizes sufficiently.
+
+The parameters are:
 
 * `x`: the continuous time signal to warp (see [`LinearInterpolation`](@ref) for generating such a signal from discrete data)
 * `y`: the continuous-time signal to warp to
+* `T`: the numeric type to be used in the problem
+* `symmetric`: if true, `ψ(s) = 2s - ϕ(s)`, otherwise `ψ(s) = s`.
 * `t`: the discretization of time on `[0,1]`; either `t` or `N` should be specified
 * `M`: the discretization of the values obtained by the warping path
 * `metric`:  a function `metric(u,v) -> ℝ` to compute differences between the signals at a time point (such as a Distances.jl distance)
@@ -121,21 +156,26 @@ function prepare_gdtw(
     x,
     y,
     ::Type{T}  = Float64;
+    symmetric::Bool = true,
     M::Int     = 100,
-    N          = 100,
-    t          = range(T(0), stop = T(1), length = N),
+    N::Int     = 100,
+    t::AbstractVector{T} = range(T(0), stop = T(1), length = N),
     cache::GDTWWorkspace = GDTWWorkspace{T}(M, length(t)),
-    λcum       = T(0.01),
-    λinst      = T(0.01),
-    η          = T(1 / 8),
+    λcum::T    = T(0.01),
+    λinst::T   = T(0.01),
+    η::T       = T(1 / 8),
     max_iters  = 3,
     metric     = (x, y) -> norm(x - y),
     Rcum       = u -> u^2,
-    smin::Real = T(0.001),
-    smax::Real = T(5.0),
-    Rinst      = u -> smin <= u <= smax ? (u-1)^2 : typemax(T),
-    verbose    = false,
-    warp       = zeros(length(t)),
+    smin::T    = T(0.001),
+    smax::T    = T(5.0),
+    Rinst      = symmetric  ? 
+                    ϕ′ -> ( (smin <= ϕ′ <= smax)
+                        && (smin <= 2 - ϕ′ <= smax) ) ? (ϕ′-1)^2 : typemax(T)
+                            :
+                    ϕ′ -> (smin <= ϕ′ <= smax) ? (ϕ′-1)^2 : typemax(T),
+    verbose::Bool = false,
+    warp       = zeros(T, length(t)),
     callback   = nothing,
 ) where T
     N = length(t)
@@ -145,13 +185,14 @@ function prepare_gdtw(
     end
 
     @unpack l₀, u₀, τ = cache
-    inital_bounds!(l₀, u₀, t, smin, smax)
+    inital_bounds!(l₀, u₀, t, smin, smax, symmetric)
     update_τ!(τ, t, M, l₀, u₀)
     
     function node_weight(j, s)
         s == length(t) && return zero(T)
         Rval = Rcum(τ[j, s] - t[s])
-        (t[s+1] - t[s])*(metric(x(τ[j, s]), y(t[s])) + λcum * Rval)
+        yval = symmetric ? 2*t[s] - τ[j, s] : t[s]
+        (t[s+1] - t[s])*(metric(x(τ[j, s]), y(yval)) + λcum * Rval)
     end
 
     @inline function edge_weight((j, s), (k, s2))
@@ -178,13 +219,14 @@ function prepare_gdtw(
         metric      = metric,
         cache       = cache,
         warp        = warp,
+        symmetric   = symmetric,
     )
 end
 
 
 function iterative_gdtw!(data)
     @unpack N, M, τ, η, max_iters, t, callback = data
-    @unpack verbose, cache, warp = data
+    @unpack verbose, cache, warp, symmetric = data
 
     if callback !== nothing
         callback((iter=1, t=t, τ=τ))
@@ -192,7 +234,7 @@ function iterative_gdtw!(data)
 
     cost = single_gdtw!(data)
 
-    max_iters == 1 && return cost, LinearInterpolation(warp, t)
+    max_iters == 1 && return cost, result_interpolations(t, warp, symmetric)...
 
     @unpack l_prev, u_prev, l, u, l₀, u₀ = cache
     l_prev .= l₀
@@ -214,7 +256,18 @@ function iterative_gdtw!(data)
         end
         iter += 1
     end
-    return cost, LinearInterpolation(warp, t)
+    
+    return cost, result_interpolations(t, warp, symmetric)...
+end
+
+function result_interpolations(t, warp, symmetric)
+    if symmetric
+        ψ = LinearInterpolation(2*t - warp, t)
+    else
+        ψ = LinearInterpolation(t, t)
+    end
+    ϕ = LinearInterpolation(warp, t)
+    return ϕ, ψ
 end
 
 ## Dynamic programming to compute the distance
