@@ -139,12 +139,12 @@ function dba_iteration!(
         # store stats for barycentric average
         for j = 1:length(i2)
             counts[i1[j]] += 1
-            newavg[!,i1[j]] += seq[i2[j]]
+            newavg[!,i1[j]] += seq[!,i2[j]]
         end
     end
 
     # compute average and return total cost
-    for i in eachindex(newavg)
+    for i in eachindex(counts)
         newavg[!,i] = newavg[!,i] / counts[i]
     end
 

@@ -1,6 +1,7 @@
 using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
+using ForwardDiff, QuadGK
 
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
@@ -387,11 +388,20 @@ using Distances, Plots
     end
 
     @testset "DBA" begin
+        @info "Testing DBA"
+        # one-dimensional sequences
         x = [1.0, 2.0, 2.0, 3.0, 3.0, 4.0]
         y = [1.0, 3.0, 4.0]
         z = [1.0, 2.0, 2.0, 4.0]
-        avg, _ = dba([x, y, z], DTW(5), init_center = z)
+        avg, _ = dba([x, y, z], DTW(5), init_center = z, show_progress=false)
         @test avg == [1.0, 1.75, 2.75, 4.0]
+
+        # multi-dimensional sequences
+        x = [1.0 2.0 2.0 3.0 3.0 4.0; 1.0 2.0 2.0 3.0 3.0 4.0; 1.0 2.0 2.0 3.0 3.0 4.0]
+        y = [1.0 3.0 4.0; 1.0 3.0 4.0; 1.0 3.0 4.0]
+        z = [1.0 2.0 2.0 4.0; 1.0 2.0 2.0 4.0; 1.0 2.0 2.0 4.0]
+        avg, _ = dba([x, y, z], DTW(5), init_center = z, show_progress=false)
+        @test avg == [1.0 1.75 2.75 4.0; 1.0 1.75 2.75 4.0; 1.0 1.75 2.75 4.0]
     end
 
 
