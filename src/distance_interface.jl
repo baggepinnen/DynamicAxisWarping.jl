@@ -77,3 +77,16 @@ function SlidingDistancesBase.distance_profile(d::DTWDistance, Q::AbstractArray{
     res = dtwnn(Q, T, d.dist, d.radius; saveall=true, kwargs...)
     res.dists
 end
+
+# TODO: come up with better name and write tests
+Base.@kwdef struct SDTWNN{D} <: Distances.Metric
+    r::Int
+    d::D = SqEuclidean()
+end
+
+function Distances.evaluate(d::SDTWNN, a, b)
+    if length(a) > length(b)
+        a,b = b,a
+    end
+    dtwnn(a, b, d.d, d.r).cost
+end
