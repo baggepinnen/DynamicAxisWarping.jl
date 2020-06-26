@@ -10,6 +10,8 @@ abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} end
 - `radius`: The maximum allowed deviation of the matching path from the diagonal
 - `dist`: Inner distance
 - `transportcost` If >1, an additional penalty factor for non-diagonal moves is added.
+
+If the two time-series are of equal length, [`dtw_cost`](@ref) is called, if not, [`dtwnn`](@ref) is called.
 """
 Base.@kwdef struct DTW{D} <: DTWDistance{D}
     "The maximum allowed deviation of the matching path from the diagonal"
@@ -52,7 +54,25 @@ end
 
 
 
-Distances.evaluate(d::DTW, x, y) = dtw_cost(x, y, d.dist, d.radius)
+function Distances.evaluate(d::DTW, x, y; normalizer = Val(Nothing), kwargs...)
+    if lastlength(x) == lastlength(y)
+        x, y = normalize(normalizer, x), normalize(normalizer, y)
+        return dtw_cost(x, y, d.dist, d.radius; transportcost = d.transportcost, kwargs...)
+    end
+    if lastlength(x) > lastlength(y)
+        x, y = y, x
+    end
+    dtwnn(
+        x,
+        y,
+        d.dist,
+        d.radius;
+        transportcost = d.transportcost,
+        normalizer = normalizer,
+        kwargs...,
+    ).cost
+end
+
 Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ)
 Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
@@ -62,7 +82,7 @@ distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector) =
     dtw(x, y, i2min, i2max, d.dist)
 distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
-(d::DTWDistance)(x,y) = Distances.evaluate(d,x,y)
+(d::DTWDistance)(x,y;kwargs...) = Distances.evaluate(d,x,y;kwargs...)
 
 """
     distance_profile(d::DTWDistance, Q::AbstractArray{S}, T::AbstractArray{S}; kwargs...) where S
@@ -76,4 +96,17 @@ function SlidingDistancesBase.distance_profile(d::DTWDistance, Q::AbstractArray{
     l = n-m+1
     res = dtwnn(Q, T, d.dist, d.radius; saveall=true, kwargs...)
     res.dists
+end
+
+# TODO: come up with better name and write tests
+Base.@kwdef struct SDTWNN{D} <: Distances.Metric
+    r::Int
+    d::D = SqEuclidean()
+end
+
+function Distances.evaluate(d::SDTWNN, a, b)
+    if length(a) > length(b)
+        a,b = b,a
+    end
+    dtwnn(a, b, d.d, d.r).cost
 end

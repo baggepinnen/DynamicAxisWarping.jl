@@ -41,7 +41,7 @@ export dtw,
        LinearInterpolation
 
 export ZNormalizer,
-       IsoZNormalizer,
+       DiagonalZNormalizer,
        normalize
 
 export stomp
