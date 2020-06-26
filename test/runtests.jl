@@ -36,7 +36,7 @@ using ForwardDiff, QuadGK
     @testset "Normalizers" begin
         @info "Testing Normalizers"
         a = randn(2,100)
-        @test dtwnn(a,a,SqEuclidean(),3,normalizer=IsoZNormalizer).cost < 1e-20
+        @test dtwnn(a,a,SqEuclidean(),3,normalizer=DiagonalZNormalizer).cost < 1e-20
         @test dtwnn(a,a,SqEuclidean(),3,normalizer=ZNormalizer).cost < 1e-20
     end
 
