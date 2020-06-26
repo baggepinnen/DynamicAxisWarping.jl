@@ -419,6 +419,7 @@ using ForwardDiff, QuadGK
         @inferred dtwnn(a, b, SqEuclidean(), 7)
 
         res = dtwnn(a, b, SqEuclidean(), 7)
+        plot(res)
         m = findmin(naive(a, b))
         @test m[1] ≈ res.cost
         @test m[2] == res.loc

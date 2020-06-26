@@ -105,3 +105,19 @@ using Statistics
         vec([i1'; i2'; i][:,1:ds:end]), vec([s1[i1]'; s2[i2]'; i][:,1:ds:end])
     end
 end
+
+@recipe function plot(r::DTWSearchResult)
+    title --> "DTW-NN Search result"
+    yguide --> "Distance"
+    label --> round(r.cost, sigdigits=4)
+    @series r.dists
+
+    @series begin
+        seriestype := :vline
+        linestyle := :dash
+        linecolor := :black
+        primary := false
+        [r.loc]
+    end
+
+end
