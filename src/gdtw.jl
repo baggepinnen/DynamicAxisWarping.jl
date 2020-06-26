@@ -184,9 +184,8 @@ function prepare_gdtw(
 ) where T
     N = length(t)
 
-    if !(M > N / smax)
-        @warn "`M <= N / smax`; problem may be infeasible" M N smax
-    end
+    (M > N / smax) || @warn "`M <= N / smax`; problem may be infeasible" M N smax
+
 
     @unpack l₀, l_prev, l,  u₀, u_prev, u, τ = cache
     inital_bounds!(l₀, u₀, t, smin, smax, symmetric)

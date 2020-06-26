@@ -1,5 +1,8 @@
 include("gdtw_graph_implementation.jl")
 
+w = GDTWWorkspace(20,20)
+@test w isa GDTWWorkspace
+
 @testset "GDTW: test against graph implementation" begin
     ts = range(0, stop=4π, length=50)
     rnd = () -> rand(2)
@@ -95,5 +98,9 @@ end
         @test cost ≈ cost2
         @test ϕ.(t) ≈ ϕ2.(t)
         @test ψ.(t) ≈ ψ2.(t)
+
+        @info "The following warning is intentional"
+        c = iterative_gdtw!(data, max_iters = 1)
+        @test c == 0
     end
 end
