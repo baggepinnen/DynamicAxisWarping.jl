@@ -422,6 +422,8 @@ using ForwardDiff, QuadGK
         m = findmin(naive(a, b))
         @test m[1] ≈ res.cost
         @test m[2] == res.loc
+        @test res.cost ≈ DTW(radius=7)(a,b)
+        @test res.cost ≈ DTW(radius=7)(b,a)
 
         res = dtwnn(a, b, SqEuclidean(), 7, saveall=true)
         resn = naive(a, b)
