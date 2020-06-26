@@ -514,6 +514,17 @@ using ForwardDiff, QuadGK
         ) for _ in 1:2]
         inds = 1:5
         @test any(all([allsame(result.clustids[inds .+ 5i]) for i in 0:3]) for result in result)
+
+
+        nclust = 10
+        result = dbaclust(
+            data,
+            nclust,
+            DTW(10);
+            n_init = 20,
+            iterations = 10,
+        )
+        @test all(1:10 .∈ Ref(result.clustids))
     end
 
 
