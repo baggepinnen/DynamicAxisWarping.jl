@@ -77,8 +77,8 @@ Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ)
 Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
 
-distpath(d::DTW, x, y) = dtw(x, y, d.dist)
-distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector) =
+distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost)
+distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector; transportcost=d.transportcost) =
     dtw(x, y, i2min, i2max, d.dist)
 distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
