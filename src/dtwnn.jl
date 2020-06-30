@@ -9,7 +9,7 @@ struct DTWWorkspace{T,N,AT<:AbstractArray,D}
     cb::Vector{T}
     c1::Vector{T}
     c2::Vector{T}
-    function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, ::Type{N}=Type{Nothing}) where {QT, N}
+    function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, ::Type{N}=Nothing) where {QT, N}
         T      = floattype(QT)
         m      = lastlength(q)
         n      = 2r + 1
