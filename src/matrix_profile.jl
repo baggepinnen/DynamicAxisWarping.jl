@@ -1,5 +1,5 @@
 
-function MatrixProfile.matrix_profile(T, m::Int, dist::DTW; showprogress=true, normalizer=Val(Nothing))
+function MatrixProfile.matrix_profile(T, m::Int, dist::DTW{<:Any, N}; showprogress=true) where N
     n   = lastlength(T)
     l   = n-m+1
     r   = dist.radius
@@ -10,7 +10,7 @@ function MatrixProfile.matrix_profile(T, m::Int, dist::DTW; showprogress=true, n
     bsf = typemax(floattype(T))
     @inbounds for i = 1:l
         Ti = getwindow(T,m,i)
-        res = dtwnn(Ti, T, dist.dist, r, transportcost=dist.transportcost, avoid=i-r:i+r, normalizer=normalizer)
+        res = dtwnn(Ti, T, dist.dist, r, N, transportcost=dist.transportcost, avoid=i-r:i+r)
         I[i] = res.loc
         P[i] = res.cost
         showprogress && i % 5 == 0 && next!(prog)

@@ -28,7 +28,7 @@ plot(plot(Q, title = "Query"), plot(Y, title = "Data"), link = :both, layout = (
 # We now see if we can detect the pattern using DTW with the standard squared Euclidean distance
 rad  = 10 # This is the maximum allowed warping radius
 dist = SqEuclidean()
-w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Val(Nothing))
+w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Nothing)
 res  = dtwnn(w, sqrt.(Y.power))
 plot(Y);
 vline!([Y.time[res.loc]], l = (4, :blue), primary=false, yscale=:identity)
@@ -37,7 +37,7 @@ vline!([Y.time[res.loc]], l = (4, :blue), primary=false, yscale=:identity)
 # Let's do the same with a transport-based distance
 n, m = size(Q.power)
 dist = DiscreteGridTransportDistance(Cityblock(), Float32, n, n)
-w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Val(Nothing))
+w    = DTWWorkspace(sqrt.(Q.power), dist, rad, Nothing)
 res  = dtwnn(w, sqrt.(Y.power))
 plot(Y);
 vline!([Y.time[res.loc]], l = (4, :blue), primary=false)

@@ -1,4 +1,4 @@
-struct DTWWorkspace{T,AT<:AbstractArray,D,N}
+struct DTWWorkspace{T,N,AT<:AbstractArray,D}
     q::AT
     dist::D
     r::Int
@@ -9,8 +9,7 @@ struct DTWWorkspace{T,AT<:AbstractArray,D,N}
     cb::Vector{T}
     c1::Vector{T}
     c2::Vector{T}
-    normalizer::N
-    function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, normalizer=Val(Nothing)) where QT
+    function DTWWorkspace(q::AbstractArray{QT}, dist, r::Int, ::Type{N}=Type{Nothing}) where {QT, N}
         T      = floattype(QT)
         m      = lastlength(q)
         n      = 2r + 1
@@ -21,7 +20,7 @@ struct DTWWorkspace{T,AT<:AbstractArray,D,N}
         cb     = zeros(T, m)
         c1     = zeros(T, n)
         c2     = zeros(T, n)
-        new{T, typeof(q), typeof(dist), typeof(normalizer)}(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2, normalizer)
+        new{T, N, typeof(q), typeof(dist)}(q, dist, r, l, u, l_buff, u_buff, cb, c1, c2)
     end
 end
 
@@ -144,9 +143,9 @@ function rev_cumsum!(cb)
 end
 
 """
-    search_result = dtwnn(q, y, dist, rad; kwargs...)
+    search_result = dtwnn(q, y, dist, rad, [normalizer::Type{Nothing}]; kwargs...)
 
-Compute the nearest neighbor to `q` in `y`.
+Compute the nearest neighbor to `q` in `y`. An optinal normalizer type can be supplied, see, `ZNormalizer, DiagonalZNormalizer, NormNormalizer`.
 
 # Arguments:
 - `q`: query (the short time series)
@@ -160,14 +159,13 @@ Compute the nearest neighbor to `q` in `y`.
 - `saveall = false`: compute a dense result (takes longer, no early stopping methods used). If false, then a vector of lower bounds on the distance is stored in `search_result.dists`, if true, all distances are computed and stored.
 - `avoid`: If an integer index (or set of indices) is provided, this index will be avoided in the search. This is useful in case `q` is a part of `y`.
 """
-function dtwnn(q, y, dist, rad; normalizer=Val(Nothing), kwargs...)
-    n = normalizer isa Val ? normalizer : Val(normalizer)
-    n, q, y = setup_normalizer(n, q, y)
-    w = DTWWorkspace(q, dist, rad, n)
+function dtwnn(q::AbstractArray{QT}, y, dist, rad, ::Type{N}=Nothing; kwargs...) where {QT,N}
+    q, y = setup_normalizer(N, q, y)
+    w = DTWWorkspace(q, dist, rad, N)::DTWWorkspace{floattype(QT),N,typeof(q),typeof(dist)}
     dtwnn(w, y; kwargs...)
 end
 
-function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
+function dtwnn(w::DTWWorkspace{T,normalizer}, y::AbstractArray;
     prune_endpoints = true,
     prune_envelope  = true,
     saveall         = false,
@@ -175,10 +173,10 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
     transportcost   = 1,
     showprogress    = true,
     avoid           = nothing,
-    kwargs...) where T
+    kwargs...) where {T,normalizer}
 
 
-    w.normalizer !== Val(Nothing) && !isa(y, AbstractNormalizer) && @warn("Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance", maxlog=10)
+    normalizer !== Nothing && !isa(y, AbstractNormalizer) && @warn("Normalizer in use but `y` is not wrapped in a normalizer object. This will result in highly suboptimal performance", maxlog=10)
     bsf_multiplier >= 1 || throw(DomainError("It does not make sense to have the bsf_multiplier < 1"))
     best_so_far = typemax(T)
     best_loc    = 1
@@ -219,7 +217,7 @@ function dtwnn(w::DTWWorkspace{T}, y::AbstractArray;
             end
         end
         # If we get here, we must normalize the entire y
-        buffern = normalize(w.normalizer, ym) # This only normalizes what's not already normalized
+        buffern = normalize(normalizer, ym) # This only normalizes what's not already normalized
 
         newdist = dtw_cost(q, buffern, w.dist, w.r;
             cumulative_bound = w.cb,

@@ -4,23 +4,25 @@ abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} end
 
 
 """
-    struct DTW{D} <: DTWDistance{D}
+    struct DTW{D,N} <: DTWDistance{D}
 
-# Arguments:
+# Keyword arguments:
 - `radius`: The maximum allowed deviation of the matching path from the diagonal
 - `dist`: Inner distance
 - `transportcost` If >1, an additional penalty factor for non-diagonal moves is added.
+- `normalizer`: defaults to `Nothing`
 
 If the two time-series are of equal length, [`dtw_cost`](@ref) is called, if not, [`dtwnn`](@ref) is called.
 """
-Base.@kwdef struct DTW{D} <: DTWDistance{D}
+struct DTW{D,N} <: DTWDistance{D}
     "The maximum allowed deviation of the matching path from the diagonal"
     radius::Int
-    dist::D = SqEuclidean()
+    dist::D
     "If >1, an additional penalty factor for non-diagonal moves is added."
-    transportcost::Float64 = 1.0
-    DTW(r,dist=SqEuclidean(),transportcost=1) = new{typeof(dist)}(r,dist,transportcost)
+    transportcost::Float64
 end
+DTW(r,dist::D=SqEuclidean(); transportcost=1, normalizer::Type{N}=Nothing) where {D,N} = DTW{D, N}(r,dist,transportcost)
+DTW(;radius,dist=SqEuclidean(), transportcost=1, normalizer::Type{N}=Nothing) where {N} = DTW{typeof(dist), N}(radius,dist,transportcost)
 
 """
     struct SoftDTW{D, T} <: DTWDistance{D}
@@ -54,9 +56,9 @@ end
 
 
 
-function Distances.evaluate(d::DTW, x, y; normalizer = Val(Nothing), kwargs...)
+function Distances.evaluate(d::DTW{<:Any,N}, x, y; kwargs...) where N
     if lastlength(x) == lastlength(y)
-        x, y = normalize(normalizer, x), normalize(normalizer, y)
+        x, y = normalize(N, x), normalize(N, y)
         return dtw_cost(x, y, d.dist, d.radius; transportcost = d.transportcost, kwargs...)
     end
     if lastlength(x) > lastlength(y)
@@ -66,9 +68,9 @@ function Distances.evaluate(d::DTW, x, y; normalizer = Val(Nothing), kwargs...)
         x,
         y,
         d.dist,
-        d.radius;
+        d.radius,
+        N;
         transportcost = d.transportcost,
-        normalizer = normalizer,
         kwargs...,
     ).cost
 end
@@ -89,11 +91,11 @@ distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
 Optimized method for computing the distance profile using DTW distances. kwargs are sent to [`dtwnn`](@ref).
 """
-function SlidingDistancesBase.distance_profile(d::DTWDistance, Q::AbstractArray{S}, T::AbstractArray{S}; kwargs...) where S
+function SlidingDistancesBase.distance_profile(d::DTW{<:Any,N}, Q::AbstractArray{S}, T::AbstractArray{S}; kwargs...) where {N,S}
     m = lastlength(Q)
     n = lastlength(T)
     n >= m || throw(ArgumentError("Q cannot be longer than T"))
     l = n-m+1
-    res = dtwnn(Q, T, d.dist, d.radius; saveall=true, kwargs...)
+    res = dtwnn(Q, T, d.dist, d.radius, N; saveall=true, kwargs...)
     res.dists
 end

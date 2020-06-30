@@ -61,7 +61,7 @@ plot(f1,f2,f3, legend=false, layout=3, grid=false)
 ![figure](examples/doppler.svg)
 
 ## Find a short pattern in a long time series
-The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass `normalizer = ZNormalizer` (this only works for 1D and 2D data).
+The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass, e.g., `ZNormalizer` as the fifth argument.
 
 ```julia
 using DynamicAxisWarping, Distances
@@ -74,6 +74,7 @@ plot([a b[eachindex(a) .+ (res.loc-1)]])
 
 - `saveall` causes the entire distance profile to be computed. This will take longer time to compute. It is stored in `res.dists`.
 - `bsf_multiplier = 1`: If > 1, require lower bound to exceed `bsf_multiplier*best_so_far`. This allows you to find several nearby points without having to compute the entire distance profile.
+- Available normalizers are: `ZNormalizer, DiagonalZNormalizer, NormNormalizer`
 
 ### Multi-threaded search
 Below is an example of how several long series `y ∈ Y` can be searched for the occurance of query `q` in a multithreaded fashion, using `tmap` from [ThreadTools.jl](https://github.com/baggepinnen/ThreadTools.jl). In this example, we first create a unique workspace object for each thread to save on allocations
@@ -102,7 +103,7 @@ The following optimizations are implemented.
 ```julia
 a = sin.(0.1f0 .* (1:100))    .+ 0.1f0 .* randn.(Float32)
 b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
-@btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = true, normalizer=Val(ZNormalizer))
+@btime dtwnn($a, $b, SqEuclidean(), 5, ZNormalizer, prune_endpoints = true, prune_envelope = true)
 # 853.336 ms (25519 allocations: 5.00 MiB)
 ```
 
