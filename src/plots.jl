@@ -15,6 +15,12 @@ function handleargs(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
     seq1, seq2, D, i1, i2
 end
 
+function handleargs(seq1, seq2, dist, i2min, i2max; kwargs...)
+    D = dtw_cost_matrix(seq1, seq2, dist, i2min, i2max; kwargs...)
+    cost, i1, i2 = DynamicAxisWarping.trackback(D)
+    seq1, seq2, D, i1, i2
+end
+
 handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
 
 @userplot DTWPlot

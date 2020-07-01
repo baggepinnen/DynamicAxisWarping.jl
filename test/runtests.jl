@@ -6,6 +6,26 @@ using ForwardDiff, QuadGK
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
 
+
+    @testset "radiuslimits" begin
+        @info "Testing radiuslimits"
+
+        n,m = 10,20
+        mi,ma = radiuslimits(3,n,m)
+        @test length(mi) == length(ma) == 10
+        @test mi[1] == 1
+        @test ma[1] == 4+10
+        @test ma[end] == 20
+
+        n,m = 20,10
+        mi,ma = radiuslimits(3,n,m)
+        @test length(mi) == length(ma) == 20
+        @test mi[1] == 1
+        @test ma[1] == 4
+        @test ma[end] == 10
+
+    end
+
     @testset "LinearInterpolation" begin
         @info "Testing LinearInterpolation"
         # Test arrays

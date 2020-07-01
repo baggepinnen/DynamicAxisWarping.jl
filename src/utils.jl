@@ -15,6 +15,19 @@
 end
 
 
-function radiuslimits(r,n, m)
-    max.((1:n) .- r,1), min.((1:n) .+ r, m)
+"""
+    imin, imax = radiuslimits(r, n::Int, m::Int)
+    imin, imax = radiuslimits(r, seq1, seq2)
+"""
+function radiuslimits(r, n::Int, m::Int)
+    d = abs(m-n)
+    if m >= n
+        imin, imax = max.((1:n) .- r,1), min.((1:n) .+ (r+d), m)
+    else
+        imin, imax = max.((1:n) .- (r+d),1), min.((1:n) .+ r, m)
+    end
+
+    imin, imax
 end
+
+radiuslimits(r,seq1, seq2) = radiuslimits(r, lastlength(seq1), lastlength(seq2))
