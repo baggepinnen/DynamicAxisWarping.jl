@@ -70,6 +70,7 @@ function Distances.evaluate(d::DTW{<:Any,N}, x, y; kwargs...) where N
         d.dist,
         d.radius,
         N;
+        prune_endpoints = false,
         transportcost = d.transportcost,
         kwargs...,
     ).cost

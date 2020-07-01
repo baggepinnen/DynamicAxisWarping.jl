@@ -71,13 +71,13 @@ Base.@propagate_inbounds function dtw_cost_matrix(
     i2max::AbstractVector{U};
     transportcost = 1
 ) where {T,U<:Integer}
-    m = lastlength(seq2) # of rows in cost matrix
     n = lastlength(seq1) # of columns in cost matrix
+    m = lastlength(seq2) # of rows in cost matrix
     Base.@boundscheck begin
         n == length(i2min) || throw(ArgumentError("i2min does not match length of seq1."))
         n == length(i2max) || throw(ArgumentError("i2max does not match length of seq1."))
         1 == i2min[1]      || throw(ArgumentError("i2min must start at 1."))
-        m == i2max[end]    || throw(ArgumentError("i2max must end at length(seq2)."))
+        m == i2max[end]    || throw(ArgumentError("i2max must end at length(seq2), was $(i2max[end]) ≂̸ $(m)"))
     end
 
     # Build the (n x m) cost matrix into a WindowedMatrix, because it's ragged.
