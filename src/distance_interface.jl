@@ -1,6 +1,6 @@
 # methods for estimating dtw #
 
-abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} end
+abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} <: Distances.SemiMetric end
 
 
 """
