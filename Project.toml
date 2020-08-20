@@ -1,7 +1,7 @@
 name = "DynamicAxisWarping"
 uuid = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 authors = ["Fredrik Bagge Carlson <baggepinnen@gmail.com>"]
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
@@ -22,7 +22,7 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
 BinDeps = "1.0"
-DataStructures = "0.17"
+DataStructures = "0.17, 0.18"
 Distances = "0.8, 0.9"
 FillArrays = "0.8, 0.9"
 LoopVectorization = "0.7, 0.8"
