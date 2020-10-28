@@ -28,17 +28,18 @@ DTW(;radius,dist=SqEuclidean(), transportcost=1, normalizer::Type{N}=Nothing) wh
     struct SoftDTW{D, T} <: DTWDistance{D}
 
 # Arguments:
-- `γ`: smoothing parameter
-- `dist`
+- `γ`: smoothing parameter default to 1. Smaller value makes the distance closer to standard DTW.
+- `dist`: Inner distance, defaults to `SqEuclidean()`.
 - `transportcost`
 """
-Base.@kwdef struct SoftDTW{D,T} <: DTWDistance{D}
+Base.@kwdef struct SoftDTW{D,T,R} <: DTWDistance{D}
     γ::T
     "The maximum allowed deviation of the matching path from the diagonal"
     dist::D = SqEuclidean()
     "If >1, an additional penalty factor for non-diagonal moves is added."
     transportcost::Float64 = 1.0
-    SoftDTW(γ, dist=SqEuclidean(),transportcost=1) = new{typeof(dist), typeof(γ)}(γ,dist,transportcost)
+    radius::R = nothing
+    SoftDTW(γ, dist=SqEuclidean(),transportcost=1,radius=nothing) = new{typeof(dist), typeof(γ), typeof(radius)}(γ,dist,transportcost,radius)
 end
 
 
@@ -76,7 +77,7 @@ function Distances.evaluate(d::DTW{<:Any,N}, x, y; kwargs...) where N
     ).cost
 end
 
-Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ)
+Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ, radius=d.radius)
 Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
 

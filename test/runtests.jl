@@ -85,6 +85,8 @@ using ForwardDiff, QuadGK
 
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) ≈ cost rtol = 1e-2
         @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001) == SoftDTW(0.001)(a,b)
+        @test soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001, radius=4) == SoftDTW(γ=0.001, radius=4)(a,b)
+        @test SoftDTW(0.001)(a,b) <= SoftDTW(γ=0.001, radius=2)(a,b)
 
         a = collect(1.0:10)
         b = a .+ 1
@@ -138,6 +140,8 @@ using ForwardDiff, QuadGK
         cost, = dtw(a, b, Chebyshev())
         @test evaluate(DTW(10,Chebyshev()), a, b) == cost
         @test dtw_cost(a, b, Chebyshev(), length(a)) == cost
+
+        @test SoftDTW(0.001)(a,b) <= SoftDTW(γ=0.001, radius=2)(a,b)
 
 
         @test_nowarn dtwplot(a, b)
