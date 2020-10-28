@@ -259,8 +259,8 @@ end
         for c = 2:n
             for r = 2:m
                 if abs(c-r) > radius
-                    D[r, c] = Inf
-                    continue
+                    D[r, c] += 1/γ
+                    # continue
                 end    
                 D[r, c] += softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
             end
