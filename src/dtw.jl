@@ -309,9 +309,9 @@ const LVB = LoopVectorization.VectorizationBase
 @inline function softmin(a::T, b::T, c::T, γ) where T <: Union{Float64, Float32}
     γ = -γ
     ninvγ = one(T) / γ
-    v = LVB.SVec{4,T}((a, b, c, typemax(T)))
+    v = LVB.Vec{4,T}(a, b, c, typemax(T))
     v = v * ninvγ
     @fastmath maxv = min(a,b,c) * ninvγ
-    ve = exp(v - maxv) * LVB.SVec{4,T}((one(T), one(T), one(T), zero(T)))
-    γ*(log(sum(ve)) + maxv)
+    ve = exp(v - maxv) * LVB.Vec{4,T}(one(T), one(T), one(T), zero(T))
+    γ*(log(LVB.vsum(ve)) + maxv)
 end
