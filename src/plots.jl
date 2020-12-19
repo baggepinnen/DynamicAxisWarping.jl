@@ -2,13 +2,17 @@ export dtwplot
 
 
 """
-    dtwplot(seq1, seq2, [dist=SqEuclidean()])
-    dtwplot(seq1, seq2, D, i1, i2)
+    dtwplot(seq1, seq2, [dist=SqEuclidean()]; transportcost=1, diagonal=false)
+    dtwplot(seq1, seq2, D, i1, i2; transportcost=1, diagonal=false)
 
 Given two sequences, perform dynamic time warping and plot
 the results. If alignment has already been computed, pass
 the indices `i1` and `i2` to make the plot.
+
+`diagonal = true` plots a diagonal marker as visual aid.
 """
+dtwplot
+
 function handleargs(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
     D = dtw_cost_matrix(seq1, seq2, dist; kwargs...)
     cost, i1, i2 = DynamicAxisWarping.trackback(D)
@@ -25,7 +29,7 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
 
 @userplot DTWPlot
 
-@recipe function f(h::DTWPlot; transportcost=1)
+@recipe function f(h::DTWPlot; transportcost=1, diagonal=false)
     seq1, seq2, D, i1, i2 = handleargs(h; transportcost=transportcost)
 
     n1, n2 = lastlength(seq1), lastlength(seq2)
@@ -63,11 +67,27 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
     # main plot
     s1 = @series begin
         seriestype := :path
-        linecolor --> RGB(0, 0, 0)
+        linecolor --> :auto
         linewidth --> 3
         subplot := (all ? 2 : 1)
         formatter --> (z) -> ""
         i1, i2
+    end
+
+    if diagonal
+        m2 = max(n1, n2)
+        m1 = min(n1, n2)
+        d = m2-m1
+        seriestype := :path
+        subplot := (all ? 2 : 1)
+        imi, ima = radiuslimits(d,seq1, seq2)
+        if d == 0
+            @series 1:n1
+        else
+            @series begin
+                [imi ima]
+            end
+        end
     end
 
     if all
