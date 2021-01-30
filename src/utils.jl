@@ -33,7 +33,7 @@ end
 radiuslimits(r,seq1, seq2) = radiuslimits(r, lastlength(seq1), lastlength(seq2))
 
 """
-    inds = align_signals(s::AbstractVector{<:AbstractVector}, master = argmax(length.(s)), method = :dtw)
+    inds = align_signals(s::AbstractVector{<:AbstractVector}, master = argmax(length.(s)); method = :dtw)
 
 Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[master]`. 
 
@@ -42,7 +42,7 @@ Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[ma
 - `master`: Index of the signal used as reference.
 - `method`: `:dtw` uses the warping paths from dtw between `s[master]` and `s[i]`. `:xcorr` uses `DSP.finddelay` which internally computes the cross correlation between signals, which often results in a slight misalignment.  
 """
-function align_signals(s::AbstractVector{<:AbstractVector}, master::Integer=argmax(length.(s)), method=:dtw)
+function align_signals(s::AbstractVector{<:AbstractVector}, master::Integer=argmax(length.(s)); method=:dtw)
     inds = UnitRange.(eachindex.(s))
     # find delays to align with master
     d = map(s) do si
@@ -53,7 +53,7 @@ function align_signals(s::AbstractVector{<:AbstractVector}, master::Integer=argm
             d,i1,i2 = dtw(si, s[master])
             round(Int, median(i2-i1))
         else
-            error("Unknown method")
+            throw(ArgumentError("Unknown method"))
         end
     end
 
