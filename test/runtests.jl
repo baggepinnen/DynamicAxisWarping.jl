@@ -606,6 +606,21 @@ using ForwardDiff, QuadGK
             # plot!(sa, sp=2)
             # display(current())
         end
+
+        s = [sin.((0:0.01:(4pi + rand())) .+ rand()) for _ in 1:10]
+        inds = align_signals(s; output=:indices)
+        sa = getindex.(s, inds)
+        sa2 = align_signals(s; output=:signals)
+        @test all(s1 == s2 for (s1,s2) in zip(sa, sa2))
+
+        s = [randn(2,10) for _ in 1:5]
+        inds = align_signals(s; output=:indices)
+        @test all(reduce(vcat, inds) .<= 10)
+        sa = align_signals(s; output=:signals)
+        @test all(size.(sa) .== Ref((2, length(inds[1]))))
+    
+        @test all(length.(inds) .== length(inds[1]))
+
         @test_throws ArgumentError align_signals([[1],[2],[3]], method=:ninjaturtles)
     end
 

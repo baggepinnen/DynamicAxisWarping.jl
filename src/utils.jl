@@ -33,7 +33,7 @@ end
 radiuslimits(r,seq1, seq2) = radiuslimits(r, lastlength(seq1), lastlength(seq2))
 
 """
-    inds = align_signals(s::AbstractVector{<:AbstractArray}, master = argmax(length.(s)); method = :dtw)
+    inds = align_signals(s::AbstractVector{<:AbstractArray}, master = argmax(length.(s)); method = :dtw, output=:indices)
 
 Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[master]`. All elements of `inds` will have the same length.
 
@@ -41,9 +41,10 @@ Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[ma
 - `s`: A vector of signals to align
 - `master`: Index of the signal used as reference. All the other signals will be aligned to this one.
 - `method`: `:dtw` uses the warping paths from dtw between `s[master]` and `s[i]`. `:xcorr` uses `DSP.finddelay` which internally computes the cross correlation between signals, which often results in a slight misalignment.  
+- `output`: The default is to output the aligning indices, alternatively, the aligned `:signals` themselves can be outputted.
 """
-function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argmax(length.(s)); method=:dtw)
-    inds = UnitRange.(eachindex.(s))
+function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argmax(length.(s)); method=:dtw, output=:indices)
+    inds = [1:lastlength(s) for s in s]
     # find delays to align with master
     d = map(s) do si
         si === s[master] && (return 0)
@@ -71,7 +72,10 @@ function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argma
         inds[i] = start : stop
     end
     @assert all(length.(inds) .== length(inds[1]))
-
-    inds 
+    if output === :indices
+        return inds 
+    else
+        return [s[!,i] for (s,i) in zip(s,inds)]
+    end
 end
 
