@@ -42,7 +42,7 @@ Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[ma
 - `master`: Index of the signal used as reference. All the other signals will be aligned to this one.
 - `method`: `:dtw` uses the warping paths from dtw between `s[master]` and `s[i]`. `:xcorr` uses `DSP.finddelay` which internally computes the cross correlation between signals, which often results in a slight misalignment.  
 """
-function align_signals(s::AbstractVector{<:AbstractVAbstractArrayector}, master::Integer=argmax(length.(s)); method=:dtw)
+function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argmax(length.(s)); method=:dtw)
     inds = UnitRange.(eachindex.(s))
     # find delays to align with master
     d = map(s) do si
