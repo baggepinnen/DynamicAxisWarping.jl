@@ -584,6 +584,28 @@ using ForwardDiff, QuadGK
     end
 
 
+    @testset "align signals" begin
+        @info "Testing align signals"
+        # test with same length
+        s = [sin.((0:0.01:6pi) .+ rand()) for _ in 1:50]
+        inds = align_signals(s)
+        sa = getindex.(s, inds)
+        @test all(length.(inds) .== length(inds[1]))
+        @test all(norm.(sa .- (sa[1], )) .< 0.5)
+
+        # test with different lengths
+        s = [sin.((0:0.01:(6pi + rand())) .+ rand()) for _ in 1:50]
+        inds = align_signals(s)
+        sa = getindex.(s, inds)
+        @test all(length.(inds) .== length(inds[1]))
+        @test all(norm.(sa .- (sa[1], )) .< 0.5)
+
+        # plot(s, layout=2, sp=1)
+        # plot!(sa, sp=2)
+        # display(current())
+    end
+
+
     @testset "datasets" begin
         @info "Testing datasets"
 
