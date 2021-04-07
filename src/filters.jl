@@ -1,4 +1,4 @@
-function imfilter!(A::AbstractMatrix, kern)
+function imfilter(A::AbstractMatrix, kern)
     out = similar(A)
     @avx for J in CartesianIndices(out)
         tmp = zero(eltype(out))
