@@ -170,8 +170,8 @@ profile = matrix_profile(y, m, DTW(radius, [transportcost]))
 ```julia
 a = sin.(1:100); b = sin.(1:100) .+ randn.();
 dtwplot(a,b, transportcost=1)    # Default
-dtwplot(a,b, transportcost=1.01) # Should be "more diagnoal"
-dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagnoal
+dtwplot(a,b, transportcost=1.01) # Should be "more diagonal"
+dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagonal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
 
