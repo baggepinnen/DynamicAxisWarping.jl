@@ -3,7 +3,7 @@
 #####################################
 
 """
-    cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean])
+    cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean, filterkernel=nothing])
     cost,i1,i2 = dtw(seq1, seq2, dist, i2min, i2max)
 
 Perform dynamic-time warping to measure the distance between two sequences.
@@ -17,6 +17,8 @@ an observation.
 If `i2min/max` are provided, do DTW to align `seq1` and `seq2` confined to a window. Vectors `i2min` and
 `i2max` specify (inclusive) lower and upper bounds for `seq2` for each index in
 `seq1`. Thus, `i2min` and `i2max` are required to be the same length as `seq1`.
+
+If `filternernel::AbstractMatrix` is provided, it's used to filter the cost matrix. Create a suitable kerlen using, e.g., `ImageFiltering.Kernel.gaussian(3)`. The filtering of the cost matrix makes the warping smoother, effectively penalizing small-scale warping.
 
 See also [`dtw_cost`](@ref) and [`dtwnn`](@ref).
 """
@@ -36,7 +38,8 @@ function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; 
 end
 
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean();
-    transportcost=1) where T
+    transportcost=1,
+    filterkernel = nothing) where T
     # Build the cost matrix
     m = lastlength(seq2)
     n = lastlength(seq1)
@@ -60,8 +63,13 @@ end
         end
     end
 
+    if filterkernel !== nothing
+        D = imfilter(D, filterkernel)
+    end
+
     return D
 end
+
 
 Base.@propagate_inbounds function dtw_cost_matrix(
     seq1::AbstractArray{T},

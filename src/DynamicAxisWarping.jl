@@ -50,6 +50,7 @@ export stomp
 include("utils.jl")
 
 include("distance_interface.jl")
+include("filters.jl")
 include("dtw.jl")
 include("gdtw.jl")
 include("dtwnn.jl")

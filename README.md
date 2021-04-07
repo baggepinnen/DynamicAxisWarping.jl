@@ -28,7 +28,7 @@ cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. S
 
 # dtw supports arbitrary upper and lower bound vectors constraining the warping path.
 imin,imax = radiuslimits(5,20,20), plot([imin imax])
-dtw(a, b, dist, imin, imax) # Cost eqivalent to dtw_cost(a, b, dist, 5)
+dtw(a, b, dist, imin, imax) # Cost equivalent to dtw_cost(a, b, dist, 5)
 
 # The Distances.jl interface is supported
 d = DTW(radius=5)
@@ -174,6 +174,8 @@ dtwplot(a,b, transportcost=1.01) # Should be "more diagnoal"
 dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagnoal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
+
+See also the keyword argument `filterkernel` that allows you to pass an `AbstractMatrix` that is used to filter the cost matrix. Low-pass filtering can be used to effectively remove small-scale warping.
 
 
 ## Combine with optimal transport

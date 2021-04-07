@@ -29,8 +29,8 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
 
 @userplot DTWPlot
 
-@recipe function f(h::DTWPlot; transportcost=1, diagonal=false)
-    seq1, seq2, D, i1, i2 = handleargs(h; transportcost=transportcost)
+@recipe function f(h::DTWPlot; transportcost=1, diagonal=false, filterkernel=nothing)
+    seq1, seq2, D, i1, i2 = handleargs(h; transportcost=transportcost, filterkernel=filterkernel)
 
     n1, n2 = lastlength(seq1), lastlength(seq2)
 

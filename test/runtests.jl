@@ -69,6 +69,11 @@ using ForwardDiff, QuadGK
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
         @test evaluate(DTW(10), a, b) == cost
 
+        costf, match1f, match2f = dtw(a, b, filterkernel=ones(5,5))
+        @test costf > 0
+        @test match1f == [1, 2, 3, 4, 5, 6, 7, 7, 8, 8, 8, 9, 9, 10, 10, 11, 12, 12, 13, 14, 15]
+        @test match2f == [1, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 10, 11, 12, 13, 14, 15, 15, 15]
+
         @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001)) > -0.01
 
         a[end] += 2
