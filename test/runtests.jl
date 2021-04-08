@@ -1,6 +1,7 @@
 using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
+using OffsetArrays
 using ForwardDiff, QuadGK
 
 @testset "DynamicAxisWarping" begin
@@ -65,13 +66,14 @@ using ForwardDiff, QuadGK
         @test dtw_cost(a, b, SqEuclidean(), length(a)) == cost
         @test cost == 0
         @test match1 ==
-              [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
+            [1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 10, 11, 12, 12, 12, 13, 14, 15]
         @test match2 == [1, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15]
         @test evaluate(DTW(10), a, b) == cost
 
         D  = dtw_cost_matrix(a, b)
-        Df = dtw_cost_matrix(a, b, filterkernel=ones(5,5)./25)
+        Df = dtw_cost_matrix(a, b, filterkernel=OffsetArray(ones(1,1),0:0, 0:0))
         @test sum(D) ≈ sum(Df) rtol=1e-2
+        Df = dtw_cost_matrix(a, b, filterkernel=OffsetArray(ones(3,3)./9, -1:1, -1:1))
         V = var(DynamicAxisWarping.imfilter(D, [0 1 0; 1 -4 0; 0 1 0]))
         Vf = var(DynamicAxisWarping.imfilter(Df, [0 1 0; 1 -4 0; 0 1 0]))
         @test Vf < V # variance of diff is reduced by filtering
