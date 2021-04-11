@@ -3,10 +3,10 @@ function imfilter(A, kern)
     isodd(size(kern,1)) || throw(ArgumentError("Only odd-sized kernels supported, you provided $(size(kern))."))
     A2 = LocalFilters.convolve(A, kern)
     pad = size(kern, 1) ÷ 2
-    A2[1:pad, :] .= A[1:pad, :]
-    A2[end-pad+1:end, :] .= A[end-pad+1:end, :]
-    A2[:, 1:pad] .= A[:, 1:pad]
-    A2[:, end-pad+1:end] .= A[:, end-pad+1:end]
+    @views A2[1:pad, :] .= A[1:pad, :]
+    @views A2[end-pad+1:end, :] .= A[end-pad+1:end, :]
+    @views A2[:, 1:pad] .= A[:, 1:pad]
+    @views A2[:, end-pad+1:end] .= A[:, end-pad+1:end]
     A2
 end
 
