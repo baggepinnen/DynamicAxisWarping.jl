@@ -128,8 +128,8 @@ end
 
 znorm(x) = (x = x.- mean(x); x ./= std(x))
 using Statistics
-@recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1)
-    x, y, D, i1, i2 = handleargs(h; transportcost=transportcost)
+@recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1, filterkernel=nothing)
+    x, y, D, i1, i2 = handleargs(h; transportcost=transportcost, filterkernel=filterkernel)
     x,y = znorm.((x,y))
     s1 = x .- separation
     s2 = y .+ separation

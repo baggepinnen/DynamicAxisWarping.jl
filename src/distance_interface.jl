@@ -14,15 +14,16 @@ abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} <: Distance
 
 If the two time-series are of equal length, [`dtw_cost`](@ref) is called, if not, [`dtwnn`](@ref) is called.
 """
-struct DTW{D,N} <: DTWDistance{D}
+struct DTW{D,N,FK} <: DTWDistance{D}
     "The maximum allowed deviation of the matching path from the diagonal"
     radius::Int
     dist::D
     "If >1, an additional penalty factor for non-diagonal moves is added."
     transportcost::Float64
+    filterkernel::FK
 end
-DTW(r,dist::D=SqEuclidean(); transportcost=1, normalizer::Type{N}=Nothing) where {D,N} = DTW{D, N}(r,dist,transportcost)
-DTW(;radius,dist=SqEuclidean(), transportcost=1, normalizer::Type{N}=Nothing) where {N} = DTW{typeof(dist), N}(radius,dist,transportcost)
+DTW(r,dist::D=SqEuclidean(); transportcost=1, filterkernel::FK=nothing, normalizer::Type{N}=Nothing) where {D,N,FK} = DTW{D, N, FK}(r,dist,transportcost,filterkernel)
+DTW(;radius,dist=SqEuclidean(), transportcost=1, filterkernel::FK=nothing, normalizer::Type{N}=Nothing) where {N,FK} = DTW{typeof(dist), N, FK}(radius,dist,transportcost,filterkernel)
 
 """
     struct SoftDTW{D, T} <: DTWDistance{D}
@@ -81,7 +82,7 @@ Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ, radi
 Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
 
-distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost)
+distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost, filterkernel = d.filterkernel)
 distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector; transportcost=d.transportcost) =
     dtw(x, y, i2min, i2max, d.dist)
 distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)

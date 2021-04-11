@@ -1,7 +1,6 @@
 using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
-using OffsetArrays
 using ForwardDiff, QuadGK
 
 @testset "DynamicAxisWarping" begin
@@ -71,9 +70,13 @@ using ForwardDiff, QuadGK
         @test evaluate(DTW(10), a, b) == cost
 
         D  = dtw_cost_matrix(a, b)
-        Df = dtw_cost_matrix(a, b, filterkernel=OffsetArray(ones(1,1),0:0, 0:0))
+        Df = dtw_cost_matrix(a, b, filterkernel=ones(1,1))
         @test sum(D) ≈ sum(Df) rtol=1e-2
-        Df = dtw_cost_matrix(a, b, filterkernel=OffsetArray(ones(3,3)./9, -1:1, -1:1))
+        Df = dtw_cost_matrix(a, b, filterkernel=DynamicAxisWarping.gaussian(3))
+        V = var(DynamicAxisWarping.imfilter(D, [0 1 0; 1 -4 0; 0 1 0]))
+        Vf = var(DynamicAxisWarping.imfilter(Df, [0 1 0; 1 -4 0; 0 1 0]))
+        @test Vf < V # variance of diff is reduced by filtering
+        Df = dtw_cost_matrix(a, b, filterkernel=DynamicAxisWarping.gaussian2(3))
         V = var(DynamicAxisWarping.imfilter(D, [0 1 0; 1 -4 0; 0 1 0]))
         Vf = var(DynamicAxisWarping.imfilter(Df, [0 1 0; 1 -4 0; 0 1 0]))
         @test Vf < V # variance of diff is reduced by filtering
@@ -627,8 +630,12 @@ using ForwardDiff, QuadGK
         @test all(reduce(vcat, inds) .<= 10)
         sa = align_signals(s; output=:signals)
         @test all(size.(sa) .== Ref((2, length(inds[1]))))
-    
         @test all(length.(inds) .== length(inds[1]))
+
+        sa2 = align_signals(s; output=:signals, filterkernel=DynamicAxisWarping.gaussian(3))
+
+        # plot(transpose.(sa), c=:blue)
+        # plot!(transpose.(sa2), c=:red)
 
         @test_throws ArgumentError align_signals([[1],[2],[3]], method=:ninjaturtles)
     end
@@ -734,3 +741,17 @@ end
 # a = sin.(0.1f0 .* (1:100))    .+ 0.1f0 .* randn.(Float32)
 # b = sin.(0.1f0 .* (1:1000_000)) .+ 0.1f0 .* randn.(Float32)
 # @btime dtwnn($a, $b, SqEuclidean(), 5, prune_endpoints = true, prune_envelope = true, ZNormalizer)
+
+
+# Explore imfilter kernels
+# a = sin.(1:0.1:10)
+# b = a .+ 0.1 .* randn.()
+# plot([a b])
+
+# K = DynamicAxisWarping.gaussian(9)
+# # K = reverse(DynamicAxisWarping.gaussian2(3), dims=2)
+# dtwplot(a,b)
+# dtwplot(a,b, filterkernel=K)
+
+# matchplot(a,b)
+# matchplot(a,b, filterkernel=K)

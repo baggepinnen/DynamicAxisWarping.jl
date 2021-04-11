@@ -13,6 +13,7 @@ using LoopVectorization
 using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
 using Requires
 using UnPack
+using LocalFilters
 
 export dtw,
        dtw_cost,
