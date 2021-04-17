@@ -20,10 +20,10 @@ struct DTW{D,N,FK} <: DTWDistance{D}
     dist::D
     "If >1, an additional penalty factor for non-diagonal moves is added."
     transportcost::Float64
-    filterkernel::FK
+    postprocess::FK
 end
-DTW(r,dist::D=SqEuclidean(); transportcost=1, filterkernel::FK=nothing, normalizer::Type{N}=Nothing) where {D,N,FK} = DTW{D, N, FK}(r,dist,transportcost,filterkernel)
-DTW(;radius,dist=SqEuclidean(), transportcost=1, filterkernel::FK=nothing, normalizer::Type{N}=Nothing) where {N,FK} = DTW{typeof(dist), N, FK}(radius,dist,transportcost,filterkernel)
+DTW(r,dist::D=SqEuclidean(); transportcost=1, postprocess::FK=nothing, normalizer::Type{N}=Nothing) where {D,N,FK} = DTW{D, N, FK}(r,dist,transportcost,postprocess)
+DTW(;radius,dist=SqEuclidean(), transportcost=1, postprocess::FK=nothing, normalizer::Type{N}=Nothing) where {N,FK} = DTW{typeof(dist), N, FK}(radius,dist,transportcost,postprocess)
 
 """
     struct SoftDTW{D, T} <: DTWDistance{D}
@@ -82,7 +82,7 @@ Distances.evaluate(d::SoftDTW, x, y) = soft_dtw_cost(x, y, d.dist, γ=d.γ, radi
 Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
 
-distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost, filterkernel = d.filterkernel)
+distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost, postprocess = d.postprocess)
 distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector; transportcost=d.transportcost) =
     dtw(x, y, i2min, i2max, d.dist)
 distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)

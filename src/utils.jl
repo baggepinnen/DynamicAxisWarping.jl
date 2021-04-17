@@ -43,7 +43,7 @@ Compute a set of indices such that `s[i][inds[i]]` is optimally aligned to `s[ma
 - `method`: `:dtw` uses the warping paths from dtw between `s[master]` and `s[i]`. `:xcorr` uses `DSP.finddelay` which internally computes the cross correlation between signals, which often results in a slight misalignment.  
 - `output`: The default is to output the aligning indices, alternatively, the aligned `:signals` themselves can be outputted.
 """
-function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argmax(length.(s)); method=:dtw, output=:indices, filterkernel=nothing)
+function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argmax(length.(s)); method=:dtw, output=:indices, postprocess=nothing)
     inds = [1:lastlength(s) for s in s]
     # find delays to align with master
     d = map(s) do si
@@ -51,7 +51,7 @@ function align_signals(s::AbstractVector{<:AbstractArray}, master::Integer=argma
         if method ∈ (:xcorr, :crosscorr, :dsp)
             SlidingDistancesBase.DSP.finddelay(s[master], si) # suboptimal because xcorr does not do exactly what we want
         elseif method ∈ (:dtw, :DTW)
-            d,i1,i2 = dtw(si, s[master], filterkernel=filterkernel)
+            d,i1,i2 = dtw(si, s[master], postprocess=postprocess)
             round(Int, median(i2-i1))
         else
             throw(ArgumentError("Unknown method"))

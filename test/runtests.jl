@@ -70,16 +70,9 @@ using ForwardDiff, QuadGK
         @test evaluate(DTW(10), a, b) == cost
 
         D  = dtw_cost_matrix(a, b)
-        Df = dtw_cost_matrix(a, b, filterkernel=ones(1,1))
-        @test sum(D) ≈ sum(Df) rtol=1e-2
-        Df = dtw_cost_matrix(a, b, filterkernel=DynamicAxisWarping.gaussian(3))
-        V = var(DynamicAxisWarping.imfilter(D, [0 1 0; 1 -4 0; 0 1 0]))
-        Vf = var(DynamicAxisWarping.imfilter(Df, [0 1 0; 1 -4 0; 0 1 0]))
-        @test Vf < V # variance of diff is reduced by filtering
-        Df = dtw_cost_matrix(a, b, filterkernel=DynamicAxisWarping.gaussian2(3))
-        V = var(DynamicAxisWarping.imfilter(D, [0 1 0; 1 -4 0; 0 1 0]))
-        Vf = var(DynamicAxisWarping.imfilter(Df, [0 1 0; 1 -4 0; 0 1 0]))
-        @test Vf < V # variance of diff is reduced by filtering
+        Df = dtw_cost_matrix(a, b, postprocess=x->2x)
+        @test Df == 2D
+
 
         @test @inferred(soft_dtw_cost(Float64.(a),Float64.(b), γ=0.001)) > -0.01
 
@@ -632,8 +625,8 @@ using ForwardDiff, QuadGK
         @test all(size.(sa) .== Ref((2, length(inds[1]))))
         @test all(length.(inds) .== length(inds[1]))
 
-        sa2 = align_signals(s; output=:signals, filterkernel=DynamicAxisWarping.gaussian(3))
-
+        
+        # sa2 = align_signals(s; output=:signals, postprocess=x->imfilter(x, kernel))
         # plot(transpose.(sa), c=:blue)
         # plot!(transpose.(sa2), c=:red)
 
@@ -751,7 +744,7 @@ end
 # K = DynamicAxisWarping.gaussian(9)
 # # K = reverse(DynamicAxisWarping.gaussian2(3), dims=2)
 # dtwplot(a,b)
-# dtwplot(a,b, filterkernel=K)
+# dtwplot(a,b, postprocess=K)
 
 # matchplot(a,b)
-# matchplot(a,b, filterkernel=K)
+# matchplot(a,b, postprocess=K)

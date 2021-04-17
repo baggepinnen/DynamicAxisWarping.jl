@@ -175,7 +175,7 @@ dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagonal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
 
-See also the keyword argument `filterkernel` that allows you to pass an `AbstractMatrix` that is used to filter the cost matrix. Low-pass filtering can be used to effectively remove small-scale warping.
+See also the keyword argument `postprocess` that allows you to pass a function `D->f(D)` that is used to filter/post-process the cost matrix. Low-pass filtering can be used to effectively remove small-scale warping.
 
 
 ## Combine with optimal transport

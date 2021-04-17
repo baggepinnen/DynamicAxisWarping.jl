@@ -3,7 +3,7 @@
 #####################################
 
 """
-    cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean, filterkernel=nothing])
+    cost,i1,i2 = dtw(seq1, seq2, [dist=SqEuclidean, postprocess=nothing])
     cost,i1,i2 = dtw(seq1, seq2, dist, i2min, i2max)
 
 Perform dynamic-time warping to measure the distance between two sequences.
@@ -39,7 +39,7 @@ end
 
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean();
     transportcost=1,
-    filterkernel = nothing) where T
+    postprocess = nothing) where T
     # Build the cost matrix
     m = lastlength(seq2)
     n = lastlength(seq1)
@@ -63,8 +63,8 @@ end
         end
     end
 
-    if filterkernel !== nothing
-        D = imfilter(D, filterkernel)
+    if postprocess !== nothing
+        D = postprocess(D)
     end
 
     return D

@@ -29,8 +29,8 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
 
 @userplot DTWPlot
 
-@recipe function f(h::DTWPlot; transportcost=1, diagonal=false, filterkernel=nothing)
-    seq1, seq2, D, i1, i2 = handleargs(h; transportcost=transportcost, filterkernel=filterkernel)
+@recipe function f(h::DTWPlot; transportcost=1, diagonal=false, postprocess=nothing)
+    seq1, seq2, D, i1, i2 = handleargs(h; transportcost=transportcost, postprocess=postprocess)
 
     n1, n2 = lastlength(seq1), lastlength(seq2)
 
@@ -128,8 +128,8 @@ end
 
 znorm(x) = (x = x.- mean(x); x ./= std(x))
 using Statistics
-@recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1, filterkernel=nothing)
-    x, y, D, i1, i2 = handleargs(h; transportcost=transportcost, filterkernel=filterkernel)
+@recipe function f(h::MatchPlot; transportcost=1, separation=2, ds=1, postprocess=nothing)
+    x, y, D, i1, i2 = handleargs(h; transportcost=transportcost, postprocess=postprocess)
     x,y = znorm.((x,y))
     s1 = x .- separation
     s2 = y .+ separation
