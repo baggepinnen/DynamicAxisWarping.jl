@@ -375,7 +375,7 @@ struct LinearInterpolation{Tx,Tt} <: Function
     t::Tt
     function LinearInterpolation(x::Tx, ts::Ts) where {Tx,Ts}
         issorted(ts) || throw(ArgumentError("Time parameter `ts` must be sorted in increasing order."))
-        T = eltype(Tx)
+        T = eltype(ts)
         t = (ts .- T(first(ts))) ./ T( last(ts) - first(ts))
         Tt = typeof(t)
         new{Tx,Tt}(x, t)
