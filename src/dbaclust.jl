@@ -45,6 +45,7 @@ function dbaclust(
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
+    n_jobs::Int           = 1,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
@@ -63,6 +64,7 @@ function dbaclust(
             inner_iterations = inner_iterations,
             rtol = rtol,
             rtol_inner = rtol_inner,
+            n_jobs = n_jobs,
             show_progress = show_progress,
             store_trace = store_trace,
             i2min = i2min,
@@ -104,6 +106,7 @@ function dbaclust_single(
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
+    n_jobs::Int           = 1,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
@@ -231,7 +234,7 @@ function dbaclust_single(
         unused = setdiff(1:nclust, unique(clus_asgn))
         if !isempty(unused)
             # reinitialize centers
-            for c in unused
+            Threads.@threads for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
                 for s = 1:nseq
                     seq = sequences[s]
