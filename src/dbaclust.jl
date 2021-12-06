@@ -40,16 +40,15 @@ function dbaclust(
     sequences,
     nclust::Int,
     dtwdist::DTWDistance;
-    n_init::Int = 1,
-    iterations::Int = 100,
+    n_init::Int           = 1,
+    iterations::Int       = 100,
     inner_iterations::Int = 10,
-    rtol::Float64 = 1e-4,
-    rtol_inner::Float64 = rtol,
-    n_jobs::Int = 1,
-    show_progress::Bool = true,
-    store_trace::Bool = true,
+    rtol::Float64         = 1e-4,
+    rtol_inner::Float64   = rtol,
+    show_progress::Bool   = true,
+    store_trace::Bool     = true,
     i2min::AbstractVector = [],
-    i2max::AbstractVector = []
+    i2max::AbstractVector = [],
 )
 
 
@@ -64,11 +63,10 @@ function dbaclust(
             inner_iterations = inner_iterations,
             rtol = rtol,
             rtol_inner = rtol_inner,
-            n_jobs = n_jobs,
             show_progress = show_progress,
             store_trace = store_trace,
             i2min = i2min,
-            i2max = i2max
+            i2max = i2max,
         )
         if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
             best_result = deepcopy(dbaclust_result)
@@ -102,20 +100,19 @@ function dbaclust_single(
         nclust,
         dtwdist
     ),
-    iterations::Int = 100,
+    iterations::Int       = 100,
     inner_iterations::Int = 10,
-    rtol::Float64 = 1e-4,
-    rtol_inner::Float64 = rtol,
-    n_jobs::Int = 1,
-    show_progress::Bool = true,
-    store_trace::Bool = true,
+    rtol::Float64         = 1e-4,
+    rtol_inner::Float64   = rtol,
+    show_progress::Bool   = true,
+    store_trace::Bool     = true,
     i2min::AbstractVector = [],
-    i2max::AbstractVector = []
+    i2max::AbstractVector = [],
 )
 
     T = floattype(eltype(sequences))
     # rename for convienence
-    avgs = init_centers
+    avgs   = init_centers
     N = length(avgs[1])
 
     # check initial centers have the same length
@@ -124,30 +121,30 @@ function dbaclust_single(
     end
 
     # dimensions
-    nseq = length(sequences)
+    nseq      = length(sequences)
     maxseqlen = maximum([length(s) for s in sequences])
 
 
     # TODO switch to ntuples?
-    counts = [zeros(Int, N) for _ = 1:nclust]
-    sums = [Array{T}(undef, N) for _ = 1:nclust]
+    counts    = [zeros(Int, N) for _ = 1:nclust]
+    sums      = [Array{T}(undef,N) for _ = 1:nclust]
 
     # cluster assignments for each sequence
-    clus_asgn = Array{Int}(undef, nseq)
-    c = 0
+    clus_asgn = Array{Int}(undef,nseq)
+    c         = 0
 
     # arrays storing path through dtw cost matrix
-    i1, i2 = Int[], Int[]
+    i1, i2    = Int[], Int[]
 
     # variables storing optimization progress
-    converged = false
-    iter = 0
-    inner_iter = 0
+    converged       = false
+    iter            = 0
+    inner_iter      = 0
     converged_inner = false
-    last_cost = Inf
-    total_cost = 0.0
-    cost_trace = Float64[]
-    costs = Array{Float64}(undef, nseq)
+    last_cost       = Inf
+    total_cost      = 0.0
+    cost_trace      = Float64[]
+    costs           = Array{Float64}(undef,nseq)
 
     # main loop ##
     if show_progress
@@ -159,7 +156,7 @@ function dbaclust_single(
                 (:iteration, iter),
                 (Symbol("max iteration"), iterations),
                 (:cost, total_cost),
-            ]
+            ],
         )
     end#showprogress
 
@@ -175,12 +172,11 @@ function dbaclust_single(
 
             # find cluster assignment for s
             costs[s] = Inf
-
             if n_jobs != 1
                 # using multi-core
-                cluster_dists_ = Array{Float64}(undef, nclust)
-                cluster_i1s_ = Array{Vector{Int64}}(undef, nclust)
-                cluster_i2s_ = Array{Vector{Int64}}(undef, nclust)
+                cluster_dists_      = Array{Float64}(undef, nclust)
+                cluster_i1s_        = Array{Vector{Int64}}(undef, nclust)
+                cluster_i2s_        = Array{Vector{Int64}}(undef, nclust)
 
                 Threads.@threads for c_ = 1:nclust
                     # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
@@ -189,13 +185,13 @@ function dbaclust_single(
                     else
                         cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq, i2min, i2max)
                     end
-                    cluster_dists_[c_] = cost
-                    cluster_i1s_[c_] = i1_
-                    cluster_i2s_[c_] = i2_
+                    cluster_dists_[c_]  = cost
+                    cluster_i1s_[c_]    = i1_
+                    cluster_i2s_[c_]    = i2_
                 end
                 cost, c = findmin(cluster_dists_)
-                i1 = cluster_i1s_[c]
-                i2 = cluster_i2s_[c]
+                i1      = cluster_i1s_[c]
+                i2      = cluster_i2s_[c]
                 costs[s] = cost
             else
                 # using single-core
@@ -208,25 +204,25 @@ function dbaclust_single(
                     end
                     if cost < costs[s]
                         # store cluster, and match indices
-                        c = c_
-                        i1 = i1_
-                        i2 = i2_
-                        costs[s] = cost
+                        c           = c_
+                        i1          = i1_
+                        i2          = i2_
+                        costs[s]    = cost
                     end
                 end
             end
 
             # s was assigned to cluster c
             clus_asgn[s] = c
-            cnt = counts[c]
-            sm = sums[c]
-            avg = avgs[c]
+            cnt          = counts[c]
+            sm           = sums[c]
+            avg          = avgs[c]
 
             # update stats for barycentric average for
             # the assigned cluster
             for t = 1:length(i2)
                 cnt[i1[t]] += 1
-                sm[i1[t]] += seq[i2[t]]
+                sm[i1[t]]  += seq[i2[t]]
             end
         end
 
@@ -237,31 +233,16 @@ function dbaclust_single(
             # reinitialize centers
             for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
-                if n_jobs == 1
-                    for s = 1:nseq
-                        seq = sequences[s]
-                        if isempty(i2min) && isempty(i2max)
-                            cost, = distpath(dtwdist, avgs[c], seq)
-                        else
-                            cost, = distpath(dtwdist, avgs[c], seq, i2min, i2max)
-                        end
-                        if costs[s] > cost
-                            costs[s] = cost
-                        end
+                for s = 1:nseq
+                    seq = sequences[s]
+                    if isempty(i2min) && isempty(i2max)
+                        cost, = distpath(dtwdist, avgs[c], seq)
+                    else
+                        cost, = distpath(dtwdist, avgs[c], seq, i2min, i2max)
                     end
-                else
-                    Threads.@threads for s = 1:nseq
-                        seq = sequences[s]
-                        if isempty(i2min) && isempty(i2max)
-                            cost, = distpath(dtwdist, avgs[c], seq)
-                        else
-                            cost, = distpath(dtwdist, avgs[c], seq, i2min, i2max)
-                        end
-                        if costs[s] > cost
-                            costs[s] = cost
-                        end
+                    if costs[s] > cost
+                        costs[s] = cost
                     end
-
                 end
             end
             # we need to reassign clusters, start iteration over
@@ -294,10 +275,10 @@ function dbaclust_single(
         # add additional inner dba iterations
 
         for i = 1:nclust
-            seqs = view(sequences, clus_asgn .== i)
-            inner_iter = 0
+            seqs            = view(sequences, clus_asgn .== i)
+            inner_iter      = 0
             converged_inner = false
-            oldcost = 1.0e100
+            oldcost         = 1.0e100
             while !converged_inner && inner_iter < inner_iterations
                 newcost = dba_iteration!(
                     sums[i],
@@ -306,7 +287,7 @@ function dbaclust_single(
                     seqs,
                     dtwdist;
                     i2min = i2min,
-                    i2max = i2max
+                    i2max = i2max,
                 )
                 copy!(avgs[i], sums[i])
                 inner_iter += 1
@@ -328,7 +309,7 @@ function dbaclust_single(
                 (:iteration, iter),
                 (Symbol("max iteration"), iterations),
                 (:cost, total_cost),
-            ]
+            ],
         )
     end
 
@@ -355,13 +336,13 @@ function dbaclust_initial_centers(
 )
 
     # number of sequences in dataset
-    nseq = length(sequences)
+    nseq          = length(sequences)
     # distance of each datapoint to each center
-    dists = zeros(nclust, nseq)
+    dists         = zeros(nclust, nseq)
     # distances to closest center
-    min_dists = zeros(1, nseq)
+    min_dists     = zeros(1, nseq)
     # choose a center uniformly at random
-    center_ids = zeros(Int, nclust)
+    center_ids    = zeros(Int, nclust)
     center_ids[1] = rand(1:nseq)
 
     # assign the rest of the centers
