@@ -540,11 +540,11 @@ using BenchmarkTools
         if Threads.nthreads() > 1
             # testing multi-threading speedup
             # increase number of vectors in data
-            data_big = [randn(100) .+ 2(i ÷ 5) for i = 0:100]
+            data_big = [randn(300) .+ 2(i ÷ 5) for i = 0:500]
             result = [@benchmark dbaclust(
                 $data_big,
                 $nclust,
-                FastDTW(10);
+                DTW(10);
                 n_init = 20,
                 iterations = 10,
                 n_jobs = $j
