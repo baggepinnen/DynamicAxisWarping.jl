@@ -2,6 +2,7 @@ using Test, Statistics, LinearAlgebra
 using DynamicAxisWarping, SlidingDistancesBase
 using Distances, Plots
 using ForwardDiff, QuadGK
+using BenchmarkTools
 
 @testset "DynamicAxisWarping" begin
     @info "Testing DynamicAxisWarping"
@@ -536,6 +537,21 @@ using ForwardDiff, QuadGK
         inds = 1:5
         @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
 
+        if Threads.nthreads() > 1
+            # testing multi-threading speedup
+            # increase number of vectors in data
+            data_big = [randn(100) .+ 2(i ÷ 5) for i = 0:100]
+            result = [@benchmark dbaclust(
+                $data_big,
+                $nclust,
+                FastDTW(10);
+                n_init = 20,
+                iterations = 10,
+                n_jobs = $j
+            ) for j in [1, -1]]
+            inds = 1:5
+            @test r[0] > r[1]
+        end
 
         result = [dbaclust(
             data,
