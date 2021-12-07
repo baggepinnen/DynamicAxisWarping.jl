@@ -13,6 +13,24 @@ mutable struct DBAclustResult{T}
 end
 
 """
+
+    optional_threaded(cond, ex)
+
+Execute ex with multi-threading if cond is true,
+otherwise execute with one core
+"""
+macro optional_threaded(cond, ex)
+    quote
+        if $(esc(cond))
+            $(esc(:(Threads.@threads $ex)))
+        else
+            $(esc(ex))
+        end
+    end
+end
+
+
+"""
     dbaclust(
         sequences,
         nclust::Int,
@@ -45,18 +63,16 @@ function dbaclust(
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
-    n_jobs::Int           = 1,
+    threaded::Bool        = false,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
 )
 
-
-    best_result = []
-    best_cost = []
-    for i = 1:n_init
-        dbaclust_result = dbaclust_single(
+    results = Array{Any}(undef, n_init)
+    @optional_threaded threaded for i = 1:n_init
+        results[i] = dbaclust_single(
             sequences,
             nclust,
             dtwdist;
@@ -64,19 +80,21 @@ function dbaclust(
             inner_iterations = inner_iterations,
             rtol = rtol,
             rtol_inner = rtol_inner,
-            n_jobs = n_jobs,
+            threaded = threaded,
             show_progress = show_progress,
             store_trace = store_trace,
             i2min = i2min,
             i2max = i2max,
         )
-        if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
-            best_result = deepcopy(dbaclust_result)
-            best_cost = best_result.dbaresult.cost
+    end
+    best = results[1]
+    for i = 2:n_init
+        if results[i].dbaresult.cost < best.dbaresult.cost
+            best = results[i]
         end
-    end #1:n_init
+    end
 
-    return best_result
+    return best
 end
 
 
@@ -97,16 +115,17 @@ function dbaclust_single(
     sequences::AbstractVector,
     nclust::Int,
     dtwdist::DTWDistance;
+    threaded::Bool        = false,
     init_centers::AbstractVector = dbaclust_initial_centers(
         sequences,
         nclust,
-        dtwdist
+        dtwdist;
+        threaded
     ),
     iterations::Int       = 100,
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
-    n_jobs::Int           = 1,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
@@ -175,7 +194,7 @@ function dbaclust_single(
 
             # find cluster assignment for s
             costs[s] = Inf
-            if n_jobs != 1
+            if threaded
                 # using multi-core
                 cluster_dists_      = Array{Float64}(undef, nclust)
                 cluster_i1s_        = Array{Vector{Int64}}(undef, nclust)
@@ -234,9 +253,9 @@ function dbaclust_single(
         unused = setdiff(1:nclust, unique(clus_asgn))
         if !isempty(unused)
             # reinitialize centers
-            Threads.@threads for c in unused
+            @optional_threaded threaded for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
-                for s = 1:nseq
+                @optional_threaded threaded for s = 1:nseq
                     seq = sequences[s]
                     if isempty(i2min) && isempty(i2max)
                         cost, = distpath(dtwdist, avgs[c], seq)
@@ -327,7 +346,7 @@ end
 
 
 """
-   dbaclust_initial_centers(sequences, nclust, dtwdist::DTWDistance)
+   dbaclust_initial_centers(sequences, nclust, dtwdist::DTWDistance; threaded::Bool = false)
 
 Uses kmeans++ (but with dtw distance) to initialize the centers
 for dba clustering.
@@ -335,9 +354,9 @@ for dba clustering.
 function dbaclust_initial_centers(
     sequences::AbstractVector,
     nclust::Int,
-    dtwdist::DTWDistance,
+    dtwdist::DTWDistance;
+    threaded::Bool        = false
 )
-
     # number of sequences in dataset
     nseq          = length(sequences)
     # distance of each datapoint to each center
@@ -353,10 +372,11 @@ function dbaclust_initial_centers(
 
         # first, compute distances for the previous center
         cent = sequences[center_ids[c]]
-        for (i, seq) in enumerate(sequences)
+        @optional_threaded threaded for i = 1:nseq
             # this distance will be zero
             i == center_ids[c] && continue
             # else, compute dtw distance
+            seq = sequences[i]
             dists[c, i], = distpath(dtwdist, seq, cent)
         end
 
