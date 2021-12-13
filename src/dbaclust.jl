@@ -71,6 +71,8 @@ function dbaclust(
     i2max::AbstractVector = [],
 )
 
+    n_init < 1 && throw(ArgumentError("n_init must be greater than zero"))
+
     results = Array{Any}(undef, n_init)
     @optional_threaded threaded for i = 1:n_init
         results[i] = dbaclust_single(
