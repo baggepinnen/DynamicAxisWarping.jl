@@ -536,9 +536,19 @@ using ForwardDiff, QuadGK
         inds = 1:5
         @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
 
-        if Threads.nthreads() > 1
-            include("test_dba_multicore.jl")
-        end
+        # test threaded argument
+
+        result = dbaclust(
+            data, 
+            nclust, 
+            DTW(10); 
+            n_init = 20, 
+            iterations = 10, 
+            threaded=true
+        )
+        inds = 1:5
+        @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
+        
 
         result = [dbaclust(
             data,
