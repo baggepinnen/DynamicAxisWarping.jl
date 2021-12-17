@@ -73,7 +73,11 @@ function dbaclust(
 
     n_init < 1 && throw(ArgumentError("n_init must be greater than zero"))
 
-    results = Array{Any}(undef, n_init)
+    T = typeof(sequences)
+
+    results = Array{DBAclustResult{T}}(undef, n_init)
+    show_progress && (p = Progress(n_init))
+
     @optional_threaded threaded for i = 1:n_init
         results[i] = dbaclust_single(
             sequences,
@@ -84,13 +88,15 @@ function dbaclust(
             rtol = rtol,
             rtol_inner = rtol_inner,
             threaded = threaded,
-            show_progress = show_progress,
+            show_progress = false,
             store_trace = store_trace,
             i2min = i2min,
             i2max = i2max,
         )
+        show_progress && next!(p)
     end
     best = results[1]
+
     for i = 2:n_init
         if results[i].dbaresult.cost < best.dbaresult.cost
             best = results[i]
