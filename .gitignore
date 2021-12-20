@@ -4,3 +4,4 @@
 data/*/
 *.swp
 Manifest.toml
+.vscode/

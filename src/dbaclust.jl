@@ -13,6 +13,24 @@ mutable struct DBAclustResult{T}
 end
 
 """
+
+    optional_threaded(cond, ex)
+
+Execute ex with multi-threading if cond is true,
+otherwise execute with one core
+"""
+macro optional_threaded(cond, ex)
+    quote
+        if $(esc(cond))
+            $(esc(:(Threads.@threads $ex)))
+        else
+            $(esc(ex))
+        end
+    end
+end
+
+
+"""
     dbaclust(
         sequences,
         nclust::Int,
@@ -22,7 +40,7 @@ end
         inner_iterations::Int = 10,
         rtol::Float64         = 1e-4,
         rtol_inner::Float64   = rtol,
-        n_jobs::Int           = 1,
+        threaded::Bool        = false,
         show_progress::Bool   = true,
         store_trace::Bool     = true,
         i2min::AbstractVector = [],
@@ -35,6 +53,7 @@ end
 - `n_init`: Number of initialization tries
 - `inner_iterations`: Number of iterations in the inner alg.
 - `i2min`: Bounds on the warping path
+- `threaded`: Use multi-threading 
 """
 function dbaclust(
     sequences,
@@ -45,17 +64,22 @@ function dbaclust(
     inner_iterations::Int = 10,
     rtol::Float64         = 1e-4,
     rtol_inner::Float64   = rtol,
+    threaded::Bool        = false,
     show_progress::Bool   = true,
     store_trace::Bool     = true,
     i2min::AbstractVector = [],
     i2max::AbstractVector = [],
 )
 
+    n_init < 1 && throw(ArgumentError("n_init must be greater than zero"))
 
-    best_result = []
-    best_cost = []
-    for i = 1:n_init
-        dbaclust_result = dbaclust_single(
+    T = typeof(sequences)
+
+    results = Array{DBAclustResult{T}}(undef, n_init)
+    show_progress && (p = Progress(n_init))
+
+    @optional_threaded threaded for i = 1:n_init
+        results[i] = dbaclust_single(
             sequences,
             nclust,
             dtwdist;
@@ -63,18 +87,23 @@ function dbaclust(
             inner_iterations = inner_iterations,
             rtol = rtol,
             rtol_inner = rtol_inner,
-            show_progress = show_progress,
+            threaded = threaded,
+            show_progress = false,
             store_trace = store_trace,
             i2min = i2min,
             i2max = i2max,
         )
-        if isempty(best_cost) || dbaclust_result.dbaresult.cost < best_cost
-            best_result = deepcopy(dbaclust_result)
-            best_cost = best_result.dbaresult.cost
-        end
-    end #1:n_init
+        show_progress && next!(p)
+    end
+    best = results[1]
 
-    return best_result
+    for i = 2:n_init
+        if results[i].dbaresult.cost < best.dbaresult.cost
+            best = results[i]
+        end
+    end
+
+    return best
 end
 
 
@@ -95,10 +124,12 @@ function dbaclust_single(
     sequences::AbstractVector,
     nclust::Int,
     dtwdist::DTWDistance;
+    threaded::Bool        = false,
     init_centers::AbstractVector = dbaclust_initial_centers(
         sequences,
         nclust,
-        dtwdist
+        dtwdist;
+        threaded
     ),
     iterations::Int       = 100,
     inner_iterations::Int = 10,
@@ -172,19 +203,43 @@ function dbaclust_single(
 
             # find cluster assignment for s
             costs[s] = Inf
-            for c_ = 1:nclust
-                # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
-                if isempty(i2min) && isempty(i2max)
-                    cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
-                else
-                    cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq, i2min, i2max)
+            if threaded
+                # using multi-core
+                cluster_dists_      = Array{Float64}(undef, nclust)
+                cluster_i1s_        = Array{Vector{Int64}}(undef, nclust)
+                cluster_i2s_        = Array{Vector{Int64}}(undef, nclust)
+
+                Threads.@threads for c_ = 1:nclust
+                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+                    if isempty(i2min) && isempty(i2max)
+                        cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
+                    else
+                        cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq, i2min, i2max)
+                    end
+                    cluster_dists_[c_]  = cost
+                    cluster_i1s_[c_]    = i1_
+                    cluster_i2s_[c_]    = i2_
                 end
-                if cost < costs[s]
-                    # store cluster, and match indices
-                    c        = c_
-                    i1       = i1_
-                    i2       = i2_
-                    costs[s] = cost
+                cost, c = findmin(cluster_dists_)
+                i1      = cluster_i1s_[c]
+                i2      = cluster_i2s_[c]
+                costs[s] = cost
+            else
+                # using single-core
+                for c_ = 1:nclust
+                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+                    if isempty(i2min) && isempty(i2max)
+                        cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
+                    else
+                        cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq, i2min, i2max)
+                    end
+                    if cost < costs[s]
+                        # store cluster, and match indices
+                        c           = c_
+                        i1          = i1_
+                        i2          = i2_
+                        costs[s]    = cost
+                    end
                 end
             end
 
@@ -207,9 +262,9 @@ function dbaclust_single(
         unused = setdiff(1:nclust, unique(clus_asgn))
         if !isempty(unused)
             # reinitialize centers
-            for c in unused
+            @optional_threaded threaded for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
-                for s = 1:nseq
+                @optional_threaded threaded for s = 1:nseq
                     seq = sequences[s]
                     if isempty(i2min) && isempty(i2max)
                         cost, = distpath(dtwdist, avgs[c], seq)
@@ -300,7 +355,7 @@ end
 
 
 """
-   dbaclust_initial_centers(sequences, nclust, dtwdist::DTWDistance)
+   dbaclust_initial_centers(sequences, nclust, dtwdist::DTWDistance; threaded::Bool = false)
 
 Uses kmeans++ (but with dtw distance) to initialize the centers
 for dba clustering.
@@ -308,9 +363,9 @@ for dba clustering.
 function dbaclust_initial_centers(
     sequences::AbstractVector,
     nclust::Int,
-    dtwdist::DTWDistance,
+    dtwdist::DTWDistance;
+    threaded::Bool        = false
 )
-
     # number of sequences in dataset
     nseq          = length(sequences)
     # distance of each datapoint to each center
@@ -326,10 +381,11 @@ function dbaclust_initial_centers(
 
         # first, compute distances for the previous center
         cent = sequences[center_ids[c]]
-        for (i, seq) in enumerate(sequences)
+        @optional_threaded threaded for i = 1:nseq
             # this distance will be zero
             i == center_ids[c] && continue
             # else, compute dtw distance
+            seq = sequences[i]
             dists[c, i], = distpath(dtwdist, seq, cent)
         end
 

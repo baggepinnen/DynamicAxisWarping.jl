@@ -536,6 +536,19 @@ using ForwardDiff, QuadGK
         inds = 1:5
         @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
 
+        # test threaded argument
+
+        result = dbaclust(
+            data, 
+            nclust, 
+            DTW(10); 
+            n_init = 20, 
+            iterations = 10, 
+            threaded=true
+        )
+        inds = 1:5
+        @test all([allsame(result.clustids[inds .+ 5i]) for i in 0:3])
+        
 
         result = [dbaclust(
             data,
