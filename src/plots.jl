@@ -20,11 +20,6 @@ function handleargs(seq1, seq2, dist::SemiMetric = SqEuclidean(); kwargs...)
     seq1, seq2, D, i1, i2
 end
 
-
-function handleargs(seq1, seq2, D, i1, i2; kwargs...)
-    seq1, seq2, D, i1, i2
-end
-
 function handleargs(seq1::AbstractArray, seq2::AbstractArray, D::AbstractMatrix; kwargs...)
     cost, i1, i2 = DynamicAxisWarping.trackback(D)
     seq1, seq2, D, i1, i2
@@ -33,7 +28,6 @@ end
 function handleargs(seq1::AbstractArray, seq2::AbstractArray, D::AbstractMatrix, i1::AbstractVector, i2::AbstractVector; kwargs...)
     seq1, seq2, D, i1, i2
 end
-
 
 function handleargs(seq1, seq2, dist, i2min, i2max; kwargs...)
     D = dtw_cost_matrix(seq1, seq2, dist, i2min, i2max; kwargs...)
