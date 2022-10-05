@@ -151,6 +151,16 @@ using ForwardDiff, QuadGK
 
         @test_nowarn dtwplot(a, b)
         @test_nowarn matchplot(a, b)
+
+        # Tests plotting with a precalculated matrix
+        D = soft_dtw_cost_matrix(a, b, SqEuclidean(); transportcost = 1, γ = 0.1, radius=30) 
+        cost, i1, i2 = DynamicAxisWarping.trackback(D)
+        
+        @test_nowarn dtwplot(a, b, D, i1, i2, lc=:green, lw=1; )
+        @test_nowarn matchplot(a, b, D, i1, i2, ds=3,separation=1)
+
+        @test_nowarn dtwplot(a, b, D, lc=:green, lw=1; )
+        @test_nowarn matchplot(a, b, D, ds=3,separation=1)
     end
 
 
