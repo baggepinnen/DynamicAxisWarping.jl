@@ -159,6 +159,37 @@ using Statistics
     end
 end
 
+@userplot MatchPlot2
+znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
+@recipe function f(h::MatchPlot2; transportcost=1, separation=0.5, ds=1,
+                   postprocess=nothing)
+
+    x, y, D, i1, i2 = DynamicAxisWarping.handleargs(h;
+                                                    transportcost=transportcost,
+                                                    postprocess=postprocess)
+    x,y = znorm2.((x,y))
+    s1 = x .- separation
+    s2 = y .+ separation
+
+    @series begin
+        @infiltrate
+        (collect(eachrow(s1))...,)
+    end
+    @series begin
+        (collect(eachrow(s2))...,)
+    end
+    @series begin
+        primary := false
+        linecolor --> :black
+        seriesalpha --> 0.2
+        s1, s2 = s1[:,i1][:,1:ds:end], s2[:,i2][:,1:ds:end]
+        # Concatonate along 3rd dim
+        s3 = cat(s1,s2; dims=3)
+        s3 = eachrow.(eachslice(s3, dims=2))
+        [(rows_of_slices...,) for rows_of_slices in s3]
+    end
+end
+
 @recipe function plot(r::DTWSearchResult)
     title --> "DTW-NN Search result"
     yguide --> "Distance"
