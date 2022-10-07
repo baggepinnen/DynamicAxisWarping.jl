@@ -172,7 +172,6 @@ znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
     s2 = y .+ separation
 
     @series begin
-        @infiltrate
         (collect(eachrow(s1))...,)
     end
     @series begin
