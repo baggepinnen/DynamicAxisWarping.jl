@@ -19,7 +19,7 @@ xlabel!("Time t")
 ylabel!("Amplitude")
 title!("GDTW")
 
-dtw_cost, t_dtw_x, t_dtw_y = dtw(x.x, y.x)
+dtwcost, t_dtw_x, t_dtw_y = dtw(x.x, y.x)
 dtw_plot = plot(eachindex(t_dtw_x) ./ length(t_dtw_x), x.x[t_dtw_x], label="x(t_x)")
 plot!(eachindex(t_dtw_x) ./ length(t_dtw_x), y.x[t_dtw_y], label="y(t_y)")
 xlabel!("Time")
