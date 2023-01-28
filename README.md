@@ -190,6 +190,8 @@ d = DTW(radius=radius, dist=SqEuclidean()) # Or FastDTW / SoftDTW
 d(a,b)
 ```
 
+## Signal alignment
+See [SignalAlignment.jl](https://github.com/baggepinnen/SignalAlignment.jl) which uses this package to align out-of-sync signals and signals with different sample rates.
 
 ## Acknowledgements
 
