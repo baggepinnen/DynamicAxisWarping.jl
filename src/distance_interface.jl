@@ -43,6 +43,12 @@ Base.@kwdef struct SoftDTW{D,T,R} <: DTWDistance{D}
     SoftDTW(γ, dist=SqEuclidean(),transportcost=1,radius=nothing) = new{typeof(dist), typeof(γ), typeof(radius)}(γ,dist,transportcost,radius)
 end
 
+struct GDTW{D} <: DTWDistance{D}
+    dist::D 
+    "A named tuple with all keyword arguments to `gdtw`"
+    opts::NamedTuple
+end
+GDTW(d = SqEuclidean(); opts...) = GDTW(d, NamedTuple(opts))
 
 """
     struct FastDTW{D} <: DTWDistance{D}
