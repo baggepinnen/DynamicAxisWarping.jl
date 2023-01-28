@@ -6,6 +6,8 @@
 
 Dynamic Time Warping (DTW), matrix profile and related algorithms in Julia.
 
+[Dynamic Time Warping](https://en.wikipedia.org/wiki/Dynamic_time_warping) is a method used to compare, or measure the "distance" between two signals. Contrary to, e.g., the Euclidean distance between two signals, which operates point-wise, DTW compares the signals by warping them in time to produce the closest possible match, with the constraint that the warping is monotonic. Underneath the hood, DTW solves an $\mathcal{O}(n^2)$ dynamic-programming problem, and can thus be computationally expensive if implemented and used naively. This package attempts at providing a fairly well-optimized implementation, and further supports some well-known tricks to reduce the computational complexity, such as limiting the maximum allowed warping (radius) etc., effectively reducing the complexity to $\mathcal{O}(nr)$ where $r$ is the radius. DTW does not require the two signals under comparison to have the same length, making it a widely applicable measure of (dis)similarity.
+
 This package supports arbitrary metrics and arbitrary "spaces", i.e., as long as you are passing a vector or higher dimensional array of something that your distance can operate on, you're good to go. Time is always considered to be the last dimension.
 
 This package is registered and can be installed with:
@@ -175,7 +177,7 @@ dtwplot(a,b, transportcost=1.1)  # Should be almost completely diagonal
 ```
 You can try a `transportcost < 1` as well, but then it is preferable to make weird alignments and I'm not sure how much sense that would make.
 
-See also the keyword argument `postprocess` that allows you to pass a function `D->f(D)` that is used to filter/post-process the cost matrix. Low-pass filtering can be used to effectively remove small-scale warping.
+See also the keyword argument `postprocess` that allows you to pass a function `D_modified = f(D)` that is used to filter/post-process the cost matrix. Low-pass filtering can be used to effectively remove small-scale warping.
 
 
 ## Combine with optimal transport
