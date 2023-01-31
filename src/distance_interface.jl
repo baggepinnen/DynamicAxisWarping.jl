@@ -10,7 +10,7 @@ abstract type DTWDistance{D <: Union{Function, Distances.PreMetric}} <: Distance
 - `radius`: The maximum allowed deviation of the matching path from the diagonal
 - `dist`: Inner distance
 - `transportcost` If >1, an additional penalty factor for non-diagonal moves is added.
-- `normalizer`: defaults to `Nothing`
+- `normalizer`: defaults to `Nothing`. Supported options are the normalizers defined in [SlidingDistancesBase.jl](https://github.com/baggepinnen/SlidingDistancesBase.jl)
 
 If the two time-series are of equal length, [`dtw_cost`](@ref) is called, if not, [`dtwnn`](@ref) is called.
 """
@@ -43,6 +43,12 @@ Base.@kwdef struct SoftDTW{D,T,R} <: DTWDistance{D}
     SoftDTW(γ, dist=SqEuclidean(),transportcost=1,radius=nothing) = new{typeof(dist), typeof(γ), typeof(radius)}(γ,dist,transportcost,radius)
 end
 
+struct GDTW{D} <: DTWDistance{D}
+    dist::D 
+    "A named tuple with all keyword arguments to `gdtw`"
+    opts::NamedTuple
+end
+GDTW(d = SqEuclidean(); opts...) = GDTW(d, NamedTuple(opts))
 
 """
     struct FastDTW{D} <: DTWDistance{D}
