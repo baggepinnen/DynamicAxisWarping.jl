@@ -182,12 +182,12 @@ matchplot2
 @userplot MatchPlot2
 znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
 @recipe function f(h::MatchPlot2; transportcost=1, separation=0.5, ds=1,
-                   postprocess=nothing, showindex=false)
+                   postprocess=nothing, showindex=false, normalize=true)
 
     x, y, D, i1, i2 = DynamicAxisWarping.handleargs(h;
                                                     transportcost=transportcost,
                                                     postprocess=postprocess)
-    x,y = znorm2.((x,y))
+    x,y = normalize ? znorm2.((x,y)) : (x,y)
     if showindex
         x = [x[:,i1]; i1[:,1]']
         y = [y[:,i2]; i2[:,1]']
