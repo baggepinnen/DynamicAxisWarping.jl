@@ -39,8 +39,8 @@ d(a,b)
 
 ## Plotting
 ```julia
-dtwplot(a,    b, [dist=SqEuclidean()]; transportcost = 1)
-matchplot(a,  b, [dist=SqEuclidean()])
+dtwplot(a, b, [dist=SqEuclidean()]; transportcost = 1)
+matchplot(a, b, [dist=SqEuclidean()])
 matchplot2(a, b, [dist=SqEuclidean()])
 ```
 Example:

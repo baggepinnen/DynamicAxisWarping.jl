@@ -4,7 +4,6 @@ using Distances, Plots
 using ForwardDiff, QuadGK
 
 @testset "DynamicAxisWarping" begin
-    
     @info "Testing DynamicAxisWarping"
 
 
@@ -786,4 +785,3 @@ end
 # dtwplot(a,b, postprocess=K)
 
 # matchplot(a,b)
-# matchplot(a,b, postprocess=K)
