@@ -159,6 +159,26 @@ using Statistics
     end
 end
 
+"""
+    matchplot2
+
+Like `matchplot`, but works with 2d and 3d signals.
+
+### Inputs
+
+#### Positional args
+For available positional argument patterns, see `DynamicAxisWarping.handleargs`
+
+Generally, it can accept a `x` and `y` signal to warp and optionally `dtw_cost_matrix` inputs, or `x` and `y` signal plus `dtw` or `dtw_cost_matrix` outputs (skipping the warp step).
+
+#### Keyword args
+- `transportcost` -- see `dtw_cost_matrix`
+- `separation` -- extra separation/padding added between the signals in in ℜⁿ  
+- `showindex` -- Whether to add an axis in the plot for the index/"time" axis (appends to the last dimension)
+
+"""
+matchplot2
+
 @userplot MatchPlot2
 znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
 @recipe function f(h::MatchPlot2; transportcost=1, separation=0.5, ds=1,
