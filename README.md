@@ -81,19 +81,23 @@ y[end-10:end,:] .+= q[end-10:end,:]
 y[10:13] .+= 0.5
 
 # Plot signals
-kws = (;linewidth=3, zlabel="time")
+kws = (;linewidth=3, zlabel="time", xlabel="signal comp. 1", ylabel="signal comp. 2",
+	   xticks=-1:1:1, yticks=-1:1:1, asepct_ratio=1, legend=nothing)
+cs, cq = theme_palette(:auto).colors.colors[1:2]
 orig= plot(eachcol(q)...,1:size(q,1); c=cq, label="query", kws...)
-plot!(eachcol(y)..., 1:size(y,1) ; c=cs, label="similar signal", 
-      legendposition=:outerbottomright, kws...)
+plot!(eachcol(y)..., 1:size(y,1) ; c=cs, label="similar signal", kws...)
 
 # Warp 2D time signals and visualize
 cost, i1, i2 = dtw(y', q', SqEuclidean(); transportcost = 1)
 kws=(;kws..., legend=nothing)
-cs, cq = theme_palette(:auto).colors.colors[1:2]
 warped=plot(eachcol(q[i2,:])..., 1:length(i2); c=cq, label="query", kws...);
 plot!(eachcol(y[i1,:])..., 1:length(i1); c=cs, label="signal", kws..., linewidth=1);
 plot(orig, warped)
+```
 
+![figure](examples/R2_signals.svg)
+
+```julia
 # Visualizing matched ℜ² signal points in ℜ²
 kws=(;kws..., legend=nothing, ds=3, separation=0, xlabel="signal comp. 1", ylabel="signal comp. 2")
 mp1 = matchplot2(y', q'; kws...)
@@ -101,6 +105,8 @@ mp1 = matchplot2(y', q'; kws...)
 mp2 = matchplot2(y', q'; showindex=true, zlabel="warped signal index", kws...)
 plot(mp1, mp2)
 ```
+
+![figure](examples/R2_matchplot_signals.svg)
 
 ## Find a short pattern in a long time series
 The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass, e.g., `ZNormalizer` as the fifth argument.
