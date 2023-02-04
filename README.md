@@ -81,7 +81,7 @@ y[end-10:end,:] .+= q[end-10:end,:]
 y[10:13] .+= 0.5
 
 # Plot signals
-kws = (;linewidth=3, zlabel="time", xlabel="signal comp. 1", ylabel="signal comp. 2",
+kws = (;linewidth=3, zlabel="index", xlabel="signal comp. 1", ylabel="signal comp. 2",
 	   xticks=-1:1:1, yticks=-1:1:1, asepct_ratio=1, legend=nothing)
 cs, cq = theme_palette(:auto).colors.colors[1:2]
 orig= plot(eachcol(q)...,1:size(q,1); c=cq, label="query", kws...)
