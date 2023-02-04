@@ -162,12 +162,19 @@ end
 @userplot MatchPlot2
 znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
 @recipe function f(h::MatchPlot2; transportcost=1, separation=0.5, ds=1,
-                   postprocess=nothing)
+                   postprocess=nothing, showindex=false)
 
     x, y, D, i1, i2 = DynamicAxisWarping.handleargs(h;
                                                     transportcost=transportcost,
                                                     postprocess=postprocess)
     x,y = znorm2.((x,y))
+    if showindex
+        x = [x[:,i1]; i1[:,1]']
+        y = [y[:,i2]; i2[:,1]']
+    else
+        x = x[:,i1]
+        y = y[:,i2]
+    end
     s1 = x .- separation
     s2 = y .+ separation
 
@@ -181,7 +188,7 @@ znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
         primary := false
         linecolor --> :black
         seriesalpha --> 0.2
-        s1, s2 = s1[:,i1][:,1:ds:end], s2[:,i2][:,1:ds:end]
+        s1, s2 = s1[:,1:ds:end], s2[:,1:ds:end]
         # Concatonate along 3rd dim
         s3 = cat(s1,s2; dims=3)
         s3 = eachrow.(eachslice(s3, dims=2))
