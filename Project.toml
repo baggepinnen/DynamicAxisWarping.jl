@@ -1,7 +1,7 @@
 name = "DynamicAxisWarping"
 uuid = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 authors = ["Fredrik Bagge Carlson <baggepinnen@gmail.com>"]
-version = "0.4.14"
+version = "0.4.15"
 
 [deps]
 BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
