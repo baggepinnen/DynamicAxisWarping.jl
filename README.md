@@ -41,6 +41,7 @@ d(a,b)
 ```julia
 dtwplot(a, b, [dist=SqEuclidean()]; transportcost = 1)
 matchplot(a, b, [dist=SqEuclidean()])
+matchplot2(a, b, [dist=SqEuclidean()])
 ```
 Example:
 ```julia
@@ -61,6 +62,51 @@ f3 = matchplot(q,y,ds=3,separation=1)
 plot(f1,f2,f3, legend=false, layout=3, grid=false)
 ```
 ![figure](examples/doppler.svg)
+
+Example, two-dimension timeseries, simple example
+
+```julia
+using DynamicAxisWarping, Plots, Distances
+
+# Create signals q(u) ∈ ℜ², y(u) ∈ ℜ²
+fs = 70
+u  = collect(range(0,stop=1,step=1/fs))
+# Create a template query signal
+q, tq = [sin.(2pi .* u) cos.(2pi .* u)] .+ 0.01 .* randn.(), u
+# Create a similar signal
+y = [sin.(3pi .*u)  cos.(3pi .* u)] .+ 0.01 .* randn.()
+last_peak = findlast(isapprox.(y[:,2], maximum(y[:,2]),atol=0.05))
+y, ty = y[1:last_peak, :], u[1:last_peak]
+y[end-10:end,:] .+= q[end-10:end,:]
+y[10:13] .+= 0.5
+
+# Plot signals
+kws = (;linewidth=3, zlabel="index", xlabel="signal comp. 1", ylabel="signal comp. 2",
+	   xticks=-1:1:1, yticks=-1:1:1, asepct_ratio=1, legend=nothing)
+cs, cq = theme_palette(:auto).colors.colors[1:2]
+orig= plot(eachcol(q)...,1:size(q,1); c=cq, label="query", kws...)
+plot!(eachcol(y)..., 1:size(y,1) ; c=cs, label="similar signal", kws...)
+
+# Warp 2D time signals and visualize
+cost, i1, i2 = dtw(y', q', SqEuclidean(); transportcost = 1)
+kws=(;kws..., legend=nothing)
+warped=plot(eachcol(q[i2,:])..., 1:length(i2); c=cq, label="query", kws...);
+plot!(eachcol(y[i1,:])..., 1:length(i1); c=cs, label="signal", kws..., linewidth=1);
+plot(orig, warped)
+```
+
+![figure](examples/R2_signals.svg)
+
+```julia
+# Visualizing matched ℜ² signal points in ℜ²
+kws=(;kws..., legend=nothing, ds=3, separation=0, xlabel="signal comp. 1", ylabel="signal comp. 2")
+mp1 = matchplot2(y', q'; kws...)
+# Or in ℜ³ with a signal index axis
+mp2 = matchplot2(y', q'; showindex=true, zlabel="warped signal index", kws...)
+plot(mp1, mp2)
+```
+
+![figure](examples/R2_matchplot_signals.svg)
 
 ## Find a short pattern in a long time series
 The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass, e.g., `ZNormalizer` as the fifth argument.

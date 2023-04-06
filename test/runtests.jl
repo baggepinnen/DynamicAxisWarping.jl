@@ -161,6 +161,21 @@ using ForwardDiff, QuadGK
 
         @test_nowarn dtwplot(a, b, D, lc=:green, lw=1; )
         @test_nowarn matchplot(a, b, D, ds=3,separation=1)
+
+        # Create 2D signals
+        A, B  = Matrix([a [2 .* a[1:6]; a[7:end]]]'), 
+                Matrix([b [1.2 .* b[1:3]; b[4:end]]]')
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=false)
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=true)
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=false, normalize=false)
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=true, normalize=false)
+
+        # Create 3D signals
+        A, B  = Matrix([a [2 .* a[1:6]; a[7:end]] -1*a]'), 
+                Matrix([b [1.2 .* b[1:3]; b[4:end] ] 1.4*b]')
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=false)
+        @test_nowarn matchplot2(A, B; separation=0.5, ds=1, showindex=false, normalize=false)
+
     end
 
 
@@ -770,4 +785,3 @@ end
 # dtwplot(a,b, postprocess=K)
 
 # matchplot(a,b)
-# matchplot(a,b, postprocess=K)

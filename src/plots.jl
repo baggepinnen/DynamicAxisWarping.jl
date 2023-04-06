@@ -159,6 +159,63 @@ using Statistics
     end
 end
 
+"""
+    matchplot2
+
+Like `matchplot`, but works with 2d and 3d signals.
+
+### Inputs
+
+#### Positional args
+For available positional argument patterns, see `DynamicAxisWarping.handleargs`
+
+Generally, it can accept a `x` and `y` signal to warp and optionally `dtw_cost_matrix` inputs, or `x` and `y` signal plus `dtw` or `dtw_cost_matrix` outputs (skipping the warp step).
+
+#### Keyword args
+- `transportcost` -- see `dtw_cost_matrix`
+- `separation` -- extra separation/padding added between the signals in in ℜⁿ  
+- `showindex` -- Whether to add an axis in the plot for the index/"time" axis (appends to the last dimension)
+
+"""
+matchplot2
+
+@userplot MatchPlot2
+znorm2(x) = (x = x.- mean(x,dims=2); x ./= std(x,dims=2))
+@recipe function f(h::MatchPlot2; transportcost=1, separation=0.5, ds=1,
+                   postprocess=nothing, showindex=false, normalize=true)
+
+    x, y, D, i1, i2 = DynamicAxisWarping.handleargs(h;
+                                                    transportcost=transportcost,
+                                                    postprocess=postprocess)
+    x,y = normalize ? znorm2.((x,y)) : (x,y)
+    if showindex
+        x = [x[:,i1]; i1[:,1]']
+        y = [y[:,i2]; i2[:,1]']
+    else
+        x = x[:,i1]
+        y = y[:,i2]
+    end
+    s1 = x .- separation
+    s2 = y .+ separation
+
+    @series begin
+        (collect(eachrow(s1))...,)
+    end
+    @series begin
+        (collect(eachrow(s2))...,)
+    end
+    @series begin
+        primary := false
+        linecolor --> :black
+        seriesalpha --> 0.2
+        s1, s2 = s1[:,1:ds:end], s2[:,1:ds:end]
+        # Concatonate along 3rd dim
+        s3 = cat(s1,s2; dims=3)
+        s3 = eachrow.(eachslice(s3, dims=2))
+        [(rows_of_slices...,) for rows_of_slices in s3]
+    end
+end
+
 @recipe function plot(r::DTWSearchResult)
     title --> "DTW-NN Search result"
     yguide --> "Distance"
