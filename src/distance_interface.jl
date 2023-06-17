@@ -62,7 +62,7 @@ Base.@kwdef struct FastDTW{D} <: DTWDistance{D}
     FastDTW(r, dist=SqEuclidean()) = new{typeof(dist)}(r, dist)
 end
 
-
+Distances.result_type(::DTWDistance,::Type{T1},::Type{T2}) where {T1,T2} = float(promote_type(T1,T2))
 
 function Distances.evaluate(d::DTW{<:Any,N}, x, y; kwargs...) where N
     if lastlength(x) == lastlength(y)
