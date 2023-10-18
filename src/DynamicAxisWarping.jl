@@ -10,7 +10,7 @@ using DataStructures
 using SlidingDistancesBase
 import SlidingDistancesBase: floattype, lastlength, setup_normalizer
 using LoopVectorization
-using Plots, Plots.PlotMeasures # Plots required both for @layout and for the margins
+using RecipesBase
 using Requires
 using UnPack
 
