@@ -58,10 +58,13 @@ handleargs(h; kwargs...) = handleargs(h.args...; kwargs...)
         layout --> 1
     end
 
-    left_margin --> 0mm
-    bottom_margin --> 0mm
-    top_margin --> 0mm
-    right_margin --> 0mm
+    plots_id = Base.PkgId(Base.UUID("91a5bcdd-55d7-5caf-9e0b-520d859cae80"), "Plots")
+    Plots = Base.loaded_modules[plots_id]
+
+    left_margin --> 0Plots.mm
+    bottom_margin --> 0Plots.mm
+    top_margin --> 0Plots.mm
+    right_margin --> 0Plots.mm
 
     # heatmap
     @series begin

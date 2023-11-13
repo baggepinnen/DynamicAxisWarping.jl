@@ -112,7 +112,7 @@ plot(mp1, mp2)
 The function `dtwnn` searches for a pattern in a long time series. By default, it *does not normalize* the data over each window, to do this, pass, e.g., `ZNormalizer` as the fifth argument.
 
 ```julia
-using DynamicAxisWarping, Distances
+using DynamicAxisWarping, Distances, Plots
 radius = 5
 a      = sin.(0.1 .* (1:100))     .+ 0.1 .* randn.()
 b      = sin.(0.1 .* (1:100_000)) .+ 0.1 .* randn.()
@@ -216,6 +216,7 @@ profile = matrix_profile(y, m, DTW(radius, [transportcost]))
 ## `transportcost`
 `transportcost` adds an additional penalty multiplier for "transporting", i.e., deviations from the Euclidean matching. The standard DTW distance does not consider this added cost and the default is 1. A value greater than 1 multiplies the cost of moving horizontally or vertically in the coupling matrix, promoting a diagonal move, corresponding to the standard Euclidean matching. The influence of the transport cost can be visualized with
 ```julia
+using DynamicAxisWarping, Plots
 a = sin.(1:100); b = sin.(1:100) .+ randn.();
 dtwplot(a,b, transportcost=1)    # Default
 dtwplot(a,b, transportcost=1.01) # Should be "more diagonal"
