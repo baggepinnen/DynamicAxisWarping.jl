@@ -2,8 +2,8 @@ using DynamicAxisWarping
 #using DynamicAxisWarping.WarpPlots
 using DynamicAxisWarping.Datasets
 
-# UCI data repository must be downloaded first, run DynamicAxisWarping.Datasets.download_ucr()
-data, labels = ucr_traindata("MedicalImages");
+# UCI data repository must be downloaded first, then extract and prepare the data set labeled "MedicalImages"
+# data, labels = ... # MedicalImages
 
 # c = [ cl==1 ? :blue : :red for cl in class ]'
 # plot(y, linecolor=c, legend=false)

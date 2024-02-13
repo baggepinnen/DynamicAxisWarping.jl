@@ -4,7 +4,6 @@ authors = ["Fredrik Bagge Carlson <baggepinnen@gmail.com>"]
 version = "0.4.18"
 
 [deps]
-BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
@@ -20,11 +19,11 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
-BinDeps = "1.0"
 DataStructures = "0.17, 0.18"
 DelimitedFiles = "1"
 Distances = "0.8, 0.9, 0.10"
 FillArrays = "1"
+LinearAlgebra = "<0.0.1, 1"
 LoopVectorization = "0.9, 0.10, 0.11, 0.12"
 ProgressMeter = "1.2"
 RecipesBase = "1.0"
@@ -34,7 +33,6 @@ Statistics = "1"
 StatsBase = "0.32, 0.33, 0.34"
 UnPack = "0.1, 1"
 julia = "1"
-LinearAlgebra = "<0.0.1, 1"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
