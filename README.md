@@ -24,9 +24,9 @@ Any distance implementing the [Distances.jl](https://github.com/JuliaStats/Dista
 
 ```julia
 using DynamicAxisWarping, Distances, Plots
-cost, i1, i2 = dtw(a,b, [dist=SqEuclidean()]; transportcost = 1)
-cost, i1, i2 = fastdtw(a,b, dist, radius) # note https://arxiv.org/abs/2003.11246
-cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. Supports early stopping, see docstring. Can be made completely allocation free.
+cost, i1, i2 = dtw(a, b, [dist=SqEuclidean()]; transportcost = 1)
+cost, i1, i2 = fastdtw(a, b, radius; dist = SqEuclidean()) # note https://arxiv.org/abs/2003.11246
+cost = dtw_cost(a, b, radius; dist = SqEuclidean()) # Optimized method that only returns cost. Supports early stopping, see docstring. Can be made completely allocation free.
 
 # dtw supports arbitrary upper and lower bound vectors constraining the warping path.
 imin,imax = radiuslimits(5,20,20), plot([imin imax])

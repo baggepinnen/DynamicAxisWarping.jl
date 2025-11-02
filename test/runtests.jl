@@ -436,6 +436,12 @@ using ForwardDiff, QuadGK
         @test isapprox(cost, cost1)
         @test px == qx
         @test py == qy
+
+        # default distance
+        cost2, rx, ry = fastdtw(x, y, 15) 
+        @test isequal(cost1, cost2)
+        @test qx == rx
+        @test qy == ry
     end
 
     @testset "DBA" begin

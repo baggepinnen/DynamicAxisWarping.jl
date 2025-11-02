@@ -156,13 +156,14 @@ end
 
 
 """
-    dtw_cost(a::AbstractArray, b::AbstractArray, dist::Distances.SemiMetric, r::Int; best_so_far = Inf, cumulative_bound = Zeros(length(a)))
+    dtw_cost(a::AbstractArray, b::AbstractArray, r::Int; dist::Distances.SemiMetric = SqEuclidean(), best_so_far = Inf, cumulative_bound = Zeros(length(a)))
 
 Perform dynamic time warping to measure the distance between two sequences.
 
 Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You may provide values of `best_so_far` and `cumulative_bound` in order to enable early stopping.
 
 # Keyword arguments:
+- `dist`: The distance semi-metric to use (default: `SqEuclidean()`)
 - `best_so_far`: The best cost value obtained so far (optional)
 - `cumulative_bound`: A vector the same length as a and b (optional)
 - `s1`: Optional storage vector of length 2r+1, can be used to save allocations.
@@ -237,6 +238,9 @@ function dtw_cost(
 end
 
 
+# Convenience method with default SqEuclidean() distance
+dtw_cost(a::AbstractArray, b::AbstractArray, r::Int; kwargs...) =
+    dtw_cost(a, b, SqEuclidean(), r; kwargs...)
 
 
 @inbounds function soft_dtw_cost_matrix(seq1::AbstractArray, seq2::AbstractArray, dist::SemiMetric = SqEuclidean(); γ = 1,
