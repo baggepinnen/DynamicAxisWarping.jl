@@ -1,6 +1,6 @@
 
 """
-    cost,i1,i2 = fastdtw(seq1,seq2,radius;dist=SqEuclidean())
+    cost,i1,i2 = fastdtw(seq1,seq2,dist,radius)
 
 Perform dynamic-time warping using the FastDTW algorithm to measure the distance between two sequences. Note that regular DTW often performs better than FastDTW https://arxiv.org/abs/2003.11246
 

@@ -156,7 +156,7 @@ end
 
 
 """
-    dtw_cost(a::AbstractArray, b::AbstractArray, r::Int; dist::Distances.SemiMetric = SqEuclidean(), best_so_far = Inf, cumulative_bound = Zeros(length(a)))
+   dtw_cost(a::AbstractArray, b::AbstractArray, dist::Distances.SemiMetric, r::Int; best_so_far = Inf, cumulative_bound = Zeros(length(a))) 
 
 Perform dynamic time warping to measure the distance between two sequences.
 
