@@ -163,7 +163,6 @@ Perform dynamic time warping to measure the distance between two sequences.
 Calculate the DTW cost between `a` and `b` with maximum warping radius `r`. You may provide values of `best_so_far` and `cumulative_bound` in order to enable early stopping.
 
 # Keyword arguments:
-- `dist`: The distance semi-metric to use (default: `SqEuclidean()`)
 - `best_so_far`: The best cost value obtained so far (optional)
 - `cumulative_bound`: A vector the same length as a and b (optional)
 - `s1`: Optional storage vector of length 2r+1, can be used to save allocations.
