@@ -30,7 +30,7 @@ function handleargs(seq1::AbstractArray, seq2::AbstractArray, D::AbstractMatrix,
 end
 
 function handleargs(seq1, seq2, dist, i2min, i2max; kwargs...)
-    D = dtw_cost_matrix(seq1, seq2, dist, i2min, i2max; kwargs...)
+    D = dtw_cost_matrix(seq1, seq2, i2min, i2max, dist; kwargs...)
     cost, i1, i2 = DynamicAxisWarping.trackback(D)
     seq1, seq2, D, i1, i2
 end

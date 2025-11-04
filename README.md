@@ -30,7 +30,7 @@ cost = dtw_cost(a, b, dist, radius) # Optimized method that only returns cost. S
 
 # dtw supports arbitrary upper and lower bound vectors constraining the warping path.
 imin,imax = radiuslimits(5,20,20), plot([imin imax])
-dtw(a, b, dist, imin, imax) # Cost equivalent to dtw_cost(a, b, dist, 5)
+dtw(a, b, imin, imax, dist) # Cost equivalent to dtw_cost(a, b, dist, 5)
 
 # The Distances.jl interface is supported
 d = DTW(radius=5)

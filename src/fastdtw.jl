@@ -32,7 +32,7 @@ function fastdtw(
     # window around it, and get the DTW given that window.
     hirescol, hiresrow = expandpath(lowrescol, lowresrow, N1, N2)
     idx2min, idx2max = computewindow(hirescol, hiresrow, radius)
-    cost1, newcol, newrow = dtw(seq1, seq2, dist, idx2min, idx2max)
+    cost1, newcol, newrow = dtw(seq1, seq2, idx2min, idx2max, dist)
 end
 
 

@@ -49,7 +49,7 @@ dtwplot(.√(M1.power), .√(M2.power), dist, linecolor=:green)
 # We expect to see less time warping (straighter green line) now when it's allowed to fudge the distance a bit by shuffling mass along the frequency axis.
 # How long time does it take to compute such a distance? (on a laptop, expect about 3x improvement on desktop)
 @btime dtw($(M1.power), $(M2.power), $dist)
-@btime dtw($(M1.power), $(M2.power), $dist, radiuslimits(50,m,m)...)
+@btime dtw($(M1.power), $(M2.power), radiuslimits(50,m,m)..., $dist)
 # The size of the spectrogram
 size(M1.power)
 # The complexity is almost linear in the number of frequency bins, but quadratic in the number of time steps.
