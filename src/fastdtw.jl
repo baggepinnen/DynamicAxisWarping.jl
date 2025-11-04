@@ -36,6 +36,11 @@ function fastdtw(
 end
 
 
+# Convenience method with default SqEuclidean() distance
+fastdtw(seq1::AbstractArray, seq2::AbstractArray, radius::Int; dist=SqEuclidean()) =
+    fastdtw(seq1, seq2, dist, radius)
+
+
 # Given a path through low-res space, generate an approximate path
 # through high-res space. It should have dimension Ncol x Nrow
 

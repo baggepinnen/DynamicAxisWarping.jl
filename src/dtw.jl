@@ -237,6 +237,9 @@ function dtw_cost(
 end
 
 
+# Convenience method with default SqEuclidean() distance
+dtw_cost(a::AbstractArray, b::AbstractArray, r::Int; kwargs...) =
+    dtw_cost(a, b, SqEuclidean(), r; kwargs...)
 
 
 @inbounds function soft_dtw_cost_matrix(seq1::AbstractArray, seq2::AbstractArray, dist::SemiMetric = SqEuclidean(); γ = 1,
