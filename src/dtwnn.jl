@@ -105,12 +105,12 @@ function lb_endpoints(dist, q, buffer, best_so_far; kwargs...)
     lb >= best_so_far && return lb
 
     x2 = buffer[!,2]
-    d = min(dist(x2, q[!,1]; kwargs...), dist(x1,q[!,2]; kwargs...), dist(x2,q[!,2]); kwargs...)
+    d = min(dist(x2, q[!,1]; kwargs...), dist(x1, q[!,2]; kwargs...), dist(x2, q[!,2]; kwargs...))
     lb += d
     lb >= best_so_far && return lb
 
     y2 = buffer[!,m-1]
-    d = min(dist(y2, q[!,m]; kwargs...), dist(y1,q[!,m-1]; kwargs...), dist(y2,q[!,m-1]); kwargs...)
+    d = min(dist(y2, q[!,m]; kwargs...), dist(y1, q[!,m-1]; kwargs...), dist(y2, q[!,m-1]; kwargs...))
     lb += d
     lb >= best_so_far && return lb
 
