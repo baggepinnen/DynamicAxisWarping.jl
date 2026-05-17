@@ -184,6 +184,7 @@ function prepare_gdtw(
 ) where T
     N = length(t)
 
+    M > 1 || throw(ArgumentError("M must be > 1 (received M = $M); `update_τ!` would otherwise divide by zero."))
     (M > N / smax) || @warn "`M <= N / smax`; problem may be infeasible" M N smax
 
 
