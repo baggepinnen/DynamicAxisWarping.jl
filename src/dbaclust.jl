@@ -261,8 +261,11 @@ function dbaclust_single(
         # with the highest cost
         unused = setdiff(1:nclust, unique(clus_asgn))
         if !isempty(unused)
-            # reinitialize centers
-            @optional_threaded threaded for c in unused
+            # reinitialize centers — the outer loop must be sequential so each
+            # unused center picks the current `argmax(costs)` after previous
+            # reassignments have updated `costs`. The inner loop is independent
+            # across `s` and may be threaded.
+            for c in unused
                 avgs[c] = deepcopy(sequences[argmax(costs)])
                 @optional_threaded threaded for s = 1:nseq
                     seq = sequences[s]
