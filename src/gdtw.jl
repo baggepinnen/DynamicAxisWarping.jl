@@ -135,8 +135,8 @@ The parameters are:
 * `M`: the discretization of the values obtained by the warping path
 * `metric`:  a function `metric(u,v) -> ℝ` to compute differences between the signals at a time point (such as a Distances.jl distance)
 * `Rcum`: penalty function on the cumulative warp
-* `Rinst`: penalty function on the instantaenous warping. Should be infinite outside of `[smin, smax]`.
-* `smin`, `smax`: minimum and maximum allowed instantaenous warping. Should have `smin > 0` and `smin < smax`.
+* `Rinst`: penalty function on the instantaneous warping. Should be infinite outside of `[smin, smax]`.
+* `smin`, `smax`: minimum and maximum allowed instantaneous warping. Should have `smin > 0` and `smin < smax`.
 * `λcum`, `λinst`: the regularization constants for `Rcum` and `Rinst`, respectively
 
 The following may be pre-allocated and reused between distance computations with the same `M` and `N` (or `length(t)`).

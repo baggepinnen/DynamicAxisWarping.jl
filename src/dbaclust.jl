@@ -110,7 +110,7 @@ end
 """
     avgseq, results = dbaclust_single(sequences, dist; kwargs...)
 
-Perfoms a single DTW Barycenter Averaging (DBA) given a collection of `sequences`
+Performs a single DTW Barycenter Averaging (DBA) given a collection of `sequences`
 and the current estimate of the average sequence.
 
 Example usage:
@@ -142,7 +142,7 @@ function dbaclust_single(
 )
 
     T = floattype(eltype(sequences))
-    # rename for convienence
+    # rename for convenience
     avgs   = init_centers
     N = length(avgs[1])
 
@@ -210,7 +210,7 @@ function dbaclust_single(
                 cluster_i2s_        = Array{Vector{Int64}}(undef, nclust)
 
                 Threads.@threads for c_ = 1:nclust
-                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same length, distpath will throw error
                     if isempty(i2min) && isempty(i2max)
                         cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
                     else
@@ -227,7 +227,7 @@ function dbaclust_single(
             else
                 # using single-core
                 for c_ = 1:nclust
-                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same lenght, distpath will throw error
+                    # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same length, distpath will throw error
                     if isempty(i2min) && isempty(i2max)
                         cost, i1_, i2_ = distpath(dtwdist, avgs[c_], seq)
                     else

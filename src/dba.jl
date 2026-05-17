@@ -15,7 +15,7 @@ end
 """
     avgseq, results = dba(sequences, dist::DTWDistance; kwargs...)
 
-Perfoms DTW Barycenter Averaging (DBA) given a collection of `sequences`
+Performs DTW Barycenter Averaging (DBA) given a collection of `sequences`
 and the current estimate of the average sequence.
 
 Example usage:
@@ -125,7 +125,7 @@ function dba_iteration!(
     counts .= 0
     newavg .= 0
 
-    # main ploop
+    # main loop
     for seq in sequences
         # time warp signal versus average
         # if one of the two is empty, use unconstrained window. If both are nonempty, but not the same length, distpath will throw error
@@ -152,7 +152,7 @@ function dba_iteration!(
 end
 
 
-# weirdly enought, this works for the dtw_dba_miniexample,  but does not work for dtw_dbaclust
+# weirdly enough, this works for the dtw_dba_miniexample,  but does not work for dtw_dbaclust
 #@generated function _sequentize{T,N}(s::AbstractArray{T,N})
 #    :( Sequence[ Sequence(@ncall($N, view, s, n-> n==$N ? i : Colon())) for i = 1:size(s,2) ] )
 #end
