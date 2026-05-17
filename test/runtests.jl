@@ -57,6 +57,22 @@ using ForwardDiff, QuadGK
         @test dtwnn(a,a,SqEuclidean(),3,ZNormalizer).cost < 1e-20
     end
 
+    @testset "pairwise on multi-channel arrays" begin
+        # Regression for #72: the inner loop of `pairwise(::PreMetric, ::AbstractArray, ::AbstractArray)`
+        # iterated `j in lastlength(s2)` instead of `j in 1:lastlength(s2)`, producing a
+        # column-degenerate matrix and breaking `dtw_cost_matrix` for multi-channel inputs.
+        A = Float64[1 2 3 4; 5 6 7 8]   # 2 channels × 4 timepoints
+        B = Float64[1 2 3 4 5; 5 6 7 8 9]  # 2 channels × 5 timepoints
+        D = DynamicAxisWarping.pairwise(SqEuclidean(), A, B; dims=2)
+        @test size(D) == (4, 5)
+        @test D[1, 1] ≈ SqEuclidean()(A[:, 1], B[:, 1])
+        @test D[4, 5] ≈ SqEuclidean()(A[:, 4], B[:, 5])
+
+        # End-to-end: dtw_cost_matrix dispatches through this method when given matrices.
+        C = dtw_cost_matrix(A, B)
+        @test size(C) == (lastlength(B), lastlength(A))
+    end
+
     @testset "Basic Dynamic Time Warping" begin
         @info "Testing Basic Dynamic Time Warping"
         a = Float64[1, 1, 1, 2, 4, 6, 5, 5, 5, 4, 4, 3, 1, 1, 1]
