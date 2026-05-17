@@ -46,8 +46,6 @@ export ZNormalizer,
        DiagonalZNormalizer,
        normalize
 
-export stomp
-
 include("utils.jl")
 
 include("distance_interface.jl")
