@@ -75,7 +75,7 @@ function dba(
         store_trace && push!(cost_trace, newcost)
 
         # check convergence
-        Δ = (cost - newcost) / newcost
+        Δ = newcost > 0 ? (cost - newcost) / newcost : zero(newcost)
         if Δ < rtol
             converged = true
         else
