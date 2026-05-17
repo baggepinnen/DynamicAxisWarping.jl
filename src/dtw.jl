@@ -271,9 +271,9 @@ dtw_cost(a::AbstractArray, b::AbstractArray, r::Int; kwargs...) =
             for r = 2:m
                 if abs(c-r) > radius
                     D[r, c] += 1/γ
-                    # continue
-                end    
-                D[r, c] += softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
+                else
+                    D[r, c] += softmin(transportcost*D[r-1, c], D[r-1, c-1], transportcost*D[r, c-1], γ)
+                end
             end
         end
     end
