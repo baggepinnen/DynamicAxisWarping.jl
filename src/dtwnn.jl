@@ -145,7 +145,7 @@ end
 """
     search_result = dtwnn(q, y, dist, rad, [normalizer::Type{Nothing}]; kwargs...)
 
-Compute the nearest neighbor to `q` in `y`. An optinal normalizer type can be supplied, see, `ZNormalizer, DiagonalZNormalizer, NormNormalizer`.
+Compute the nearest neighbor to `q` in `y`. An optional normalizer type can be supplied, see, `ZNormalizer, DiagonalZNormalizer, NormNormalizer`.
 
 # Arguments:
 - `q`: query (the short time series)
