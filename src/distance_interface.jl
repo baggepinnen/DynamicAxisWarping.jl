@@ -89,8 +89,8 @@ Distances.evaluate(d::FastDTW, x, y) =
     fastdtw(x, y, d.dist, d.radius)[1]
 
 distpath(d::DTW, x, y) = dtw(x, y, d.dist; transportcost=d.transportcost, postprocess = d.postprocess)
-distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector; transportcost=d.transportcost) =
-    dtw(x, y, i2min, i2max, d.dist)
+distpath(d::DTW, x, y, i2min::AbstractVector, i2max::AbstractVector) =
+    dtw(x, y, d.dist, i2min, i2max; transportcost=d.transportcost)
 distpath(d::FastDTW, x, y) = fastdtw(x, y, d.dist, d.radius)
 
 (d::DTWDistance)(x,y;kwargs...) = Distances.evaluate(d,x,y;kwargs...)
