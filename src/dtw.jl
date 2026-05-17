@@ -34,7 +34,7 @@ end
 Distances.pairwise(d::PreMetric, s1::AbstractVector, s2::AbstractVector; dims=2) = evaluate.(Ref(d), s1, transpose(s2))
 
 function Distances.pairwise(d::PreMetric, s1::AbstractArray, s2::AbstractArray; dims=2)
-    [evaluate(d, s1[!,i], s2[!,j]) for i in 1:lastlength(s1), j in lastlength(s2)]
+    [evaluate(d, s1[!,i], s2[!,j]) for i in 1:lastlength(s1), j in 1:lastlength(s2)]
 end
 
 @inbounds function dtw_cost_matrix(seq1::AbstractArray{T}, seq2::AbstractArray{T}, dist::SemiMetric = SqEuclidean();
