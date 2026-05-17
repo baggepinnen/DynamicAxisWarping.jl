@@ -285,7 +285,7 @@ function dbaclust_single(
         store_trace && push!(cost_trace, total_cost)
 
         # check convergence
-        Δ = (last_cost - total_cost) / total_cost
+        Δ = total_cost > 0 ? (last_cost - total_cost) / total_cost : zero(total_cost)
         if Δ < rtol
             converged = true
         else
