@@ -686,11 +686,6 @@ using ForwardDiff, QuadGK
             data, labels = DynamicAxisWarping.Datasets.fakedata_gaussian()
         end
 
-        @testset "ucr" begin
-            @info "Testing ucr"
-
-        end
-
     end
 
 end
