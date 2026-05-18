@@ -206,6 +206,16 @@ using ForwardDiff, QuadGK
         @test pa == [1, 2, 3]
         @test pb == [1, 2, 3]
 
+        # Regression for #73: the constrained `distpath(::DTW, x, y, i2min, i2max)`
+        # had its arguments in the wrong order and raised a MethodError on every
+        # call with bounds.
+        let a = [1, 1, 1], b = [1, 1, 1]
+            cost_p, pa_p, pb_p = DynamicAxisWarping.distpath(DTW(2), a, b, [1, 1, 1], [3, 3, 3])
+            @test cost_p == 0
+            @test pa_p == [1, 2, 3]
+            @test pb_p == [1, 2, 3]
+        end
+
         # Verify that trackback ends properly if it reaches an edge before reaching [1,1]
         # Also check that trackback prefers diagonal moves
         a = [0, 1, 1, 1]
